@@ -1,0 +1,10 @@
+token        tag          line : column
+"abc"        STRING        1       1
+"cristi"     STRING        2       1
+"cr1st1"     STRING        3       1
+"cr1st+1"    STRING        4       1
+"cristi\n"   STRING        5       1
+"\"cristi\"" STRING        6       1
+"cristi\t412" STRING        7       1
+"\n\"\\"     STRING        8       1
+"\t\t\t\\\t\\\t\n\n\t\"abecedar\"\n" STRING        9       1

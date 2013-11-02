@@ -1,0 +1,3 @@
+"tab is not allowed" so the next line should yield an error
+"	"
+

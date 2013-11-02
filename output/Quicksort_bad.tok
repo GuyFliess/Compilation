@@ -1,0 +1,10 @@
+token        tag          line : column
+class        class         1       1
+Quicksort    CLASS_ID      1       7
+{            {             1      17
+int          int           2       5
+[            [             2       8
+]            ]             2       9
+a            ID            2      11
+;            ;             2      12
+4:5 : lexical error; invalid character '$'
