@@ -46,25 +46,26 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 /*keywords*/
 
 <YYINITIAL> "class" { return tok("class");} 
-<YYINITIAL> "return" {return tok("return");}
-<YYINITIAL> "this" {return tok("this");}
 <YYINITIAL> "extends" {return tok("extends");}
-<YYINITIAL> "if" {return tok("if");}
-<YYINITIAL> "new" {return tok("new");}
+<YYINITIAL> "static" {return tok("static");}
 <YYINITIAL> "void" {return tok("void");}
-<YYINITIAL> "else" {return tok("else");}
-<YYINITIAL> "length" {return tok("length");}
 <YYINITIAL> "int" {return tok("int");}
-<YYINITIAL> "while" {return tok("while");}
-<YYINITIAL> "true" {return tok("true");}
 <YYINITIAL> "boolean" {return tok("boolean");}
-<YYINITIAL> "break" {return tok("break");}
-<YYINITIAL> "false" {return tok("false");}
 <YYINITIAL> "string" {return tok("string");}
+<YYINITIAL> "return" {return tok("return");}
+<YYINITIAL> "if" {return tok("if");}
+<YYINITIAL> "else" {return tok("else");}
+<YYINITIAL> "while" {return tok("while");}
+<YYINITIAL> "break" {return tok("break");}
 <YYINITIAL> "continue" {return tok("continue");}
+<YYINITIAL> "this" {return tok("this");}
+<YYINITIAL> "new" {return tok("new");}
+<YYINITIAL> "length" {return tok("length");}
+<YYINITIAL> "true" {return tok("true");}
+<YYINITIAL> "false" {return tok("false");}
 <YYINITIAL> "null" {return tok("null");}
 
- <YYINITIAL> {
+<YYINITIAL> {
   /* identifiers */ 
   {Identifier}                   { return tok("ID"); }
   {ClassID}						 { return tok("CLASS_ID"); }
@@ -74,9 +75,32 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   \"                             { string.setLength(0); yybegin(STRING); }
 
   /* operators */
-  "="                            { return tok("EQ"); }
-  "=="                           { return tok("EQEQ"); }
-  "+"                            { return tok("PLUS"); }
+  "["                            { return tok("["); }
+  "]"                            { return tok("]"); }
+  "("                            { return tok("("); }
+  ")"                            { return tok(")"); }
+  "."                            { return tok("."); }
+  "-"                            { return tok("-"); }
+  "!"                            { return tok("!"); }
+  "*"                            { return tok("*"); }
+  "/"                            { return tok("/"); }
+  "%"                            { return tok("%"); }
+  "+"                            { return tok("+"); }
+  "<"                            { return tok("<"); }
+  "<="                           { return tok("<="); }
+  ">"                            { return tok(">"); }
+  ">="                           { return tok(">="); }
+  "=="                           { return tok("=="); }
+  "!="                           { return tok("!="); }
+  "&&"                           { return tok("&&"); }
+  "||"                           { return tok("||"); }
+  "="                            { return tok("="); }
+ 
+  /* structure */
+  "{"                            { return tok("{"); }
+  "}"                            { return tok("}"); }
+  ";"                            { return tok(";"); }
+  ","                            { return tok(","); }
 
   /* comments */
   {Comment}                      { /* ignore */ }
