@@ -11,6 +11,8 @@ package lex;
 
 %{
 
+int string_column = 0, string_line = 0;
+
 StringBuffer string = new StringBuffer();
 
 Token tok(String tag) { 
@@ -18,19 +20,28 @@ Token tok(String tag) {
 }
 
 Token tok(String tag, String value) { 
-	return new Token(tag, value, yyline + 1, 1);
+	if (tag == "STRING") {
+		return new Token(tag, value, yyline + 1, yycolumn + 2 - value.length());
+	}
+	else if (tag == "STRING_ERROR") {
+		return new Token(tag, value, string_line, string_column);
+	}
+	return new Token(tag, value, yyline + 1, yycolumn + 1);
 }
 %}
 
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
+Tab			   = \t
 
 /* comments */
 Comment = {TraditionalComment} | {EndOfLineComment}
 
 TraditionalComment   = "/*" ~"*/" | "/*" "*"+ "/"
-EndOfLineComment     = "//" {InputCharacter}* {LineTerminator} 
+EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}
+CommentContent       = ( [^*] | \*+ [^/*] )*
+UnterminatedComment  = "/*" {CommentContent} [^*/]
 
 Identifier = [:lowercase:] [:jletterdigit:]*
 ClassID = [:uppercase:] [:jletterdigit:]*
@@ -73,7 +84,10 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   /* literals */
   {DecIntegerLiteral}            { return tok("INTEGER"); }
   _{DecIntegerLiteral}  		 { return tok("ERROR","an identifier cannot start with '_'"); }
-  \"                             { string.setLength(0); yybegin(STRING); }
+  \"                             { string.setLength(0);
+  								   yybegin(STRING);
+  								   string_column = yycolumn + 1;
+  								   string_line = yyline + 1; }
 
   /* operators */
   "["                            { return tok("["); }
@@ -105,6 +119,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
   /* comments */
   {Comment}                      { /* ignore */ }
+  {UnterminatedComment}				 { return tok("ERROR","unterminated comment"); }
  
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }
@@ -113,16 +128,17 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 <STRING> {
   \"                             { yybegin(YYINITIAL);
                                    return tok("STRING", "\"" + string.toString() + "\""); }
+  {LineTerminator} | [\t]+ | [\{InputCharacter}]+		 { yybegin(YYINITIAL);
+  							       return tok("STRING_ERROR","malformed string literal"); }	
+  				       
   [^\n\r\"\\]+                   { string.append( yytext() ); }
+  \\                             { string.append("\\"); }
   \\t                            { string.append("\\t"); }
   \\n                            { string.append("\\n"); }
   \\r                            { string.append("\\r"); }
   \\\\                           { string.append("\\\\"); }
-  \\\"                           { string.append("\\\""); }
-  {LineTerminator}  		     { yybegin(YYINITIAL);
-  							       return tok("ERROR","malformed string literal"); }
-  [\t]						     { yybegin(YYINITIAL);
-  							       return tok("ERROR","malformed string literal"); }
+  \\\"                           { string.append("\\\""); } 
+  	 
 }
 
  /* error fallback */
