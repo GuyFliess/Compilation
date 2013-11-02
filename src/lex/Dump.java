@@ -52,6 +52,10 @@ public class Dump
 			token = tok.value;
 			line = Integer.toString(tok.line);
 			column = Integer.toString(tok.column);
+			if (tag=="ERROR") {
+				System.out.format("%s:%s : lexical error; %s \n", line, column, token);
+				break;
+			}
 			System.out.format("%-12s %-11s%4s%8s\n", token, tag, line, column);
 		}
 	}
