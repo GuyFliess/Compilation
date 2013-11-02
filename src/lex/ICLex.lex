@@ -106,21 +106,19 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }
 }
- <STRING> {
+
+<STRING> {
   \"                             { yybegin(YYINITIAL);
                                    return tok("STRING", "\"" + string.toString() + "\""); }
   [^\n\r\"\\]+                   { string.append( yytext() ); }
   \\t                            { string.append("\\t"); }
   \\n                            { string.append("\\n"); }
   \\r                            { string.append("\\r"); }
-  \\                             { string.append("\\"); }
+  \\\\                           { string.append("\\\\"); }
   \\\"                           { string.append("\\\""); }
-  \\\\\"                         { string.append("\\\\"); }
-  
-  
 }
  /* error fallback */
-.|\n                             { return tok("ERROR","invalid character '"+yytext()+"'"); }
+.|\n                             { return tok("ERROR","invalid character '" + yytext() + "'"); }
 
 
 
