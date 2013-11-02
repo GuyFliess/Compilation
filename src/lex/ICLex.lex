@@ -41,35 +41,38 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 	
 %%
 
-/*keywords*/
-
-<YYINITIAL> "class" { return tok("class");} 
-<YYINITIAL> "extends" {return tok("extends");}
-<YYINITIAL> "static" {return tok("static");}
-<YYINITIAL> "void" {return tok("void");}
-<YYINITIAL> "int" {return tok("int");}
-<YYINITIAL> "boolean" {return tok("boolean");}
-<YYINITIAL> "string" {return tok("string");}
-<YYINITIAL> "return" {return tok("return");}
-<YYINITIAL> "if" {return tok("if");}
-<YYINITIAL> "else" {return tok("else");}
-<YYINITIAL> "while" {return tok("while");}
-<YYINITIAL> "break" {return tok("break");}
-<YYINITIAL> "continue" {return tok("continue");}
-<YYINITIAL> "this" {return tok("this");}
-<YYINITIAL> "new" {return tok("new");}
-<YYINITIAL> "length" {return tok("length");}
-<YYINITIAL> "true" {return tok("true");}
-<YYINITIAL> "false" {return tok("false");}
-<YYINITIAL> "null" {return tok("null");}
-
 <YYINITIAL> {
+
+  /*keywords*/
+
+  "class" 						 { return tok("class"); } 
+  "extends" 					 { return tok("extends"); }
+  "static" 						 { return tok("static"); }
+  "void" 						 { return tok("void"); }
+  "int" 						 { return tok("int"); }
+  "boolean" 					 { return tok("boolean"); }
+  "string" 						 { return tok("string"); }
+  "return" 						 { return tok("return"); }
+  "if" 							 { return tok("if"); }
+  "else" 						 { return tok("else"); }
+  "while" 						 { return tok("while"); }
+  "break" 						 { return tok("break"); }
+  "continue" 					 { return tok("continue"); }
+  "this" 						 { return tok("this"); }
+  "new" 						 { return tok("new"); }
+  "length" 						 { return tok("length"); }
+  "true" 						 { return tok("true"); }
+  "false" 						 { return tok("false"); }
+  "null" 						 { return tok("null"); }
+
   /* identifiers */ 
   {Identifier}                   { return tok("ID"); }
+  _{Identifier}					 { return tok("ERROR","an identifier cannot start with '_'"); }
   {ClassID}						 { return tok("CLASS_ID"); }
  
   /* literals */
   {DecIntegerLiteral}            { return tok("INTEGER"); }
+  _{DecIntegerLiteral}  		 { return tok("ERROR","an identifier cannot start with '_'"); }
   \"                             { string.setLength(0); yybegin(STRING); }
 
   /* operators */
@@ -116,13 +119,16 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   \\r                            { string.append("\\r"); }
   \\\\                           { string.append("\\\\"); }
   \\\"                           { string.append("\\\""); }
+  {LineTerminator}  		     { yybegin(YYINITIAL);
+  							       return tok("ERROR","malformed string literal"); }
+  [\t]						     { yybegin(YYINITIAL);
+  							       return tok("ERROR","malformed string literal"); }
 }
 
  /* error fallback */
 
-.|\n                             { return tok("ERROR","invalid character '"+yytext()+"'"); }
-.{Identifier}					{ return tok("ERROR","an identifier cannot start with '"+yytext()+"'"); }
-.{DecIntegerLiteral}			{ return tok("ERROR","an identifier cannot start with '"+yytext()+"'"); }
+.|\n                             { return tok("ERROR","invalid character '" + yytext() + "'"); }
+
 
 
 
