@@ -29,7 +29,7 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 /* comments */
 Comment = {TraditionalComment} | {EndOfLineComment}
 
-TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
+TraditionalComment   = "/*" ~"*/" | "/*" "*"+ "/"
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator} 
 
 Identifier = [:lowercase:] [:jletterdigit:]*
@@ -117,9 +117,12 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   \\\\                           { string.append("\\\\"); }
   \\\"                           { string.append("\\\""); }
 }
- /* error fallback */
-.|\n                             { return tok("ERROR","invalid character '" + yytext() + "'"); }
 
+ /* error fallback */
+
+.|\n                             { return tok("ERROR","invalid character '"+yytext()+"'"); }
+.{Identifier}					{ return tok("ERROR","an identifier cannot start with '"+yytext()+"'"); }
+.{DecIntegerLiteral}			{ return tok("ERROR","an identifier cannot start with '"+yytext()+"'"); }
 
 
 
