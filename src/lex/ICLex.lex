@@ -27,12 +27,10 @@ InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
 /* comments */
-Comment = {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
+Comment = {TraditionalComment} | {EndOfLineComment}
 
 TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
-EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}
-DocumentationComment = "/**" {CommentContent} "*"+ "/"
-CommentContent       = ( [^*] | \*+ [^/*] )*
+EndOfLineComment     = "//" {InputCharacter}* {LineTerminator} 
 
 Identifier = [:lowercase:] [:jletterdigit:]*
 ClassID = [:uppercase:] [:jletterdigit:]*
@@ -122,7 +120,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   
 }
  /* error fallback */
-.|\n                             { throw new Error("Illegal character <" + yytext() + ">"); }
+.|\n                             { return tok("ERROR","invalid character '"+yytext()+"'"); }
 
 
 
