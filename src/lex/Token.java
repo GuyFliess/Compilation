@@ -1,7 +1,5 @@
 package lex;
 
-import java.util.regex.Matcher;
-
 public class Token {
 	public String tag;
 	public String value;

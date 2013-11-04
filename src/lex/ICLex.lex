@@ -47,6 +47,7 @@ Identifier = [:lowercase:] [:jletterdigit:]*
 ClassID = [:uppercase:] [:jletterdigit:]*
 
 DecIntegerLiteral = 0 | [1-9][0-9]*
+IllegalInteger = 0[0-9a-zA-Z]
 
 %state STRING
 	
@@ -84,6 +85,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   /* literals */
   {DecIntegerLiteral}            { return tok("INTEGER"); }
   _{DecIntegerLiteral}  		 { return tok("ERROR","an identifier cannot start with '_'"); }
+  {IllegalInteger}               { return tok("ERROR","an identifier cannot start with an integer "); }
   \"                             { string.setLength(0);
   								   yybegin(STRING);
   								   string_column = yycolumn + 1;
