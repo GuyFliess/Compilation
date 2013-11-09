@@ -1,5 +1,0 @@
-jflex --nobak src/lex/mini.lex 
-mkdir bin
-javac -d bin -cp lib/gearley.jar `find src -name "*.java"`
-java -cp bin:lib/gearley.jar Main "9"
-java -cp bin:lib/gearley.jar Main "5 8 + 11 *"

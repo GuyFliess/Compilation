@@ -1,4 +1,0 @@
-fileview.config.hidden = "bin"
-runner.config.runOnChange = false
-runner.config.args = ["5"]
-runner.config.argsPosition = "top"
