@@ -37,7 +37,7 @@ public class Calc {
 
 	fun.parser.Tree parse(Iterable<Token> tokens) {
 		EarleyParser e = new EarleyParser(tokens, grammar);
-		List<EarleyState> pts = e.getCompletedParses();
+		List<EarleyState> pts = e.getCompletedParses();		
 		if (pts.size() != 1)
 			throw new Error("parse error");
 		return pts.get(0).parseTree();
@@ -45,7 +45,7 @@ public class Calc {
 
 	Node constructAst(fun.parser.Tree parseTree)
 	{
-		Word r = parseTree.root;
+		Word r = parseTree.root;		
 		fun.parser.Tree[] s = 
 			parseTree.subtrees.toArray(new fun.parser.Tree[0]);
 		/* Branch according to root */
@@ -53,11 +53,11 @@ public class Calc {
 		case "S": return constructAst(s[0]); 
 		case "type" :
 			if (s.length == 1)
-			{
+			{				
 				switch (s[0].root.tag)
 				{
-				case "int": return new PrimitiveType( 0, DataType.INT);
-				case "boolean" : return new PrimitiveType(0 , DataType.BOOLEAN);
+				case "int": return new PrimitiveType(  ((Token) s[0].root).line, DataType.INT);
+				case "boolean" : return new PrimitiveType(((Token) s[0].root).line , DataType.BOOLEAN);
 				 
 				}
 			}
