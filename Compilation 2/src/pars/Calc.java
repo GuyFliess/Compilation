@@ -51,7 +51,7 @@ public class Calc {
 			parseTree.subtrees.toArray(new fun.parser.Tree[0]);
 		/* Branch according to root */
 		switch (r.tag) {
-		case "S":
+		case "S": System.out.println("bla");
 		case "E":
 		case "X":
 		case "T":
