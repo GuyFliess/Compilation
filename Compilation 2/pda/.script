@@ -1,0 +1,2 @@
+cd `dirname $0`
+make -f .makefile >/dev/null && java -cp bin Main "$1"
