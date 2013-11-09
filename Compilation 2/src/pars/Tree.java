@@ -4,7 +4,7 @@ public class Tree
 {
 	public Object root;
 	public Tree[] subtrees;
-	
+	//atest conflict
 	public Tree(Object root) 
 	{ this(root, new Tree[] {}); }
 	
