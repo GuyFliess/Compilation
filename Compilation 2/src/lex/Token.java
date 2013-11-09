@@ -4,28 +4,43 @@ import fun.grammar.Word;
 
 
 
-public class Token extends Word
-{
+public class Token extends Word{
+	public String tag;
+	public String value;
+	public int line;
+	public int column;
+
 	public int start;
 	public int end;
-	public String text;
-	
-	public Token(String tag, int start, int end, String text)
-	{
+
+	public Token(String tag, int start, int end, String value, int line,
+			int column) {
 		super(tag);
+		this.tag = tag;
 		this.start = start;
 		this.end = end;
-		this.text = text;
-	}
-	
-	public Token(String tag, int start, String text)
-	{
-		this(tag, start, start + text.length(), text);
+		this.value = value;
+		this.line = line;
+		this.column = column;
 	}
 
-	@Override
-	public String toString()
-	{
-		return tag + "⋮" + text;
+	public Token(String tag, int start, String text, int line, int column) {
+		this(tag, start, start + text.length(), text, line, column);
 	}
+	
+	public Token(String tag, String value, int line,
+			int column) {
+		super(tag);
+		this.tag = tag;
+		this.start = 0;
+		this.end = 0;
+		this.value = value;
+		this.line = line;
+		this.column = column;
+	}
+	
+	public Token(String tag, String value) { 
+		this(tag, value, 0, 0);
+	}
+
 }
