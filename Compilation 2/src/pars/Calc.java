@@ -1,5 +1,8 @@
 package pars;
 
+import ic.ast.decl.PrimitiveType;
+import ic.ast.decl.PrimitiveType.DataType;
+
 import java.util.*;
 
 import ast.Expr;
@@ -11,39 +14,38 @@ import ast.ExprBinary.Div;
 import ast.ExprBinary.Pow;
 import ast.ExprUnary.Neg;
 import ast.Num;
-
 import fun.grammar.Grammar;
 import fun.grammar.Word;
 import fun.parser.earley.EarleyParser;
 import fun.parser.earley.EarleyState;
-
 import lex.Token;
-
 
 public class Calc {
 
-	String GRAMMAR =
-		"S -> TYPE | FORMALS \n" + 
-		"TYPE -> int | boolean | string | class | TYPE '['']' \n" +
-		"FORMALS -> TYPE ID (',' TYPE ID)* \n" 
-		;
+	String GRAMMAR = "S0 -> S | program | libic \n"
+			+ "program -> classDecl* \n"
+			+ "classDecl -> class CLASS_ID [extends CLASS_ID] '{' type '}' \n"
+			+ // (field | method)* '}' \n" +
+			"S -> type | formals \n"
+			+ "type -> int | boolean | string | class | type '['']' \n"
+			+ "formals -> type ID (',' type ID)* \n"
+			+ "libic -> class Library '{' libmethod* '}' \n"
+			+ "libmethod -> static (type | void) ID '(' [formals] ')' ';' \n";
 
 	Grammar grammar;
-	
-	public Calc()
-	{
+
+	public Calc() {
 		grammar = new Grammar(GRAMMAR);
 	}
-	
-	fun.parser.Tree parse(Iterable<Token> tokens)
-	{
+
+	fun.parser.Tree parse(Iterable<Token> tokens) {
 		EarleyParser e = new EarleyParser(tokens, grammar);
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1)
 			throw new Error("parse error");
 		return pts.get(0).parseTree();
 	}
-	
+
 	Expr constructAst(fun.parser.Tree parseTree)
 	{
 		Word r = parseTree.root;
@@ -57,7 +59,7 @@ public class Calc {
 			{
 				switch (s[0].root.tag)
 				{
-				case "int": return new() 
+				case "int": return new PrimitiveType(0,DataType.INT); 
 				}
 			}
 		case "E":
@@ -94,49 +96,58 @@ public class Calc {
 			throw new Error("internal error");
 		}
 	}
-	
-	public Expr process(Iterable<Token> tokens)
-	{
+
+	public Expr process(Iterable<Token> tokens) {
 		return constructAst(parse(tokens));
 	}
-	
-	public String infix(Expr ast)
-	{
-		String s = ast.accept(
-			new Expr.Visitor() {
-	
-				@Override
-				public Object visit(Neg e)
-				{
-					return "(-" + e.getOperand().accept(this) + ")";
-				}
-				
-				@Override
-				public Object visit(Pow e) { return join(e); }
-				@Override
-				public Object visit(Div e) { return join(e); }
-				@Override
-				public Object visit(Mul e) { return join(e); }
-				@Override
-				public Object visit(Sub e) { return join(e); }
-				@Override
-				public Object visit(Add e) { return join(e); }
-	
-				@Override
-				public Object visit(Num e)
-				{
-					return e.eval();
-				}
-				
-				protected String join(ExprBinary e)
-				{
-					Expr[] ab = e.getOperands();
-					return "(" + ab[0].accept(this) + " " + e.getOperator() 
-							+ " " + ab[1].accept(this) + ")";
-				}
-			}).toString();
+
+	public String infix(Expr ast) {
+		String s = ast.accept(new Expr.Visitor() {
+
+			@Override
+			public Object visit(Neg e) {
+				return "(-" + e.getOperand().accept(this) + ")";
+			}
+
+			@Override
+			public Object visit(Pow e) {
+				return join(e);
+			}
+
+			@Override
+			public Object visit(Div e) {
+				return join(e);
+			}
+
+			@Override
+			public Object visit(Mul e) {
+				return join(e);
+			}
+
+			@Override
+			public Object visit(Sub e) {
+				return join(e);
+			}
+
+			@Override
+			public Object visit(Add e) {
+				return join(e);
+			}
+
+			@Override
+			public Object visit(Num e) {
+				return e.eval();
+			}
+
+			protected String join(ExprBinary e) {
+				Expr[] ab = e.getOperands();
+				return "(" + ab[0].accept(this) + " " + e.getOperator() + " "
+						+ ab[1].accept(this) + ")";
+			}
+		}).toString();
 		// chop ( )
-		if (s.startsWith("(")) s = s.substring(1, s.length()-1);
+		if (s.startsWith("("))
+			s = s.substring(1, s.length() - 1);
 		return s;
 	}
 }

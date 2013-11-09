@@ -11,6 +11,8 @@ package lex;
 
 %{
 
+int string_column = 0, string_line = 0;
+
 StringBuffer string = new StringBuffer();
 
 Token tok(String tag) { 
@@ -18,21 +20,28 @@ Token tok(String tag) {
 }
 
 Token tok(String tag, String value) { 
-	return new Token(tag, value, yyline + 1, 1);
+	if (tag == "STRING") {
+		return new Token(tag, value, yyline + 1, yycolumn + 2 - value.length());
+	}
+	else if (tag == "STRING_ERROR") {
+		return new Token(tag, value, string_line, string_column);
+	}
+	return new Token(tag, value, yyline + 1, yycolumn + 1);
 }
 %}
 
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
+Tab			   = \t
 
 /* comments */
-Comment = {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
+Comment = {TraditionalComment} | {EndOfLineComment}
 
-TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
+TraditionalComment   = "/*" ~"*/" | "/*" "*"+ "/"
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}
-DocumentationComment = "/**" {CommentContent} "*"+ "/"
 CommentContent       = ( [^*] | \*+ [^/*] )*
+UnterminatedComment  = "/*" {CommentContent} [^*/]
 
 Identifier = [:lowercase:] [:jletterdigit:]*
 ClassID = [:uppercase:] [:jletterdigit:]*
@@ -43,62 +52,98 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 	
 %%
 
-/*keywords*/
+<YYINITIAL> {
 
-<YYINITIAL> "class" { return tok("class");} 
-<YYINITIAL> "return" {return tok("return");}
-<YYINITIAL> "this" {return tok("this");}
-<YYINITIAL> "extends" {return tok("extends");}
-<YYINITIAL> "if" {return tok("if");}
-<YYINITIAL> "new" {return tok("new");}
-<YYINITIAL> "void" {return tok("void");}
-<YYINITIAL> "else" {return tok("else");}
-<YYINITIAL> "length" {return tok("length");}
-<YYINITIAL> "int" {return tok("int");}
-<YYINITIAL> "while" {return tok("while");}
-<YYINITIAL> "true" {return tok("true");}
-<YYINITIAL> "boolean" {return tok("boolean");}
-<YYINITIAL> "break" {return tok("break");}
-<YYINITIAL> "false" {return tok("false");}
-<YYINITIAL> "string" {return tok("string");}
-<YYINITIAL> "continue" {return tok("continue");}
-<YYINITIAL> "null" {return tok("null");}
+  /*keywords*/
 
- <YYINITIAL> {
+  "class" 						 { return tok("class"); } 
+  "extends" 					 { return tok("extends"); }
+  "static" 						 { return tok("static"); }
+  "void" 						 { return tok("void"); }
+  "int" 						 { return tok("int"); }
+  "boolean" 					 { return tok("boolean"); }
+  "string" 						 { return tok("string"); }
+  "return" 						 { return tok("return"); }
+  "if" 							 { return tok("if"); }
+  "else" 						 { return tok("else"); }
+  "while" 						 { return tok("while"); }
+  "break" 						 { return tok("break"); }
+  "continue" 					 { return tok("continue"); }
+  "this" 						 { return tok("this"); }
+  "new" 						 { return tok("new"); }
+  "length" 						 { return tok("length"); }
+  "true" 						 { return tok("true"); }
+  "false" 						 { return tok("false"); }
+  "null" 						 { return tok("null"); }
+
   /* identifiers */ 
   {Identifier}                   { return tok("ID"); }
+  _{Identifier}					 { return tok("ERROR","an identifier cannot start with '_'"); }
   {ClassID}						 { return tok("CLASS_ID"); }
  
   /* literals */
   {DecIntegerLiteral}            { return tok("INTEGER"); }
-  \"                             { string.setLength(0); yybegin(STRING); }
+  _{DecIntegerLiteral}  		 { return tok("ERROR","an identifier cannot start with '_'"); }
+  \"                             { string.setLength(0);
+  								   yybegin(STRING);
+  								   string_column = yycolumn + 1;
+  								   string_line = yyline + 1; }
 
   /* operators */
-  "="                            { return tok("EQ"); }
-  "=="                           { return tok("EQEQ"); }
-  "+"                            { return tok("PLUS"); }
+  "["                            { return tok("["); }
+  "]"                            { return tok("]"); }
+  "("                            { return tok("("); }
+  ")"                            { return tok(")"); }
+  "."                            { return tok("."); }
+  "-"                            { return tok("-"); }
+  "!"                            { return tok("!"); }
+  "*"                            { return tok("*"); }
+  "/"                            { return tok("/"); }
+  "%"                            { return tok("%"); }
+  "+"                            { return tok("+"); }
+  "<"                            { return tok("<"); }
+  "<="                           { return tok("<="); }
+  ">"                            { return tok(">"); }
+  ">="                           { return tok(">="); }
+  "=="                           { return tok("=="); }
+  "!="                           { return tok("!="); }
+  "&&"                           { return tok("&&"); }
+  "||"                           { return tok("||"); }
+  "="                            { return tok("="); }
+ 
+  /* structure */
+  "{"                            { return tok("{"); }
+  "}"                            { return tok("}"); }
+  ";"                            { return tok(";"); }
+  ","                            { return tok(","); }
 
   /* comments */
   {Comment}                      { /* ignore */ }
+  {UnterminatedComment}				 { return tok("ERROR","unterminated comment"); }
  
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }
 }
- <STRING> {
+
+<STRING> {
   \"                             { yybegin(YYINITIAL);
                                    return tok("STRING", "\"" + string.toString() + "\""); }
+  {LineTerminator} | [\t]+ | [\{InputCharacter}]+		 { yybegin(YYINITIAL);
+  							       return tok("STRING_ERROR","malformed string literal"); }	
+  				       
   [^\n\r\"\\]+                   { string.append( yytext() ); }
+  \\                             { string.append("\\"); }
   \\t                            { string.append("\\t"); }
   \\n                            { string.append("\\n"); }
   \\r                            { string.append("\\r"); }
-  \\                             { string.append("\\"); }
-  \\\"                           { string.append("\\\""); }
-  \\\\\"                         { string.append("\\\\"); }
-  
-  
+  \\\\                           { string.append("\\\\"); }
+  \\\"                           { string.append("\\\""); } 
+  	 
 }
+
  /* error fallback */
-.|\n                             { throw new Error("Illegal character <" + yytext() + ">"); }
+
+.|\n                             { return tok("ERROR","invalid character '" + yytext() + "'"); }
 
 
 
