@@ -23,11 +23,10 @@ import lex.Token;
 public class Calc {
 
 	String GRAMMAR =
-		"S -> E\n" + 
-		"E -> E ^ X | X\n" +
-		"X -> X + T | X - T | T\n" +
-		"T -> T * F | T / F | F\n" +
-		"F -> # | - F | ( E )";
+		"S -> TYPE | FORMALS \n" + 
+		"TYPE -> int | boolean | string | class | TYPE '['']' \n" +
+		"FORMALS -> TYPE ID (',' TYPE ID)* \n" 
+		;
 
 	Grammar grammar;
 	
@@ -81,7 +80,7 @@ public class Calc {
 			}
 		case "#": {
 			Token tok = (Token)r;
-			return new Num(Double.parseDouble(tok.text));
+			return new Num(Double.parseDouble(tok.value));
 		}
 		default: /* should never get here */
 			throw new Error("internal error");
