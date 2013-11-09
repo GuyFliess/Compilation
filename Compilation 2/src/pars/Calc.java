@@ -52,6 +52,14 @@ public class Calc {
 		/* Branch according to root */
 		switch (r.tag) {
 		case "S": System.out.println("bla");
+		case "TYPE" :
+			if (s.length == 1)
+			{
+				switch (s[0].root.tag)
+				{
+				case "int": return new() 
+				}
+			}
 		case "E":
 		case "X":
 		case "T":
