@@ -3,6 +3,7 @@ package pars;
 import ic.ast.Node;
 import ic.ast.decl.PrimitiveType;
 import ic.ast.decl.PrimitiveType.DataType;
+import ic.ast.decl.Type;
 import ic.ast.expr.Expression;
 import ic.ast.expr.Literal;
 
@@ -26,8 +27,12 @@ public class Calc {
 //			+ "libic -> class Library '{' libmethod* '}' \n"
 //			+ "libmethod -> static (type | void) ID '(' [formals] ')' ';' \n";
 
-	String GRAMMAR = "S -> type \n"
-			+"type -> int | boolean | string | class | type '['']' \n";
+	String GRAMMAR = "S -> type  \n" //TODO remove S, it's just for developing
+			+ "formals -> type ID moreFormals \n "
+			+ "moreFormals ->  ',' type ID |  \n" // TODO how to write epsilon - empty word
+			+ "type -> type2 typeArr \n"
+			+ "type2 -> int | boolean | string | class \n"
+			+ "typeArr -> '['']' typeArr |  \n";
 	
 	Grammar grammar;
 
@@ -39,7 +44,7 @@ public class Calc {
 		EarleyParser e = new EarleyParser(tokens, grammar);
 		List<EarleyState> pts = e.getCompletedParses();		
 		if (pts.size() != 1)
-			throw new Error("parse error");
+ 			throw new Error("parse error");
 		return pts.get(0).parseTree();
 	}
 
@@ -61,6 +66,24 @@ public class Calc {
 				 
 				}
 			}
+			if (s.length == 2)
+			{ 
+				
+			}
+			else if (s.length == 3)
+			{
+				// type '['']' handle array
+				Type node = null ;
+				switch (s[0].root.tag)
+				{
+				case "int": node = new PrimitiveType(  ((Token) s[0].root).line, DataType.INT);
+				case "boolean" : node = new PrimitiveType(((Token) s[0].root).line , DataType.BOOLEAN);
+				 
+				}
+				node.incrementDimension(); //increase dimension because we saw []
+				return node;
+			}
+		case "formals" : 
 
 		default: /* should never get here */
 			throw new Error("internal error");
