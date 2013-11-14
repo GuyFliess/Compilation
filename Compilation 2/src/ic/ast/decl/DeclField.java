@@ -32,6 +32,10 @@ public class DeclField extends Node {
 		this.name = name;
 	}
 	
+	public DeclField(DeclField field) {
+		this(field.getType(), field.getName());
+	}
+	
 	public Type getType() {
 		return type;
 	}

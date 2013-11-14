@@ -17,6 +17,9 @@ public class Main
 		PrettyPrint printer = new PrettyPrint();
 		List<Token> tokens = new LinkedList<Token>();
 		try {
+//			for (int i = 0; i < args.length; i++) {
+//				lex.process(args[i], tokens);
+//			}
 			lex.process(args[0], tokens);
 			Node ast = calc.process(tokens);
 			System.out.println(ast.accept(printer));
