@@ -49,21 +49,47 @@ public class Calc {
 			// '}' \n "
 			+ "field* -> f |  \n"
 			+ "f -> field field* \n"
-			+ "field -> type ID ; \n"
-			+ "type -> int | boolean \n";
-//			+ "E ->  \n";
+			+ "field -> type ID ; \n" + "type -> int | boolean \n";
+	// + "E ->  \n";
 	// + "; ->  \n";
+
+	String LibGRAMMAR = "S -> libic \n" // TODO remove S, it's just for
+	// developing
+			+ "libic -> class CLASS_ID   { libmethod* } \n"
+			+ "libmethod* -> libmethod | \n" ;
+//			+ "libmethod -> static (type | void) ID ( formals* ) \n"
+//			+ "formals* -> formals' | \n"
+//			+ "formals' -> formals formals* \n"
+//			+ "formals -> type ID typeID* \n"
+//			+ "typeID* -> typeID' | \n"
+//			+ "typeID' -> typeID typeID* \n"
+//			+ "typeID -> , type ID \n"
+//			+ "type -> type2 typeArr ';' \n"
+//			+ "type2 -> int | boolean | string | class \n"
+//			+ "typeArr -> [] typeArr |  \n";
+
+	;
+	// + "; ->  \n";
+
 	Grammar grammar;
 
 	public Calc() {
 		grammar = new Grammar(GRAMMAR);
 	}
 
+	public Calc(boolean lib) {
+		grammar = new Grammar(LibGRAMMAR);
+	}
+
 	fun.parser.Tree parse(Iterable<Token> tokens) {
 		EarleyParser e = new EarleyParser(tokens, grammar);
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1)
+		{
+			EarleyParser.PostMortem diagnosis = e.diagnoseError();
+			System.out.println(String.format("token: %s  ", diagnosis.token.tag));
 			throw new Error("parse error");
+		}
 		return pts.get(0).parseTree();
 	}
 
