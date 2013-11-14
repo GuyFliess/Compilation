@@ -56,17 +56,19 @@ public class Calc {
 	String LibGRAMMAR = "S -> libic \n" // TODO remove S, it's just for
 	// developing
 			+ "libic -> class CLASS_ID   { libmethod* } \n"
-			+ "libmethod* -> libmethod | \n" ;
-//			+ "libmethod -> static (type | void) ID ( formals* ) \n"
-//			+ "formals* -> formals' | \n"
-//			+ "formals' -> formals formals* \n"
-//			+ "formals -> type ID typeID* \n"
-//			+ "typeID* -> typeID' | \n"
-//			+ "typeID' -> typeID typeID* \n"
-//			+ "typeID -> , type ID \n"
-//			+ "type -> type2 typeArr ';' \n"
-//			+ "type2 -> int | boolean | string | class \n"
-//			+ "typeArr -> [] typeArr |  \n";
+			+ "libmethod* -> libmethod | libmethod' \n" 
+			+ "libmethod' -> libmethod libmethod* \n"
+			+ "libmethod -> static typeVoid ID ( formals* ) ; \n" //TODO add formals
+			+ "typeVoid -> type | void \n"			
+			+ "formals* -> formals' | \n"
+			+ "formals' -> formals formals* \n"
+			+ "formals -> type ID typeID* \n"
+			+ "typeID* -> typeID' | \n"
+			+ "typeID' -> typeID typeID* \n"
+			+ "typeID -> , type ID \n"
+			+ "type -> type2 typeArr \n"
+			+ "type2 -> int | boolean | string | class \n"
+			+ "typeArr -> [ ] typeArr |  \n";
 
 	;
 	// + "; ->  \n";
@@ -87,7 +89,15 @@ public class Calc {
 		if (pts.size() != 1)
 		{
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			System.out.println(String.format("token: %s  ", diagnosis.token.tag));
+			System.out.println(String.format("Early parser failed  at token: %s  ",diagnosis.token));
+			if (diagnosis.token instanceof Token)
+			{
+				Token token = (Token) diagnosis.token;
+				System.out.println(String.format("Line %d column %d",token.line, token.column));
+			}
+			for (String  expected  : diagnosis.expecting) {
+				System.out.println(String.format("Expected: %s", expected));
+			}
 			throw new Error("parse error");
 		}
 		return pts.get(0).parseTree();
@@ -133,7 +143,7 @@ public class Calc {
 
 			}
 		default: /* should never get here */
-			throw new Error("internal error");
+			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
 		}
 	}
 
