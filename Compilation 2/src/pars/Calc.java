@@ -19,6 +19,8 @@ import fun.parser.earley.EarleyState;
 import lex.Token;
 
 public class Calc {
+	List<DeclField> fields = new ArrayList<DeclField>();
+	List<DeclMethod> methods = new ArrayList<DeclMethod>();
 
 	// String GRAMMAR = "S0 -> S | program | libic \n"
 	// + "program -> classDecl* \n"
@@ -41,35 +43,25 @@ public class Calc {
 
 	// String GRAMMAR = "program"
 
-	String GRAMMAR = "S -> program \n" // TODO remove S, it's just for
-										// developing
-			+ "program -> classDecl \n"
-			+ "classDecl -> class CLASS_ID { field* } \n"
-			// + "classDecl -> field \n" //class CLASS_ID '{' (field | method)*
-			// '}' \n "
-			+ "field* -> f |  \n"
-			+ "f -> field field* \n"
-			+ "field -> type ID ; \n" + "type -> int | boolean \n";
-	// + "E ->  \n";
-	// + "; ->  \n";
+	String GRAMMAR = "S -> program \n" + "program -> classDecl \n"
+			+ "classDecl -> class CLASS_ID { field* } \n" + "field* -> f |  \n"
+			+ "f -> field field* \n" + "field -> type ID ; \n"
+			+ "type -> int | boolean \n";
 
 	String LibGRAMMAR = "S -> libic \n" // TODO remove S, it's just for
 	// developing
 			+ "libic -> class CLASS_ID   { libmethod* } \n"
-			+ "libmethod* -> libmethod | \n" ;
-//			+ "libmethod -> static (type | void) ID ( formals* ) \n"
-//			+ "formals* -> formals' | \n"
-//			+ "formals' -> formals formals* \n"
-//			+ "formals -> type ID typeID* \n"
-//			+ "typeID* -> typeID' | \n"
-//			+ "typeID' -> typeID typeID* \n"
-//			+ "typeID -> , type ID \n"
-//			+ "type -> type2 typeArr ';' \n"
-//			+ "type2 -> int | boolean | string | class \n"
-//			+ "typeArr -> [] typeArr |  \n";
-
-	;
-	// + "; ->  \n";
+			+ "libmethod* -> libmethod | \n";
+	// + "libmethod -> static (type | void) ID ( formals* ) \n"
+	// + "formals* -> formals' | \n"
+	// + "formals' -> formals formals* \n"
+	// + "formals -> type ID typeID* \n"
+	// + "typeID* -> typeID' | \n"
+	// + "typeID' -> typeID typeID* \n"
+	// + "typeID -> , type ID \n"
+	// + "type -> type2 typeArr ';' \n"
+	// + "type2 -> int | boolean | string | class \n"
+	// + "typeArr -> [] typeArr |  \n";
 
 	Grammar grammar;
 
@@ -84,10 +76,10 @@ public class Calc {
 	fun.parser.Tree parse(Iterable<Token> tokens) {
 		EarleyParser e = new EarleyParser(tokens, grammar);
 		List<EarleyState> pts = e.getCompletedParses();
-		if (pts.size() != 1)
-		{
+		if (pts.size() != 1) {
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			System.out.println(String.format("token: %s  ", diagnosis.token.tag));
+			System.out
+					.println(String.format("token: %s ", diagnosis.token.tag));
 			throw new Error("parse error");
 		}
 		return pts.get(0).parseTree();
@@ -97,6 +89,7 @@ public class Calc {
 		Word r = parseTree.root;
 		fun.parser.Tree[] s = parseTree.subtrees
 				.toArray(new fun.parser.Tree[0]);
+
 		/* Branch according to root */
 		switch (r.tag) {
 		case "S":
@@ -104,21 +97,22 @@ public class Calc {
 		case "program":
 			return constructAst(s[0]);
 		case "classDecl":
-			List<DeclField> fields = new ArrayList<DeclField>();
-			List<DeclMethod> methods = new ArrayList<DeclMethod>();
-			for (int i = 1; i < s.length; i++) {
-				if (s[i].subtrees.size() != 0) {
-					fields.add(new DeclField((DeclField) constructAst(s[i])));
-				}
+			fields.add((DeclField) (constructAst(s[3])));
+			int i = fields.size() - 1;
+			while (fields.size() != 0 && fields.get(i) == null) {
+				fields.remove(i);
+				i = fields.size() - 1;
 			}
 			return new DeclClass(((Token) s[0].root).line,
 					((Token) s[1].root).value, fields, methods);
 		case "f":
+			fields.add((DeclField) constructAst(s[0]));
+			return constructAst(s[1]);
 		case "field*":
-			for (int i = 0; i < s.length; i++) {
-				if (s[i].subtrees.size() != 0) {
-					return constructAst(s[i]);
-				}
+			if (s.length == 0) {
+				return null;
+			} else {
+				return constructAst(s[0]);
 			}
 		case "field":
 			Type type = (Type) constructAst(s[0]);
@@ -130,7 +124,6 @@ public class Calc {
 			case "boolean":
 				return new PrimitiveType(((Token) s[0].root).line,
 						DataType.BOOLEAN);
-
 			}
 		default: /* should never get here */
 			throw new Error("internal error");
