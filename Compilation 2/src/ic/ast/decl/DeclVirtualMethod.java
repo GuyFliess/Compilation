@@ -31,5 +31,9 @@ public class DeclVirtualMethod extends DeclMethod {
 			List<Statement> statements) {
 		super(type, name, formals, statements);
 	}
+	
+	public DeclVirtualMethod(DeclVirtualMethod method) {
+		this(method.getType(), method.getName(), method.getFormals(), method.getStatements());
+	}
 
 }

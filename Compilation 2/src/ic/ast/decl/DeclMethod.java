@@ -39,7 +39,7 @@ public abstract class DeclMethod extends Node {
 		this.formals = formals;
 		this.statements = statements;
 	}
-
+	
 	public Type getType() {
 		return type;
 	}
@@ -54,5 +54,23 @@ public abstract class DeclMethod extends Node {
 
 	public List<Statement> getStatements() {
 		return statements;
+	}
+	
+	public void removeNulls() {
+		int index;
+		index = formals.size() - 1;
+		while (formals.size() != 0 && index != -1) {
+			if (formals.get(index) == null) {
+				formals.remove(index);
+			}
+			index--;
+		}
+		index = statements.size() - 1;
+		while (statements.size() != 0 && index != -1) {
+			if (statements.get(index) == null) {
+				statements.remove(index);
+			}
+			index--;
+		}
 	}
 }

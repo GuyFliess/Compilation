@@ -1,15 +1,21 @@
 package pars;
 
 import ic.ast.Node;
+import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
 import ic.ast.decl.DeclMethod;
+import ic.ast.decl.DeclStaticMethod;
+import ic.ast.decl.DeclVirtualMethod;
+import ic.ast.decl.Parameter;
 import ic.ast.decl.PrimitiveType;
 import ic.ast.decl.PrimitiveType.DataType;
 import ic.ast.decl.Type;
 import ic.ast.expr.Expression;
 import ic.ast.expr.Literal;
+import ic.ast.stmt.Statement;
+import ic.ast.stmt.StmtBreak;
 
 import java.util.*;
 
@@ -22,22 +28,26 @@ import lex.Token;
 public class Calc {
 	List<DeclField> fields = new ArrayList<DeclField>();
 	List<DeclMethod> methods = new ArrayList<DeclMethod>();
+	List<Parameter> formals = new ArrayList<Parameter>();
+	List<Statement> statements = new ArrayList<Statement>();
 	Type type;
 	int dimensions;
+	String method_name;
 
 	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl \n"
 			+ "classDecl -> class CLASS_ID { fieldORmethod* } \n"
-			+ "fieldORmethod* -> field* | method* \n"
+			+ "fieldORmethod* -> nextMethod | nextField |  \n"
 			+ "method* -> nextMethod |  \n"
-			+ "nextMethod -> method method* \n"
+			+ "nextMethod -> method fieldORmethod* \n"
 			+ "method -> static methodDecl | methodDecl \n"
 			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
 			+ "methodType -> type | void \n"
-			+ "formals* ->  \n"
-			+ "stmt* ->  \n"
+			+ "formals* -> formal | , formal |  \n"
+			+ "formal -> type array ID formals* \n"
+			+ "stmt* -> break ; \n"
 			+ "field* -> nextField |  \n"
-			+ "nextField -> field field* \n"
+			+ "nextField -> field fieldORmethod* \n"
 			+ "field -> type array ID moreIDs* ; \n"
 			+ "moreIDs* -> anotherID |  \n"
 			+ "anotherID -> , ID moreIDs* \n"
@@ -91,7 +101,7 @@ public class Calc {
 	}
 
 	Node constructAst(fun.parser.Tree parseTree) {
-		int i;
+		int index;
 		Word r = parseTree.root;
 		fun.parser.Tree[] s = parseTree.subtrees
 				.toArray(new fun.parser.Tree[0]);
@@ -101,39 +111,90 @@ public class Calc {
 		case "S":
 			return constructAst(s[0]);
 		case "program":
-			return constructAst(s[0]);
+			DeclClass decl_class = (DeclClass) constructAst(s[0]);
+			decl_class.removeNulls();
+			return decl_class;
 		case "classDecl":
 			constructAst(s[3]); /* run on fieldORmethod* */
-//			fields.add((DeclField) (constructAst(s[3])));
-			int index = fields.size() - 1;
-			while (fields.size() != 0 && fields.get(index) == null) {
-				fields.remove(index);
-				index = fields.size() - 1;
-			}
-			while (index != -1) {
-				if (fields.get(index) == null) {
-					fields.remove(index);
-				}
-				index--;
-			}
 			return new DeclClass(((Token) s[0].root).line,
 					((Token) s[1].root).value, fields, methods);
 		case "fieldORmethod*":
-			return constructAst(s[0]);
+			if (s.length == 1) {
+				return constructAst(s[0]);
+			}
+			else {
+				return null;
+			}
+		case "method*":
+			if (s.length == 0) { /* there aren't any more methods */
+				return null;
+			} else {
+				return constructAst(s[0]); /* run on nextMethod */
+			}
+		case "nextMethod":
+			methods.add((DeclMethod) constructAst(s[0])); /* run on method */
+			return constructAst(s[1]); /* run on method* */
+		case "method":
+			DeclMethod method = null;
+			if (s.length == 1) { /* virtual method */
+				constructAst(s[0]);
+				method = new DeclVirtualMethod(type, method_name, formals, statements);
+			}
+			else if (s.length == 2) { /* static method */
+				constructAst(s[1]);
+				method = new DeclStaticMethod(type, method_name, formals, statements);
+			}
+//			else {
+//				TODO: throw error: invalid method declaration
+//			}
+			method.removeNulls();
+			return method;
+		case "methodDecl":
+			dimensions = 0;
+			type = (Type) constructAst(s[0]); /* run on methodType */
+			method_name = ((Token) s[1].root).value;
+			formals.add((Parameter) constructAst(s[3])); /* run on formals* */
+			statements.add((Statement) constructAst(s[6])); /* run on stmt* */
+			return null;
+		case "methodType":
+			if (((Token) s[0].root).tag == "void") {
+				return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
+			}
+			else {
+				return constructAst(s[0]); /* run on type */
+			}
+		case "formals*":
+			if (s.length == 0) { /* there aren't any more formals */
+				return null;
+			}
+			else if (s.length == 1) { /* the first formal */
+				return constructAst(s[0]); /* run on formal */
+			}
+			else if (s.length == 2) { /* there is more than one formal */ //TODO: make sure it's with ,
+				return constructAst(s[1]);
+			}
+		case "formal":
+			dimensions = 0;
+			type = (Type) constructAst(s[0]); /* run on type */
+			constructAst(s[1]); /* run on array */
+			formals.add(new Parameter(type, ((Token) s[2].root).value));
+			return constructAst(s[3]);
+		case "stmt*":
+			return new StmtBreak(((Token) s[0].root).line);
 		case "field*":
-			if (s.length == 0) { // there aren't any more fields
+			if (s.length == 0) { /* there aren't any more fields */
 				return null;
 			} else {
 				return constructAst(s[0]); /* run on nextField */
 			}
 		case "nextField":
-			fields.add((DeclField) constructAst(s[0])); // run on field
-			return constructAst(s[1]); // run on field*
+			fields.add((DeclField) constructAst(s[0])); /* run on field */
+			return constructAst(s[1]); /* run on field* */
 		case "field":
 			dimensions = 0;
-			type = (Type) constructAst(s[0]); // run on type
-			constructAst(s[1]);
-			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on											// moreIDs*
+			type = (Type) constructAst(s[0]); /* run on type */
+			constructAst(s[1]); /* run on array */
+			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on moreIDs*
 			return new DeclField(type, ((Token) s[2].root).value);
 		case "type":
 			switch (s[0].root.tag) {
@@ -158,9 +219,9 @@ public class Calc {
 			type.incrementDimension();
 			return constructAst(s[2]);
 		case "moreIDs*":
-			if (s.length == 0) { // there aren't any more IDs
+			if (s.length == 0) { /* there aren't any more IDs */
 				return null;
-			} else { // there is another ID - run on anotherID
+			} else { /* there is another ID - run on anotherID */
 				return constructAst(s[0]);
 			}
 		case "anotherID":
@@ -176,6 +237,8 @@ public class Calc {
 			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
 		}
 	}
+
+	
 
 	public Node process(Iterable<Token> tokens) {
 		return constructAst(parse(tokens));

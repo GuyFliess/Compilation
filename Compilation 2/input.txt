@@ -5,4 +5,8 @@ class A {
 	NewClass e, f;
 	boolean[] g;
 	string[][] h, i;
+	
+	void m(int x, boolean y, int z) {
+		break;
+	}
 }
