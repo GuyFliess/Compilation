@@ -27,10 +27,9 @@ public class Calc {
 			+ "f -> field field* \n" + "field -> type ID ; \n"
 			+ "type -> int | boolean \n";
 
-	String LibGRAMMAR = "S -> libic \n" // TODO remove S, it's just for
-	// developing
+	String LibGRAMMAR = "S -> libic \n"
 			+ "libic -> class CLASS_ID   { libmethod* } \n"
-			+ "libmethod* -> libmethod | libmethod' \n" 
+			+ "libmethod* ->  libmethod' | \n" 
 			+ "libmethod' -> libmethod libmethod* \n"
 			+ "libmethod -> static typeVoid ID ( formals* ) ; \n" //TODO add formals
 			+ "typeVoid -> type | void \n"			
@@ -74,6 +73,7 @@ public class Calc {
 	}
 
 	Node constructAst(fun.parser.Tree parseTree) {
+		int i;
 		Word r = parseTree.root;
 		fun.parser.Tree[] s = parseTree.subtrees
 				.toArray(new fun.parser.Tree[0]);
@@ -86,7 +86,7 @@ public class Calc {
 			return constructAst(s[0]);
 		case "classDecl":
 			fields.add((DeclField) (constructAst(s[3])));
-			int i = fields.size() - 1;
+			i = fields.size() - 1;
 			while (fields.size() != 0 && fields.get(i) == null) {
 				fields.remove(i);
 				i = fields.size() - 1;
@@ -111,8 +111,14 @@ public class Calc {
 				return new PrimitiveType(((Token) s[0].root).line, DataType.INT);
 			case "boolean":
 				return new PrimitiveType(((Token) s[0].root).line,
-						DataType.BOOLEAN);
+						DataType.BOOLEAN);			
+				
 			}
+			//Lib part
+		case "libic":
+			
+			return new DeclClass(((Token) s[0].root).line,
+					((Token) s[1].root).value, fields, methods);
 		default: /* should never get here */
 			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
 		}
