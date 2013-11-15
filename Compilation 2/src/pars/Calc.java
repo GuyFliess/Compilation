@@ -22,27 +22,6 @@ public class Calc {
 	List<DeclField> fields = new ArrayList<DeclField>();
 	List<DeclMethod> methods = new ArrayList<DeclMethod>();
 
-	// String GRAMMAR = "S0 -> S | program | libic \n"
-	// + "program -> classDecl* \n"
-	// + "classDecl -> class CLASS_ID [extends CLASS_ID] '{' type '}' \n"
-	// + // (field | method)* '}' \n" +
-	// "S -> type | formals \n"
-	// + "type -> int | boolean | string | class | type '['']' \n"
-	// + "formals -> type ID (',' type ID)* \n"
-	// + "libic -> class Library '{' libmethod* '}' \n"
-	// + "libmethod -> static (type | void) ID '(' [formals] ')' ';' \n";
-
-	// String GRAMMAR = "S -> type  \n" //TODO remove S, it's just for
-	// developing
-	// + "formals -> type ID moreFormals \n "
-	// + "moreFormals ->  ',' type ID |  \n" // TODO how to write epsilon -
-	// empty word
-	// + "type -> type2 typeArr ';' \n"
-	// + "type2 -> int | boolean | string | class \n"
-	// + "typeArr -> '['']' typeArr |  \n";
-
-	// String GRAMMAR = "program"
-
 	String GRAMMAR = "S -> program \n" + "program -> classDecl \n"
 			+ "classDecl -> class CLASS_ID { field* } \n" + "field* -> f |  \n"
 			+ "f -> field field* \n" + "field -> type ID ; \n"
