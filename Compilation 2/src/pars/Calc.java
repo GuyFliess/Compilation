@@ -1,6 +1,7 @@
 package pars;
 
 import ic.ast.Node;
+import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
 import ic.ast.decl.DeclMethod;
@@ -21,11 +22,20 @@ import lex.Token;
 public class Calc {
 	List<DeclField> fields = new ArrayList<DeclField>();
 	List<DeclMethod> methods = new ArrayList<DeclMethod>();
+	Type type;
+	int dimensions;
 
-	String GRAMMAR = "S -> program \n" + "program -> classDecl \n"
-			+ "classDecl -> class CLASS_ID { field* } \n" + "field* -> f |  \n"
-			+ "f -> field field* \n" + "field -> type ID ; \n"
-			+ "type -> int | boolean \n";
+	String GRAMMAR = "S -> program \n"
+			+ "program -> classDecl \n"
+			+ "classDecl -> class CLASS_ID { field* } \n" 
+			+ "field* -> nextField |  \n"
+			+ "nextField -> field field* \n"
+			+ "field -> type array ID moreIDs* ; \n"
+			+ "moreIDs* -> anotherID |  \n"
+			+ "anotherID -> , ID moreIDs* \n"
+			+ "type -> int | boolean | string | CLASS_ID \n"
+			+ "array -> dimension |  \n"
+			+ "dimension -> [ ] array \n";
 
 	String LibGRAMMAR = "S -> libic \n"
 			+ "libic -> class CLASS_ID   { libmethod* } \n"
@@ -86,35 +96,67 @@ public class Calc {
 			return constructAst(s[0]);
 		case "classDecl":
 			fields.add((DeclField) (constructAst(s[3])));
-			i = fields.size() - 1;
-			while (fields.size() != 0 && fields.get(i) == null) {
-				fields.remove(i);
-				i = fields.size() - 1;
+			int index = fields.size() - 1;
+			while (fields.size() != 0 && fields.get(index) == null) {
+				fields.remove(index);
+				index = fields.size() - 1;
+			}
+			while (index != -1) {
+				if (fields.get(index) == null) {
+					fields.remove(index);
+				}
+				index--;
 			}
 			return new DeclClass(((Token) s[0].root).line,
 					((Token) s[1].root).value, fields, methods);
-		case "f":
-			fields.add((DeclField) constructAst(s[0]));
-			return constructAst(s[1]);
+		case "nextField":
+			fields.add((DeclField) constructAst(s[0])); // run on field
+			return constructAst(s[1]); // run on field*
 		case "field*":
-			if (s.length == 0) {
+			if (s.length == 0) { // there aren't any more fields
 				return null;
 			} else {
-				return constructAst(s[0]);
+				return constructAst(s[0]); // run on f
 			}
 		case "field":
-			Type type = (Type) constructAst(s[0]);
-			return new DeclField(type, ((Token) s[1].root).value);
+			dimensions = 0;
+			type = (Type) constructAst(s[0]); // run on type
+			constructAst(s[1]);
+			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on											// moreIDs*
+			return new DeclField(type, ((Token) s[2].root).value);
 		case "type":
 			switch (s[0].root.tag) {
 			case "int":
 				return new PrimitiveType(((Token) s[0].root).line, DataType.INT);
 			case "boolean":
 				return new PrimitiveType(((Token) s[0].root).line,
-						DataType.BOOLEAN);			
-				
+						DataType.BOOLEAN);
+			case "string":
+				return new PrimitiveType(((Token) s[0].root).line,
+						DataType.STRING);
+			case "CLASS_ID":
+				return new ClassType(((Token) s[0].root).line,
+						((Token) s[0].root).value);
 			}
-			//Lib part
+		case "array":
+			if (s.length > 0) {
+				constructAst(s[0]);
+			}
+			return null;
+		case "dimension":
+			type.incrementDimension();
+			return constructAst(s[2]);
+		case "moreIDs*":
+			if (s.length == 0) { // there aren't any more IDs
+				return null;
+			} else { // there is another ID - run on anotherID
+				return constructAst(s[0]);
+			}
+		case "anotherID":
+			fields.add((DeclField) constructAst(s[2])); // run on moreIDs*
+			return new DeclField(type, ((Token) s[1].root).value);
+
+		/* Lib part */
 		case "libic":
 			
 			return new DeclClass(((Token) s[0].root).line,
