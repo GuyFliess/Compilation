@@ -27,7 +27,15 @@ public class Calc {
 
 	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl \n"
-			+ "classDecl -> class CLASS_ID { field* } \n" 
+			+ "classDecl -> class CLASS_ID { fieldORmethod* } \n"
+			+ "fieldORmethod* -> field* | method* \n"
+			+ "method* -> nextMethod |  \n"
+			+ "nextMethod -> method method* \n"
+			+ "method -> static methodDecl | methodDecl \n"
+			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
+			+ "methodType -> type | void \n"
+			+ "formals* ->  \n"
+			+ "stmt* ->  \n"
 			+ "field* -> nextField |  \n"
 			+ "nextField -> field field* \n"
 			+ "field -> type array ID moreIDs* ; \n"
@@ -95,7 +103,8 @@ public class Calc {
 		case "program":
 			return constructAst(s[0]);
 		case "classDecl":
-			fields.add((DeclField) (constructAst(s[3])));
+			constructAst(s[3]); /* run on fieldORmethod* */
+//			fields.add((DeclField) (constructAst(s[3])));
 			int index = fields.size() - 1;
 			while (fields.size() != 0 && fields.get(index) == null) {
 				fields.remove(index);
@@ -109,15 +118,17 @@ public class Calc {
 			}
 			return new DeclClass(((Token) s[0].root).line,
 					((Token) s[1].root).value, fields, methods);
-		case "nextField":
-			fields.add((DeclField) constructAst(s[0])); // run on field
-			return constructAst(s[1]); // run on field*
+		case "fieldORmethod*":
+			return constructAst(s[0]);
 		case "field*":
 			if (s.length == 0) { // there aren't any more fields
 				return null;
 			} else {
-				return constructAst(s[0]); // run on f
+				return constructAst(s[0]); /* run on nextField */
 			}
+		case "nextField":
+			fields.add((DeclField) constructAst(s[0])); // run on field
+			return constructAst(s[1]); // run on field*
 		case "field":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); // run on type
