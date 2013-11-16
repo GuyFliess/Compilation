@@ -82,11 +82,14 @@ public class Calc {
 			+ "elseStmt -> else stmt |  \n"
 			+ "whileStmt -> while ( expr ) stmt \n"
 			+ "localVar -> type array ID | type array ID = expr \n"
-			+ "expr -> location | call | lengthExpr | this | newClassExpr | newTypeExpr | binOpExpr | unOpExpr | literal | paranthesisExpr \n"
+			+ "expr ->  expr2 | paranthesisExpr   \n"		
+			+ "expr2 ->  expr3 | unOpExpr \n"
+			+ "expr3 ->  expr4 | binOpExpr \n"
+			+ "expr4 -> location | call | lengthExpr | this | newClassExpr | newTypeExpr  | literal  \n"
 			+ "newClassExpr -> new CLASS_ID ( ) \n"
 			+ "paranthesisExpr -> ( expr ) \n"
-			+ "binOpExpr -> expr binop expr \n"
-			+ "unOpExpr -> unop expr \n"
+			+ "binOpExpr -> expr3 binop expr3 \n"
+			+ "unOpExpr -> unop expr2 \n"
 			+ "newTypeExpr -> new type [ expr ] \n"
 			+ "lengthExpr -> expr . length \n"
 			+ "unop -> - | ! \n"
@@ -112,17 +115,23 @@ public class Calc {
 			+ "libmethod* ->  libmethod' | \n" 
 			+ "libmethod' -> libmethod libmethod* \n"
 			+ "libmethod -> static typeVoid ID ( formals* ) ; \n" //TODO add formals
-			+ "typeVoid -> type | void \n"			
-			+ "formals* -> formals' | \n"
-			+ "formals' -> formals formals* \n"
-			+ "formals -> type ID typeID* \n"
-			+ "typeID* -> typeID' | \n"
-			+ "typeID' -> typeID typeID* \n"
-			+ "typeID -> , type ID \n"
-			+ "type -> type2 typeArr \n"
-			+ "type2 -> int | boolean | string | class \n"
-			+ "typeArr -> [ ] typeArr |  \n";
+			+ "typeVoid -> type array | void \n"	
+			+ "formals* -> formal | , formal |  \n"
+			+ "formal -> type array ID formals* \n"
+			+ "type -> int | boolean | string | CLASS_ID \n"
+			+ "array -> dimension |  \n"
+			+ "dimension -> [ ] array \n"
+//			+ "formals* -> formals' | \n"
+//			+ "formals' -> formals formals* \n"
+//			+ "formals -> type ID typeID* \n"
+//			+ "typeID* -> typeID' | \n"
+//			+ "typeID' -> typeID typeID* \n"
+//			+ "typeID -> , type ID \n"
+//			+ "type -> type2 typeArr \n"
+//			+ "type2 -> int | boolean | string | class \n"
+//			+ "typeArr -> [ ] typeArr |  \n";
 	//new line
+;
 
 	Grammar grammar;
 
@@ -139,12 +148,13 @@ public class Calc {
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1) {
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			System.out.println(String.format("Early parser failed  at token: %s  ",diagnosis.token));
 			if (diagnosis.token instanceof Token)
 			{
 				Token token = (Token) diagnosis.token;
-				System.out.println(String.format("Line %d column %d",token.line, token.column));
+				System.out.print(String.format("Line %d column %d",token.line, token.column));
 			}
+			System.out.println(String.format("syntex Error: %s  ",diagnosis.token));
+			
 			for (String  expected  : diagnosis.expecting) {
 				System.out.println(String.format("Expected: %s", expected));
 			}
@@ -579,10 +589,40 @@ public class Calc {
 			return new DeclField(type, ((Token) s[1].root).value);
 
 		/* Lib part */
-		case "libic":
-			
+		case "libic":			
+			if (s.length == 5)
+			{
+				constructAst(s[3]);
+			}
 			return new DeclClass(((Token) s[0].root).line,
-					((Token) s[1].root).value, fields, methods);
+					((Token) s[1].root).value, fields, methods);			
+		case "libmethod*": 
+			return constructAst(s[0]);
+		case "libmethod'":
+			methods.add((DeclMethod) constructAst(s[0]));
+			return constructAst(s[1]);
+		case "libmethod":
+			dimensions = 0;
+			method_type = (Type) constructAst(s[1]); /* run on methodType */
+			method_name = ((Token) s[2].root).value;
+			formals.add((Parameter) constructAst(s[4])); /* run on formals* */			
+			return new DeclStaticMethod(method_type,method_name,formals,statements);
+		case "typeVoid":
+			if (s.length == 1)
+			{
+				//void case
+				return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
+			}
+			else 
+			{
+				//type with array 
+				dimensions = 0;
+				type = (Type) constructAst(s[0]); /* run on type */
+				constructAst(s[1]); /* run on array */
+				formals.add(new Parameter(type, ((Token) s[2].root).value));
+				return constructAst(s[3]);
+				
+			}
 		default: /* should never get here */
 			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
 		}
