@@ -122,6 +122,7 @@ public class Calc {
 			+ "type -> type2 typeArr \n"
 			+ "type2 -> int | boolean | string | class \n"
 			+ "typeArr -> [ ] typeArr |  \n";
+	//new line
 
 	Grammar grammar;
 
