@@ -1,0 +1,16 @@
+class IF{
+	static void main(string[] args){
+		int a;
+		int b;
+		int c;
+		int[] aa;
+		if(args[0] = args[1]){
+			if(aa[a+b]-c == aa[0])
+			return;
+		}
+		else{
+			aa[a+b] = aa[0]+c;
+		}
+	}
+}
+

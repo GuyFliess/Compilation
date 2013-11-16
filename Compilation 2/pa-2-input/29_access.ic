@@ -1,0 +1,10 @@
+class K{
+	static void main(string[] args){}
+	
+	void test() {
+		int[][] a = new int[][10];
+	// not a valid access
+		a[][10] = 2;
+	}
+}
+

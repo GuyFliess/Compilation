@@ -1,0 +1,13 @@
+
+  [1] +-- Declaration of class: A
+  [2]     +-- Declaration of static method: main
+  [2]         +-- Primitive data type: void
+  [2]         +-- Parameter: args
+  [2]             +-- Primitive data type: 1-dimensional array of string
+  [3]         +-- Declaration of local variable: a
+  [3]             +-- Primitive data type: int
+  [4]         +-- Assignment statement
+  [4]             +-- Reference to variable: a
+  [4]             +-- int: 0
+  [5]         +-- Declaration of local variable: b
+  [5]             +-- Primitive data type: int

@@ -1,0 +1,11 @@
+class A{
+	int a;
+	string b;
+
+	a = 0;
+	b = "bi";
+	{
+		int b = a;
+	}
+}
+

@@ -1,0 +1,11 @@
+class WHILE{
+	static void main(string[] args){
+		while(+){
+			while(false){
+				return;
+			}
+		
+		}
+	}
+}
+

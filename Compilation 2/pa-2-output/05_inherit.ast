@@ -1,0 +1,36 @@
+
+[2] +-- Declaration of class: Expr
+[3]     +-- Declaration of virtual method: eval
+[3]         +-- Primitive data type: int
+[3]         +-- Return statement, with return value
+[3]             +-- int: 0
+[6] +-- Declaration of class: BinOp, subclass of Expr
+[7]     +-- Declaration of field: leftOperand
+[7]         +-- User-defined data type: Expr
+[8]     +-- Declaration of field: rightOperand
+[8]         +-- User-defined data type: Expr
+[11] +-- Declaration of class: Add, subclass of BinOp
+[12]     +-- Declaration of virtual method: eval
+[12]         +-- Primitive data type: int
+[12]         +-- Return statement, with return value
+[12]             +-- Binary operation: add (+)
+[12]                 +-- Call to virtual method: eval, on object
+[12]                     +-- Reference to variable: leftOperand
+[12]                 +-- Call to virtual method: eval, on object
+[12]                     +-- Reference to variable: rightOperand
+[15] +-- Declaration of class: UnOp, subclass of Expr
+[16]     +-- Declaration of field: operand
+[16]         +-- User-defined data type: Expr
+[19] +-- Declaration of class: Negate, subclass of UnOp
+[20]     +-- Declaration of virtual method: eval
+[20]         +-- Primitive data type: int
+[20]         +-- Return statement, with return value
+[20]             +-- Unary operation: negate (-)
+[20]                 +-- Call to virtual method: eval, on object
+[20]                     +-- Reference to variable: operand
+[23] +-- Declaration of class: NonZero, subclass of UnOp
+[24]     +-- Declaration of virtual method: eval
+[24]         +-- Primitive data type: int
+[24]         +-- Return statement, with return value
+[24]             +-- Unary operation: logical not (!)
+[24]                 +-- Reference to variable: operand

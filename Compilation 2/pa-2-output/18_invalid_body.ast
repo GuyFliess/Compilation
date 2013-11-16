@@ -1,0 +1,1 @@
+5:2 : syntax error; expected 'CLASS_ID' or 'boolean' or 'int' or 'static' or 'string' or 'void' or '}', but found 'ID'

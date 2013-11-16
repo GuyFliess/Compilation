@@ -1,0 +1,7 @@
+class J{
+	static void main(string[] args){
+	// int[[]] is not a valid type
+		int[[]] a;
+	}
+}
+

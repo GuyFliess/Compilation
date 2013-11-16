@@ -1,0 +1,11 @@
+class Dangler
+{
+	void main(string[] args) {
+		if (args.length > 0)
+		if (args[0].equals("--help"))
+			Library.println("usage");
+		else
+			Library.println(args[0]);
+	}
+}
+

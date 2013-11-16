@@ -1,0 +1,7 @@
+class L{
+	static void main(string[] args){
+	// int[1][2] is not a valid type
+		a = new int[1][2][2];
+	}
+}
+

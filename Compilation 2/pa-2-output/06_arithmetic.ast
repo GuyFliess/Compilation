@@ -1,0 +1,43 @@
+
+  [1] +-- Declaration of class: Arith
+  [3]     +-- Declaration of virtual method: computeSomething
+  [3]         +-- Primitive data type: void
+  [5]         +-- Declaration of local variable: a
+  [5]             +-- Primitive data type: int
+  [6]         +-- Assignment statement
+  [6]             +-- Reference to variable: a
+  [6]             +-- Binary operation: multiply (*)
+  [6]                 +-- Binary operation: add (+)
+  [6]                     +-- int: 5
+  [6]                     +-- int: 8
+  [6]                 +-- int: 11
+  [7]         +-- Assignment statement
+  [7]             +-- Reference to variable: a
+  [7]             +-- Binary operation: add (+)
+  [7]                 +-- int: 5
+  [7]                 +-- Binary operation: multiply (*)
+  [7]                     +-- int: 8
+  [7]                     +-- int: 11
+  [8]         +-- Assignment statement
+  [8]             +-- Reference to variable: a
+  [8]             +-- Binary operation: subtract (-)
+  [8]                 +-- Binary operation: subtract (-)
+  [8]                     +-- int: 5
+  [8]                     +-- int: 8
+  [8]                 +-- int: 11
+  [9]         +-- Declaration of local variable: b
+  [9]             +-- Primitive data type: boolean
+ [10]         +-- Assignment statement
+ [10]             +-- Reference to variable: b
+ [10]             +-- Binary operation: logical or (||)
+ [10]                 +-- Binary operation: logical or (||)
+ [10]                     +-- Binary operation: equals (==)
+ [10]                         +-- Reference to variable: a
+ [10]                         +-- int: 143
+ [10]                     +-- Binary operation: less than (<)
+ [10]                         +-- Reference to variable: a
+ [10]                         +-- Binary operation: multiply (*)
+ [10]                             +-- int: 0
+ [10]                             +-- Reference to variable: max
+ [10]                 +-- Unary operation: logical not (!)
+ [10]                     +-- boolean: true

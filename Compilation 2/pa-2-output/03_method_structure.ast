@@ -1,0 +1,12 @@
+
+  [1] +-- Declaration of class: A
+  [2]     +-- Declaration of virtual method: foo
+  [2]         +-- Primitive data type: void
+  [2]         +-- Parameter: a
+  [2]             +-- Primitive data type: int
+  [2]         +-- Parameter: b
+  [2]             +-- Primitive data type: boolean
+  [2]         +-- Parameter: a
+  [2]             +-- User-defined data type: A
+  [5]     +-- Declaration of static method: sfoo
+  [5]         +-- Primitive data type: void

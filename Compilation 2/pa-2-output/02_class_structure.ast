@@ -1,0 +1,14 @@
+
+  [1] +-- Declaration of class: A
+  [2]     +-- Declaration of field: x
+  [2]         +-- Primitive data type: int
+  [3]     +-- Declaration of field: y
+  [3]         +-- Primitive data type: boolean
+  [4]     +-- Declaration of field: a
+  [4]         +-- User-defined data type: A
+  [5]     +-- Declaration of field: arr
+  [5]         +-- Primitive data type: 1-dimensional array of int
+  [7]     +-- Declaration of virtual method: foo
+  [7]         +-- Primitive data type: void
+ [10]     +-- Declaration of static method: sfoo
+ [10]         +-- Primitive data type: void

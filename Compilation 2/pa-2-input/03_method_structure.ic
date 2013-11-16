@@ -1,0 +1,7 @@
+class A {
+  void foo(int a, boolean b, A a) {
+  }
+
+  static void sfoo() {
+  }
+}

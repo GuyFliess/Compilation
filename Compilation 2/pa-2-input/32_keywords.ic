@@ -1,0 +1,7 @@
+class L{
+	static void main(string[] args){
+		// 'true' cannot be used as a location
+		true = I.am;
+	}
+}
+

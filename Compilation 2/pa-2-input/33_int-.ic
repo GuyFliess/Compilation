@@ -1,0 +1,9 @@
+/* There is a negative integer which is ok, but a positive integer which is not */
+
+class Numbers {
+
+	void start() {
+		int fine = -2147483648;
+		int bad = 2147483648;     /* out of range (-2^31 .. 2^31-1) */
+	}
+}

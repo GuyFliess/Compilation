@@ -1,0 +1,12 @@
+class A{
+	int a;
+	int[] b;
+
+	static void main(string[] args){}
+	
+	void test() {
+		a = a;
+		A.main() = 2;
+	}
+}
+

@@ -1,0 +1,19 @@
+class A{
+	int f;
+
+	static void main(string[] args){
+	}
+	
+	void test() {
+		int a;
+
+		A b;
+
+		m() = b;
+	}
+	
+	A m(){
+		return new A();
+	}
+}
+

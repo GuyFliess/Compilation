@@ -1,0 +1,25 @@
+
+  [1] +-- Declaration of class: Dangler
+  [3]     +-- Declaration of virtual method: main
+  [3]         +-- Primitive data type: void
+  [3]         +-- Parameter: args
+  [3]             +-- Primitive data type: 1-dimensional array of string
+  [4]         +-- If statement
+  [4]             +-- Binary operation: greater than (>)
+  [4]                 +-- Reference to array length
+  [4]                     +-- Reference to variable: args
+  [4]                 +-- int: 0
+  [5]             +-- If statement, with else branch
+  [5]                 +-- Call to virtual method: equals, on object
+  [5]                     +-- Reference to array
+  [5]                         +-- Reference to variable: args
+  [5]                         +-- int: 0
+  [5]                     +-- string: ''--help''
+  [6]                 +-- Method call statement
+  [6]                     +-- Call to static method: println, in class Library
+  [6]                         +-- string: ''usage''
+  [8]                 +-- Method call statement
+  [8]                     +-- Call to static method: println, in class Library
+  [8]                         +-- Reference to array
+  [8]                             +-- Reference to variable: args
+  [8]                             +-- int: 0

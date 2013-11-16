@@ -1,0 +1,11 @@
+class K{
+	static void main(string[] args){}
+	
+	void test() {
+		int[] a = new int[1];
+		int x;
+	// length is not a method
+		x = a.length();
+	}
+}
+

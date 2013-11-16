@@ -1,0 +1,9 @@
+class K{
+	static void main(string[] args){}
+	
+	void test() {
+	// not a valid initialization
+		int[][] a = new int[10][];
+	}
+}
+
