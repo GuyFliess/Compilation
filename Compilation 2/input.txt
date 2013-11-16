@@ -1,10 +1,5 @@
 class A {
-	int x, y;
-	string a, b, c;
-	boolean d;
-	NewClass e, f;
-	boolean[] g;
-	string[][] h, i;
+	int x;
 	
 	void m(int x, boolean y, int z) {
 		break;
