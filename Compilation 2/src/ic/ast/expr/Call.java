@@ -36,5 +36,16 @@ public abstract class Call extends Expression {
 	public List<Expression> getArguments() {
 		return arguments;
 	}
+	
+	public void removeNulls() {
+		int index;
+		index = arguments.size() - 1;
+		while (arguments.size() != 0 && index != -1) {
+			if (arguments.get(index) == null) {
+				arguments.remove(index);
+			}
+			index--;
+		}
+	}
 
 }

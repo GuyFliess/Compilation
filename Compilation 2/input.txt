@@ -1,9 +1,24 @@
+class Expr {
+    int eval() { return 0; }
+}
+
 class BinOp extends Expr {
     Expr leftOperand;
     Expr rightOperand;
+}
+
+class Add extends BinOp { 
+    int eval() { return leftOperand.eval(); }
 }
 
 class UnOp extends Expr {
     Expr operand;
 }
 
+class Negate extends UnOp {
+	int eval() { return operand.eval(); }
+}
+
+class NonZero extends UnOp {
+	int eval() { return operand; }
+}
