@@ -11,6 +11,7 @@ import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Parameter;
 import ic.ast.decl.PrimitiveType;
 import ic.ast.decl.PrimitiveType.DataType;
+import ic.ast.decl.Program;
 import ic.ast.decl.Type;
 import ic.ast.expr.BinaryOp;
 import ic.ast.expr.BinaryOp.BinaryOps;
@@ -20,6 +21,7 @@ import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
 import ic.ast.expr.NewArray;
 import ic.ast.expr.NewInstance;
+import ic.ast.expr.Ref;
 import ic.ast.expr.RefArrayElement;
 import ic.ast.expr.RefField;
 import ic.ast.expr.RefVariable;
@@ -30,6 +32,7 @@ import ic.ast.expr.UnaryOp.UnaryOps;
 import ic.ast.expr.VirtualCall;
 import ic.ast.stmt.LocalVariable;
 import ic.ast.stmt.Statement;
+import ic.ast.stmt.StmtAssignment;
 import ic.ast.stmt.StmtBreak;
 import ic.ast.stmt.StmtContinue;
 import ic.ast.stmt.StmtIf;
@@ -45,20 +48,23 @@ import fun.parser.earley.EarleyState;
 import lex.Token;
 
 public class Calc {
+	Program program;
+	List<DeclClass> classes = new ArrayList<DeclClass>();
 	List<DeclField> fields = new ArrayList<DeclField>();
 	List<DeclMethod> methods = new ArrayList<DeclMethod>();
 	List<Parameter> formals = new ArrayList<Parameter>();
 	List<Statement> statements = new ArrayList<Statement>();
 	List<Expression> arguments = new ArrayList<Expression>();
-	Type type;
+	Type type, method_type;
 	int dimensions;
 	String method_name;
 	UnaryOps unary_ops;
 	BinaryOps binary_ops;
 
 	String GRAMMAR = "S -> program \n"
-			+ "program -> classDecl \n"
-			+ "classDecl -> class CLASS_ID { fieldORmethod* } \n"
+			+ "program -> classDecl classDecl* |  \n"
+			+ "classDecl* -> classDecl program |  \n"
+			+ "classDecl -> class CLASS_ID { fieldORmethod* } | class CLASS_ID extends CLASS_ID { fieldORmethod* }\n"
 			+ "fieldORmethod* -> nextMethod | nextField |  \n"
 			+ "method* -> nextMethod |  \n"
 			+ "nextMethod -> method fieldORmethod* \n"
@@ -69,12 +75,12 @@ public class Calc {
 			+ "formal -> type array ID formals* \n"
 			+ "stmt* -> nextStmt | { nextStmt } |  \n"
 			+ "nextStmt -> stmt stmt* \n"
-			+ "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar \n"
+			+ "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
 			+ "returnStmt -> return | return expr \n"
 			+ "ifStmt -> if ( expr ) stmt elseStmt \n"
 			+ "elseStmt -> else stmt |  \n"
 			+ "whileStmt -> while ( expr ) stmt \n"
-			+ "localVar -> type array ID ; | type array ID = expr ; \n"
+			+ "localVar -> type array ID | type array ID = expr \n"
 			+ "expr -> location | call | this | new CLASS_ID ( ) | new type [ expr ] | expr . length | expr binop expr | unop expr | literal | ( expr ) \n"
 			+ "location -> ID | expr . ID | expr [ expr ] \n"
 			+ "call -> staticCall | virtualCall \n"
@@ -151,13 +157,41 @@ public class Calc {
 		case "S":
 			return constructAst(s[0]);
 		case "program":
-			DeclClass decl_class = (DeclClass) constructAst(s[0]);
-			decl_class.removeNulls();
-			return decl_class;
+			if (s.length == 0) {
+				program = new Program(classes);
+				program.removeNulls();
+				return program;
+			}
+			else {
+				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
+				return constructAst(s[1]); /* run on classDecl* */
+			}
+//			DeclClass decl_class = (DeclClass) constructAst(s[0]);
+//			decl_class.removeNulls();
+//			return decl_class;
+		case "classDecl*":
+			if (s.length == 0) {
+				program = new Program(classes);
+				program.removeNulls();
+				return program;
+			}
+			else {
+				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
+				return constructAst(s[1]); /* run on program */
+			}
 		case "classDecl":
-			constructAst(s[3]); /* run on fieldORmethod* */
-			return new DeclClass(((Token) s[0].root).line,
-					((Token) s[1].root).value, fields, methods);
+			if (s.length == 5) { /* not a derived class */
+				constructAst(s[3]); /* run on fieldORmethod* */
+				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, fields, methods);
+			}
+			else if (s.length == 7) { /* extends a class */
+				constructAst(s[5]); /* run on fieldORmethod* */
+				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, ((Token) s[3].root).value, fields, methods);
+			}
+//			else {
+//				// TODO: throw error - invalid class declaration
+//			}
+			return null;
 		case "fieldORmethod*":
 			if (s.length == 1) {
 				return constructAst(s[0]);
@@ -177,12 +211,12 @@ public class Calc {
 		case "method":
 			DeclMethod method = null;
 			if (s.length == 1) { /* virtual method */
-				constructAst(s[0]);
-				method = new DeclVirtualMethod(type, method_name, formals, statements);
+				constructAst(s[0]); /* run on methodDecl */
+				method = new DeclVirtualMethod(method_type, method_name, formals, statements);
 			}
 			else if (s.length == 2) { /* static method */
-				constructAst(s[1]);
-				method = new DeclStaticMethod(type, method_name, formals, statements);
+				constructAst(s[1]); /* run on methodDecl */
+				method = new DeclStaticMethod(method_type, method_name, formals, statements);
 			}
 //			else {
 //				TODO: throw error: invalid method declaration
@@ -191,7 +225,7 @@ public class Calc {
 			return method;
 		case "methodDecl":
 			dimensions = 0;
-			type = (Type) constructAst(s[0]); /* run on methodType */
+			method_type = (Type) constructAst(s[0]); /* run on methodType */
 			method_name = ((Token) s[1].root).value;
 			formals.add((Parameter) constructAst(s[3])); /* run on formals* */
 			statements.add((Statement) constructAst(s[6])); /* run on stmt* */
@@ -221,7 +255,7 @@ public class Calc {
 			return constructAst(s[3]);			
 		case "stmt*":
 			if (s.length == 0) { /* there aren't any more statements */
-				
+				return null;
 			}
 			else if (s.length == 1) { /* in a case of stmt */
 				return constructAst(s[0]); /* run on nextStmt */
@@ -235,15 +269,17 @@ public class Calc {
 		case "nextStmt":
 			statements.add((Statement) constructAst(s[0]));
 			return constructAst(s[1]); /* run on stmt* */	
-// "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar \n"
+// "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
 		case "stmt":
 			switch (s.length) {
 			case 1:
-				return constructAst(s[0]); /* run on ifStmt / whileStmt / localVar */
+				return constructAst(s[0]); /* run on ifStmt / whileStmt */
 			case 2:
-				return constructAst(s[0]); /* run on returnStmt / call / break / continue */
-			case 3:
-				// TODO /* run on location = expr */
+				return constructAst(s[0]); /* run on returnStmt / call / break / continue / localVar */
+			case 4:
+				Ref variable = (Ref) constructAst(s[0]); /* run on location */
+				expr1 = (Expression) constructAst(s[2]); /* run on expr */
+				return new StmtAssignment(variable, expr1);
 				// TODO throw error if '=' doesn't appear
 			default:
 				// TODO throw error invalid statement
@@ -293,12 +329,12 @@ public class Calc {
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
-			if (s.length == 4) {
-				return new LocalVariable(((Token) s[0].root).line, type, ((Token) s[2].root).value);
+			if (s.length == 3) {
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value);
 			}
-			else if (s.length == 6) {
+			else if (s.length == 5) {
 				expr1 = (Expression) constructAst(s[4]); /* run on expr */
-				return new LocalVariable(((Token) s[0].root).line, type, ((Token) s[2].root).value, expr1);
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value, expr1);
 			}
 //			else {
 //				// TODO throw error invalid local variable statement
@@ -544,7 +580,15 @@ public class Calc {
 	
 
 	public Node process(Iterable<Token> tokens) {
-		return constructAst(parse(tokens));
+		constructAst(parse(tokens));
+		program.removeNulls();
+		for (int i = 0; i < program.getClasses().size(); i++) {
+			program.getClasses().get(i).removeNulls();
+			for (int j = 0; j < program.getClasses().get(i).getMethods().size(); j++) {
+				program.getClasses().get(i).getMethods().get(j).removeNulls();
+			}
+		}
+		return program;
 	}
 
 }

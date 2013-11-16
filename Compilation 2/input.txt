@@ -1,7 +1,9 @@
-class A {
-	int x;
-	
-	void m(int x, boolean y, int z) {
-		break;
-	}
+class BinOp extends Expr {
+    Expr leftOperand;
+    Expr rightOperand;
 }
+
+class UnOp extends Expr {
+    Expr operand;
+}
+

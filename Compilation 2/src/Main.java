@@ -1,7 +1,10 @@
 import ic.ast.Node;
 import ic.ast.PrettyPrint;
+import ic.ast.decl.Program;
+
 import java.util.LinkedList;
 import java.util.List;
+
 import lex.Lexer;
 import lex.Token;
 import pars.Calc;
