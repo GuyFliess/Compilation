@@ -110,37 +110,12 @@ public class Calc {
 			+ "array -> dimension |  \n"
 			+ "dimension -> [ ] array \n";
 
-	String LibGRAMMAR = "S -> libic \n"
-			+ "libic -> class CLASS_ID   { libmethod* } \n"
-			+ "libmethod* ->  libmethod' | \n" 
-			+ "libmethod' -> libmethod libmethod* \n"
-			+ "libmethod -> static typeVoid ID ( formals* ) ; \n" //TODO add formals
-			+ "typeVoid -> type array | void \n"	
-			+ "formals* -> formal | , formal |  \n"
-			+ "formal -> type array ID formals* \n"
-			+ "type -> int | boolean | string | CLASS_ID \n"
-			+ "array -> dimension |  \n"
-			+ "dimension -> [ ] array \n"
-//			+ "formals* -> formals' | \n"
-//			+ "formals' -> formals formals* \n"
-//			+ "formals -> type ID typeID* \n"
-//			+ "typeID* -> typeID' | \n"
-//			+ "typeID' -> typeID typeID* \n"
-//			+ "typeID -> , type ID \n"
-//			+ "type -> type2 typeArr \n"
-//			+ "type2 -> int | boolean | string | class \n"
-//			+ "typeArr -> [ ] typeArr |  \n";
-	//new line
 ;
 
 	Grammar grammar;
 
 	public Calc() {
 		grammar = new Grammar(GRAMMAR);
-	}
-
-	public Calc(boolean lib) {
-		grammar = new Grammar(LibGRAMMAR);
 	}
 
 	fun.parser.Tree parse(Iterable<Token> tokens) {
@@ -588,41 +563,7 @@ public class Calc {
 			fields.add((DeclField) constructAst(s[2])); // run on moreIDs*
 			return new DeclField(type, ((Token) s[1].root).value);
 
-		/* Lib part */
-		case "libic":			
-			if (s.length == 5)
-			{
-				constructAst(s[3]);
-			}
-			return new DeclClass(((Token) s[0].root).line,
-					((Token) s[1].root).value, fields, methods);			
-		case "libmethod*": 
-			return constructAst(s[0]);
-		case "libmethod'":
-			methods.add((DeclMethod) constructAst(s[0]));
-			return constructAst(s[1]);
-		case "libmethod":
-			dimensions = 0;
-			method_type = (Type) constructAst(s[1]); /* run on methodType */
-			method_name = ((Token) s[2].root).value;
-			formals.add((Parameter) constructAst(s[4])); /* run on formals* */			
-			return new DeclStaticMethod(method_type,method_name,formals,statements);
-		case "typeVoid":
-			if (s.length == 1)
-			{
-				//void case
-				return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
-			}
-			else 
-			{
-				//type with array 
-				dimensions = 0;
-				type = (Type) constructAst(s[0]); /* run on type */
-				constructAst(s[1]); /* run on array */
-				formals.add(new Parameter(type, ((Token) s[2].root).value));
-				return constructAst(s[3]);
-				
-			}
+
 		default: /* should never get here */
 			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
 		}
