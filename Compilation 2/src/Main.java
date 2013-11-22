@@ -37,8 +37,8 @@ public class Main {
 		} catch (Throwable e) {
 //			for (Token tok : tokens)
 //				System.out.println(tok);
-			System.err.println(e);
-			System.exit(1);
+//			System.err.println(e);
+//			System.exit(1);
 		}
 	}
 }

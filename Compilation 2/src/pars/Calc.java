@@ -1,7 +1,6 @@
 package pars;
 
 import ic.ast.Node;
-import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
@@ -61,7 +60,7 @@ public class Calc {
 	UnaryOps unary_ops;
 	BinaryOps binary_ops;
 
-String GRAMMAR = "S -> program \n"
+	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
 			+ "classDecl* -> classDecl program |  \n"
 			+ "classDecl -> class CLASS_ID { fieldORmethod* } | class CLASS_ID extends CLASS_ID { fieldORmethod* }\n"
@@ -70,17 +69,17 @@ String GRAMMAR = "S -> program \n"
 			+ "nextMethod -> method fieldORmethod* \n"
 			+ "method -> static methodDecl | methodDecl \n"
 			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
-			+ "methodType -> type | void \n"			
+			+ "methodType -> type | void \n"
 			+ "formals* -> formal | , formal |  \n"
 			+ "formal -> type array ID formals* \n"
-			+ "stmt* -> nextStmt  |  \n" 
-			+ "nextStmt -> stmt stmt* \n"		
+			+ "stmt* -> nextStmt  |  \n"
+			+ "nextStmt -> stmt stmt* \n"
 			+ "stmt -> location = expr ; | call ; | returnStmt ; | whileStmt ; | break ; | continue ; | { stmt* } | if ( expr ) stmt2 else stmt | if ( expr ) stmt1 | type ID expr= ; \n"
 			+ "stmt1 -> location = expr ; | call ; | returnStmt ; | whileStmt ; | break ; | continue ; | { stmt* } | if ( expr ) stmt2 else stmt | if ( expr ) stmt1 \n"
 			+ "stmt2 -> location = expr ; | call ; | returnStmt ; |whileStmt ; | break ; | continue ; | { stmt* } \n"
-	        + "expr= -> = expr |  \n"
-			+ "returnStmt -> return | return expr \n"		
-	        
+			+ "expr= -> = expr |  \n"
+			+ "returnStmt -> return | return expr \n"
+
 			+ "whileStmt -> while ( expr ) stmt \n"
 			+ "localVar -> type array ID | type array ID = expr \n"
 
@@ -93,8 +92,6 @@ String GRAMMAR = "S -> program \n"
 			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
 			+ "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
 			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-
-
 
 			+ "location -> ID | expr1 . ID | expr0 [ expr ] \n"
 			+ "call -> staticCall | virtualCall \n"
@@ -109,8 +106,6 @@ String GRAMMAR = "S -> program \n"
 			+ "type -> int | boolean | string | CLASS_ID \n"
 			+ "array -> dimension |  \n" + "dimension -> [ ] array \n";
 
-	
-
 	Grammar grammar;
 
 	public Calc() {
@@ -122,20 +117,37 @@ String GRAMMAR = "S -> program \n"
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1) {
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			if (diagnosis.token instanceof Token) {
-				Token token = (Token) diagnosis.token;
-				System.out.print(String.format("Line %d column %d", token.line,
-						token.column));
-			}
-			System.out.println(String.format("syntex Error: %s  ",
-					diagnosis.token));
-
+			// line:column : type-of-error; error-description
+			ArrayList<String> expectedList = new ArrayList<>();
 			for (String expected : diagnosis.expecting) {
-				System.out.println(String.format("Expected: %s", expected));
+				expectedList.add(expected);
+			}
+			StringBuilder builder = new StringBuilder("");
+			for (int i = 0 ; i < expectedList.size() ; i++)			
+			{
+				builder.append("'");
+				builder.append(expectedList.get(i));
+				builder.append("'");
+				if ( i != expectedList.size() -1 )
+				{
+					builder.append(" or ");
+				}
+			}
+
+			String tmpString = builder.toString();
+			
+			if (diagnosis.token instanceof Token) {
+				Token token = (Token) diagnosis.token;				
+				String errmsg = String
+						.format("%d:%d : syntax error; expected %s but found %s",token.line ,token.column, tmpString , diagnosis.token);
+				System.out.println(errmsg);
+			}
+			else {
+				System.out.println(String.format("at end of input : syntax error; expected %s",tmpString));
 			}
 			throw new Error("parse error");
 		}
-		System.out.println("Done Parsing");
+		System.out.println("Parse complete");
 		return pts.get(0).parseTree();
 	}
 
@@ -583,10 +595,13 @@ String GRAMMAR = "S -> program \n"
 			return new DeclField(type, ((Token) s[1].root).value);
 
 		default: /* should never get here */
+		{
+			System.out.println("ast error");
 			throw new Error("internal error (unimplemented ast)"); // TODO :
 																	// clean the
 																	// unimplemented
 																	// part
+		}
 		}
 	}
 
