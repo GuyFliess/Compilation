@@ -17,7 +17,6 @@ import ic.ast.decl.Type;
 import ic.ast.expr.BinaryOp;
 import ic.ast.expr.BinaryOp.BinaryOps;
 import ic.ast.expr.Expression;
-import ic.ast.expr.ExpressionBlock;
 import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
 import ic.ast.expr.NewArray;

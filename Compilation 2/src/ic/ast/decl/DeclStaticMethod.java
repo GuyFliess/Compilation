@@ -31,9 +31,5 @@ public class DeclStaticMethod extends DeclMethod {
 			List<Statement> statements) {
 		super(type, name, formals, statements);
 	}
-	
-	public DeclStaticMethod(DeclStaticMethod method) {
-		this(method.getType(), method.getName(), method.getFormals(), method.getStatements());
-	}
 
 }

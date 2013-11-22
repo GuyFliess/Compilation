@@ -15,7 +15,6 @@ import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.expr.RefArrayElement;
 import ic.ast.expr.BinaryOp;
 import ic.ast.expr.Expression;
-import ic.ast.expr.ExpressionBlock;
 import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
 import ic.ast.expr.NewArray;
@@ -431,14 +430,4 @@ public class PrettyPrint implements Visitor {
 		return "''" + sb.toString() + "''";
 	}
 
-	public Object visit(ExpressionBlock expressionBlock) {
-		StringBuffer output = new StringBuffer();
-
-		indent(output, expressionBlock);
-		output.append("Parenthesized expression");
-		++depth;
-		output.append(expressionBlock.getExpression().accept(this));
-		--depth;
-		return output.toString();
-	}
 }

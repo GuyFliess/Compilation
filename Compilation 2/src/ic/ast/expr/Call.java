@@ -1,6 +1,5 @@
 package ic.ast.expr;
 
-
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public abstract class Call extends Expression {
 	public List<Expression> getArguments() {
 		return arguments;
 	}
-	
+
 	public void removeNulls() {
 		int index;
 		index = arguments.size() - 1;

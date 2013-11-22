@@ -1,7 +1,5 @@
 package ic.ast;
 
-import java.util.ArrayList;
-
 
 /**
  * Abstract AST node base class.
