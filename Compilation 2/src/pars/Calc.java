@@ -61,29 +61,29 @@ public class Calc {
 	UnaryOps unary_ops;
 	BinaryOps binary_ops;
 
-	String GRAMMAR = "S -> program \n"
+String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
 			+ "classDecl* -> classDecl program |  \n"
 			+ "classDecl -> class CLASS_ID { fieldORmethod* } | class CLASS_ID extends CLASS_ID { fieldORmethod* }\n"
 			+ "fieldORmethod* -> nextMethod | nextField |  \n"
 			+ "method* -> nextMethod |  \n"
 			+ "nextMethod -> method fieldORmethod* \n"
-			+ "field* -> nextField |  \n"
-			+ "nextField -> field fieldORmethod* \n"
 			+ "method -> static methodDecl | methodDecl \n"
 			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
-			+ "methodType -> type | void \n"
-			+ "field -> type ID , field | type ID ; \n"
+			+ "methodType -> type | void \n"			
 			+ "formals* -> formal | , formal |  \n"
 			+ "formal -> type array ID formals* \n"
-
 			+ "stmt* -> nextStmt  |  \n" 
-			+ "nextStmt -> stmt stmt* \n"
-			+ "stmt ->               location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl | type ID equalexprb ; \n"
-			+ "stmt_no_decl ->       location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl \n"
-			+ "stmt_no_if_no_decl -> location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } \n"
-			+ "exprb -> expr |  \n"
-			+ "equalexprb -> = expr |  \n"
+			+ "nextStmt -> stmt stmt* \n"		
+			+ "stmt -> location = expr ; | call ; | returnStmt ; | whileStmt ; | break ; | continue ; | { stmt* } | if ( expr ) stmt2 else stmt | if ( expr ) stmt1 | type ID expr= ; \n"
+			+ "stmt1 -> location = expr ; | call ; | returnStmt ; | whileStmt ; | break ; | continue ; | { stmt* } | if ( expr ) stmt2 else stmt | if ( expr ) stmt1 \n"
+			+ "stmt2 -> location = expr ; | call ; | returnStmt ; |whileStmt ; | break ; | continue ; | { stmt* } \n"
+	        + "expr= -> = expr |  \n"
+			+ "returnStmt -> return | return expr \n"		
+	        
+			+ "whileStmt -> while ( expr ) stmt \n"
+			+ "localVar -> type array ID | type array ID = expr \n"
+
 			+ "expr -> expr || expr7 | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n"
 			+ "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
@@ -94,21 +94,22 @@ public class Calc {
 			+ "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
 			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
 
-+ "array -> dimension |  \n"
-			+ "type -> int | boolean | string | CLASS_ID | type [ ] \n"
-			+ "call -> staticcall | virtualcall \n"
-			+ "exprsb -> expr exprscomb |  \n"
-			+ "exprscomb -> , expr exprscom | , expr |  \n"
-			+ "exprscom -> , expr exprscom | , expr \n"
-			+ "staticcall -> CLASS_ID . ID ( exprsb ) \n"
-			+ "exprdotb -> expr1 . |  \n"
-			+ "virtualcall -> exprdotb ID ( exprsb ) \n"
+
+
 			+ "location -> ID | expr1 . ID | expr0 [ expr ] \n"
-			+ "literal -> INTEGER | STRING | true | false | null \n";
+			+ "call -> staticCall | virtualCall \n"
+			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
+			+ "virtualCall -> expr1 . ID ( expr* ) | ID ( expr* ) \n"
+			+ "expr* -> expr moreExpr |  \n" + "moreExpr -> , expr expr* |  \n"
+			+ "literal -> INTEGER | STRING | true | false | null \n"
+			+ "field* -> nextField |  \n"
+			+ "nextField -> field fieldORmethod* \n"
+			+ "field -> type array ID moreIDs* ; \n"
+			+ "moreIDs* -> anotherID |  \n" + "anotherID -> , ID moreIDs* \n"
+			+ "type -> int | boolean | string | CLASS_ID \n"
+			+ "array -> dimension |  \n" + "dimension -> [ ] array \n";
+
 	
-
-
-	;
 
 	Grammar grammar;
 
