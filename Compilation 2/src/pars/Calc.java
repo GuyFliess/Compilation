@@ -61,105 +61,54 @@ public class Calc {
 	UnaryOps unary_ops;
 	BinaryOps binary_ops;
 
-	
 	String GRAMMAR = "S -> program \n"
-	        + "program -> classdecls \n"
-	        + "classdecls -> classdecls classdecl | classdecl \n"
-	        + "classdecl -> class CLASS_ID extendsb { fieldmethodsb } \n"
-	        + "extendsb -> extends CLASS_ID |  \n"
-	        + "fieldmethodsb -> fieldmethods |  \n" 
-	        + "fieldmethods -> fieldmethods field | fieldmethods method | field | method \n"
-	        + "field -> type ID , field | type ID ; \n"
-	        + "method -> staticb typevoid ID ( formalsb ) { stmtsb } \n"
-	        + "staticb -> static |  \n"
-	        + "formalsb -> formals |  \n"
-	        + "typevoid -> type | void \n"
-	        + "stmtsb -> stmts |  \n"
-	        + "stmts -> stmts stmt | stmt \n"
-	        + "stmt ->               location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl | type ID equalexprb ; \n"
-	        + "stmt_no_decl ->       location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl \n"
-	        + "stmt_no_if_no_decl -> location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } \n" 
-	        + "exprb -> expr |  \n"
-	        + "equalexprb -> = expr |  \n"
-	        + "expr -> expr || expr7 | expr7 \n"
-	        + "expr7 -> expr7 && expr6 | expr6 \n"
-	        + "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
-	        + "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
-	        + "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
-	        + "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3 % expr2 | expr2 \n"
-	        + "expr2 -> ! expr2 | - expr2 | expr1 \n"
-	        + "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-	        + "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-	        + "formals -> type ID , formals | type ID \n"
-	        + "type -> int | boolean | string | CLASS_ID | type [ ] \n"
-	        + "call -> staticcall | virtualcall \n"
-	        + "exprsb -> expr exprscomb |  \n"
-	        + "exprscomb -> , expr exprscom | , expr |  \n"
-	        + "exprscom -> , expr exprscom | , expr \n"
-	        + "staticcall -> CLASS_ID . ID ( exprsb ) \n"
-	        + "exprdotb -> expr1 . |  \n"
-	        + "virtualcall -> exprdotb ID ( exprsb ) \n"
-	        + "location -> ID | expr1 . ID | expr0 [ expr ] \n"
-	        + "literal -> INTEGER | STRING | true | false | null \n";
-	String GRAMMAR2 = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
 			+ "classDecl* -> classDecl program |  \n"
 			+ "classDecl -> class CLASS_ID { fieldORmethod* } | class CLASS_ID extends CLASS_ID { fieldORmethod* }\n"
 			+ "fieldORmethod* -> nextMethod | nextField |  \n"
 			+ "method* -> nextMethod |  \n"
 			+ "nextMethod -> method fieldORmethod* \n"
+			+ "field* -> nextField |  \n"
+			+ "nextField -> field fieldORmethod* \n"
 			+ "method -> static methodDecl | methodDecl \n"
 			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
 			+ "methodType -> type | void \n"
-			+ "void ->  \n"
+			+ "field -> type ID , field | type ID ; \n"
 			+ "formals* -> formal | , formal |  \n"
 			+ "formal -> type array ID formals* \n"
-			+ "stmt* -> nextStmt | { nextStmt } |  \n" // TODO: deal with block stmt
+
+			+ "stmt* -> nextStmt  |  \n" 
 			+ "nextStmt -> stmt stmt* \n"
-			+ "stmt -> location = expr ; | call ; | returnStmt ; | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
-			+ "returnStmt -> return | return expr \n"
-			+ "ifStmt -> if ( expr ) stmt elseStmt \n"
-			+ "elseStmt -> else stmt |  \n"
-			+ "whileStmt -> while ( expr ) stmt \n"
-			+ "localVar -> type array ID | type array ID = expr \n"
-			+ "expr -> expr || expr7  | expr7\n"
+			+ "stmt ->               location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl | type ID equalexprb ; \n"
+			+ "stmt_no_decl ->       location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } | if ( expr ) stmt_no_if_no_decl else stmt | if ( expr ) stmt_no_decl \n"
+			+ "stmt_no_if_no_decl -> location = expr ; | call ; | return exprb ; | while ( expr ) stmt | break ; | continue ; | { stmtsb } \n"
+			+ "exprb -> expr |  \n"
+			+ "equalexprb -> = expr |  \n"
+			+ "expr -> expr || expr7 | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n"
-			+ "expr6 -> expr6 == expr5 | exp6 != expr5 | expr5 \n"
+			+ "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
 			+ "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
 			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
-			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3  % expr2 | expr2 \n"
+			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3 % expr2 | expr2 \n"
 			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
-	        + "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-	        + "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-//			+ "expr ->  expr2 | paranthesisExpr   \n"		
-//			+ "expr2 ->  expr3 | unOpExpr \n"
-//			+ "expr3 ->  expr4 | binOpExpr \n"
-//			+ "expr4 -> location | call | lengthExpr | this | newClassExpr | newTypeExpr  | literal  \n"
-//			+ "newClassExpr -> new CLASS_ID ( ) \n"
-//			+ "paranthesisExpr -> ( expr ) \n"
-//			+ "binOpExpr -> expr3 binop expr3 \n"
-//			+ "unOpExpr -> unop expr2 \n"
-//			+ "newTypeExpr -> new type [ expr ] \n"
-//			+ "lengthExpr -> expr . length \n"
-//			+ "unop -> - | ! \n"
-//			+ "binop -> + | - | * | / | % | && | || | < | <= | > | >= | == | != \n"
-			+ "location -> ID | expr1 . ID | expr0 [ expr ] \n"
-			+ "call -> staticCall | virtualCall \n"
-			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
-			+ "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
-			+ "expr* -> expr moreExpr |  \n"
-			+ "moreExpr -> , expr expr* |  \n"
-			+ "literal -> INTEGER | STRING | true | false | null \n"
-			+ "field* -> nextField |  \n"
-			+ "nextField -> field fieldORmethod* \n"
-			+ "field -> type array ID moreIDs* ; \n"
-			+ "moreIDs* -> anotherID |  \n"
-			+ "anotherID -> , ID moreIDs* \n"
-			+ "type -> int | boolean | string | CLASS_ID \n"
-			+ "array -> dimension |  \n"
-			+ "dimension -> [ ] array \n";
+			+ "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
+			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
 
-;
++ "array -> dimension |  \n"
+			+ "type -> int | boolean | string | CLASS_ID | type [ ] \n"
+			+ "call -> staticcall | virtualcall \n"
+			+ "exprsb -> expr exprscomb |  \n"
+			+ "exprscomb -> , expr exprscom | , expr |  \n"
+			+ "exprscom -> , expr exprscom | , expr \n"
+			+ "staticcall -> CLASS_ID . ID ( exprsb ) \n"
+			+ "exprdotb -> expr1 . |  \n"
+			+ "virtualcall -> exprdotb ID ( exprsb ) \n"
+			+ "location -> ID | expr1 . ID | expr0 [ expr ] \n"
+			+ "literal -> INTEGER | STRING | true | false | null \n";
+	
+
+
+	;
 
 	Grammar grammar;
 
@@ -172,18 +121,20 @@ public class Calc {
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1) {
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			if (diagnosis.token instanceof Token)
-			{
+			if (diagnosis.token instanceof Token) {
 				Token token = (Token) diagnosis.token;
-				System.out.print(String.format("Line %d column %d",token.line, token.column));
+				System.out.print(String.format("Line %d column %d", token.line,
+						token.column));
 			}
-			System.out.println(String.format("syntex Error: %s  ",diagnosis.token));
-			
-			for (String  expected  : diagnosis.expecting) {
+			System.out.println(String.format("syntex Error: %s  ",
+					diagnosis.token));
+
+			for (String expected : diagnosis.expecting) {
 				System.out.println(String.format("Expected: %s", expected));
 			}
 			throw new Error("parse error");
 		}
+		System.out.println("Done Parsing");
 		return pts.get(0).parseTree();
 	}
 
@@ -203,21 +154,19 @@ public class Calc {
 				program = new Program(classes);
 				program.removeNulls();
 				return program;
-			}
-			else {
+			} else {
 				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
 				return constructAst(s[1]); /* run on classDecl* */
 			}
-//			DeclClass decl_class = (DeclClass) constructAst(s[0]);
-//			decl_class.removeNulls();
-//			return decl_class;
+			// DeclClass decl_class = (DeclClass) constructAst(s[0]);
+			// decl_class.removeNulls();
+			// return decl_class;
 		case "classDecl*":
 			if (s.length == 0) {
 				program = new Program(classes);
 				program.removeNulls();
 				return program;
-			}
-			else {
+			} else {
 				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
 				return constructAst(s[1]); /* run on program */
 			}
@@ -226,21 +175,22 @@ public class Calc {
 			methods = new ArrayList<DeclMethod>();
 			if (s.length == 5) { /* not a derived class */
 				constructAst(s[3]); /* run on fieldORmethod* */
-				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, fields, methods);
-			}
-			else if (s.length == 7) { /* extends a class */
+				return new DeclClass(((Token) s[0].root).line,
+						((Token) s[1].root).value, fields, methods);
+			} else if (s.length == 7) { /* extends a class */
 				constructAst(s[5]); /* run on fieldORmethod* */
-				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, ((Token) s[3].root).value, fields, methods);
+				return new DeclClass(((Token) s[0].root).line,
+						((Token) s[1].root).value, ((Token) s[3].root).value,
+						fields, methods);
 			}
-//			else {
-//				// TODO: throw error - invalid class declaration
-//			}
+			// else {
+			// // TODO: throw error - invalid class declaration
+			// }
 			return null;
 		case "fieldORmethod*":
 			if (s.length == 1) {
 				return constructAst(s[0]);
-			}
-			else {
+			} else {
 				return null;
 			}
 		case "method*":
@@ -256,15 +206,16 @@ public class Calc {
 			DeclMethod method = null;
 			if (s.length == 1) { /* virtual method */
 				constructAst(s[0]); /* run on methodDecl */
-				method = new DeclVirtualMethod(method_type, method_name, formals, statements);
-			}
-			else if (s.length == 2) { /* static method */
+				method = new DeclVirtualMethod(method_type, method_name,
+						formals, statements);
+			} else if (s.length == 2) { /* static method */
 				constructAst(s[1]); /* run on methodDecl */
-				method = new DeclStaticMethod(method_type, method_name, formals, statements);
+				method = new DeclStaticMethod(method_type, method_name,
+						formals, statements);
 			}
-//			else {
-//				TODO: throw error: invalid method declaration
-//			}
+			// else {
+			// TODO: throw error: invalid method declaration
+			// }
 			method.removeNulls();
 			return method;
 		case "methodDecl":
@@ -277,22 +228,26 @@ public class Calc {
 			statements.add((Statement) constructAst(s[6])); /* run on stmt* */
 			return null;
 		case "methodType":
-//			if (((Token) s[0].root).tag == "void") {
-//				return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
-//			}
-//			else {
-				return constructAst(s[0]); /* run on type / void */
-//			}
+			// if (((Token) s[0].root).tag == "void") {
+			// return new PrimitiveType(((Token) s[0].root).line,
+			// DataType.VOID);
+			// }
+			// else {
+			return constructAst(s[0]); /* run on type / void */
+			// }
 		case "void":
 			return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
 		case "formals*":
 			if (s.length == 0) { /* there aren't any more formals */
 				return null;
-			}
-			else if (s.length == 1) { /* the first formal */
+			} else if (s.length == 1) { /* the first formal */
 				return constructAst(s[0]); /* run on formal */
-			}
-			else if (s.length == 2) { /* there is more than one formal */ //TODO: make sure it's with ,
+			} else if (s.length == 2) { /* there is more than one formal */// TODO:
+																			// make
+																			// sure
+																			// it's
+																			// with
+																			// ,
 				return constructAst(s[1]);
 			}
 		case "formal":
@@ -300,30 +255,31 @@ public class Calc {
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
 			formals.add(new Parameter(type, ((Token) s[2].root).value));
-			return constructAst(s[3]);			
+			return constructAst(s[3]);
 		case "stmt*":
 			if (s.length == 0) { /* there aren't any more statements */
 				return null;
-			}
-			else if (s.length == 1) { /* in a case of stmt */
+			} else if (s.length == 1) { /* in a case of stmt */
 				return constructAst(s[0]); /* run on nextStmt */
-			}
-			else if (s.length == 3) { /* in a case of { stmt } */
+			} else if (s.length == 3) { /* in a case of { stmt } */
 				return constructAst(s[1]); /* run on nextStmt */
 			}
-//			else {
-//				//TODO: throw error on stmt declaration
-//			}
+			// else {
+			// //TODO: throw error on stmt declaration
+			// }
 		case "nextStmt":
 			statements.add((Statement) constructAst(s[0]));
-			return constructAst(s[1]); /* run on stmt* */	
-// "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
+			return constructAst(s[1]); /* run on stmt* */
+			// "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
 		case "stmt":
 			switch (s.length) {
 			case 1:
 				return constructAst(s[0]); /* run on ifStmt / whileStmt */
 			case 2:
-				return constructAst(s[0]); /* run on returnStmt / call / break / continue / localVar */
+				return constructAst(s[0]); /*
+											 * run on returnStmt / call / break
+											 * / continue / localVar
+											 */
 			case 4:
 				Ref variable = (Ref) constructAst(s[0]); /* run on location */
 				expr1 = (Expression) constructAst(s[2]); /* run on expr */
@@ -352,54 +308,55 @@ public class Calc {
 			elseStmt = (Statement) constructAst(s[5]);
 			if (elseStmt == null) {
 				return new StmtIf(expr1, stmt);
-			}
-			else {
+			} else {
 				return new StmtIf(expr1, stmt, elseStmt);
 			}
 		case "elseStmt":
 			if (s.length == 0) { /* there isn't an else statement */
 				return null;
-			}
-			else if (s.length == 2) {
+			} else if (s.length == 2) {
 				return constructAst(s[1]); /* run on stmt */
 			}
-//			else {
-//				// TODO: throw error invalid if-else statement
-//			}
+			// else {
+			// // TODO: throw error invalid if-else statement
+			// }
 		case "whileStmt":
 			expr1 = (Expression) constructAst(s[2]);
 			stmt = (Statement) constructAst(s[4]);
 			return new StmtWhile(expr1, stmt);
-			
-//			+ "localVar -> type array ID ; | type array ID = expr ; \n"
+
+			// + "localVar -> type array ID ; | type array ID = expr ; \n"
 
 		case "localVar":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
 			if (s.length == 3) {
-				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value);
-			}
-			else if (s.length == 5) {
+				return new LocalVariable(type.getLine(), type,
+						((Token) s[2].root).value);
+			} else if (s.length == 5) {
 				expr1 = (Expression) constructAst(s[4]); /* run on expr */
-				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value, expr1);
+				return new LocalVariable(type.getLine(), type,
+						((Token) s[2].root).value, expr1);
 			}
-//			else {
-//				// TODO throw error invalid local variable statement
-//			}
-			
-//			+ "expr -> location | call | this | newClassExpr | newTypeExpr | lengthExpr | binOpExpr | unOpExpr | literal | paranthesisExpr \n"
-//			+ "newClassExpr -> new CLASS_ID ( ) \n"
-//			+ "paranthesisExpr -> ( expr ) \n"
-//			+ "binOpExpr -> expr binop expr \n"
-//			+ "unOpExpr -> unop expr \n"
-//			+ "newTypeExpr -> new type [ expr ] \n"
-//			+ "lengthExpr -> expr . length \n"
-			
+			// else {
+			// // TODO throw error invalid local variable statement
+			// }
+
+			// +
+			// "expr -> location | call | this | newClassExpr | newTypeExpr | lengthExpr | binOpExpr | unOpExpr | literal | paranthesisExpr \n"
+			// + "newClassExpr -> new CLASS_ID ( ) \n"
+			// + "paranthesisExpr -> ( expr ) \n"
+			// + "binOpExpr -> expr binop expr \n"
+			// + "unOpExpr -> unop expr \n"
+			// + "newTypeExpr -> new type [ expr ] \n"
+			// + "lengthExpr -> expr . length \n"
+
 		case "expr":
 			return constructAst(s[0]);
 		case "newClassExpr":
-			return new NewInstance(((Token) s[0].root).line, ((Token) s[1].root).value);
+			return new NewInstance(((Token) s[0].root).line,
+					((Token) s[1].root).value);
 		case "paranthesisExpr":
 			expr1 = (Expression) constructAst(s[1]); /* run on expr */
 			return new ExpressionBlock(expr1);
@@ -419,17 +376,19 @@ public class Calc {
 		case "lengthExpr":
 			expr1 = (Expression) constructAst(s[0]); /* run on expr */
 			return new Length(((Token) s[0].root).line, expr1);
-//			+ "location -> ID | expr . ID | expr [ expr ] \n"
+			// + "location -> ID | expr . ID | expr [ expr ] \n"
 		case "location":
 			switch (s.length) {
 			case 1: /* run on ID */
-				return new RefVariable(((Token) s[0].root).line, ((Token) s[0].root).value);
+				return new RefVariable(((Token) s[0].root).line,
+						((Token) s[0].root).value);
 			case 3: /* run on expr.ID */
 				if (s[1].root.tag != ".") {
 					// TODO: throw error - invalid field reference
 				}
 				expr1 = (Expression) constructAst(s[0]);
-				return new RefField(((Token) s[0].root).line, expr1, ((Token) s[2].root).value);
+				return new RefField(((Token) s[0].root).line, expr1,
+						((Token) s[2].root).value);
 			case 4:
 				if (s[1].root.tag != "[" && s[3].root.tag != "]") {
 					// TODO: throw error - invalid array reference
@@ -437,7 +396,7 @@ public class Calc {
 				expr1 = (Expression) constructAst(s[0]);
 				expr2 = (Expression) constructAst(s[2]);
 				return new RefArrayElement(expr1, expr2);
-				
+
 			default:
 				// TODO: throw error - invalid reference declaration
 				break;
@@ -445,44 +404,48 @@ public class Calc {
 			return null;
 		case "call":
 			return constructAst(s[0]); /* run on staticCall / virtualCall */
-			
-//			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
-//			+ "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
-//			+ "expr* -> expr moreExpr |  \n"
-//			+ "moreExpr -> , expr expr* |  \n"
-			
+
+			// + "staticCall -> CLASS_ID . ID ( expr* ) \n"
+			// + "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
+			// + "expr* -> expr moreExpr |  \n"
+			// + "moreExpr -> , expr expr* |  \n"
+
 		case "staticCall":
 			arguments.add((Expression) constructAst(s[4])); /* run on expr* */
-			return new StaticCall(((Token) s[0].root).line, ((Token) s[0].root).value, ((Token) s[2].root).value, arguments);
+			return new StaticCall(((Token) s[0].root).line,
+					((Token) s[0].root).value, ((Token) s[2].root).value,
+					arguments);
 		case "virtualCall":
 			VirtualCall virtual_call = null;
 			if (s.length == 4) { /* run on ID(expr*) */
 				arguments.add((Expression) constructAst(s[2])); /* run on expr* */
-				virtual_call = new VirtualCall(((Token) s[0].root).line, ((Token) s[0].root).value, arguments);
-			}
-			else if (s.length == 6) { /* run on expr.ID(expr*) */
+				virtual_call = new VirtualCall(((Token) s[0].root).line,
+						((Token) s[0].root).value, arguments);
+			} else if (s.length == 6) { /* run on expr.ID(expr*) */
 				expr1 = (Expression) constructAst(s[0]); /* run on expr */
 				arguments.add((Expression) constructAst(s[4])); /* run on expr* */
-				virtual_call = new VirtualCall(((Token) s[1].root).line, expr1, ((Token) s[2].root).value, arguments);
+				virtual_call = new VirtualCall(((Token) s[1].root).line, expr1,
+						((Token) s[2].root).value, arguments);
 			}
 			virtual_call.removeNulls();
 			return virtual_call;
-//			else {
-//				// TODO: throw error - invalid virtual call
-//			}
+			// else {
+			// // TODO: throw error - invalid virtual call
+			// }
 		case "expr*":
 			if (s.length == 0) { /* there aren't any more expressions */
 				return null;
-			}
-			else {
-				arguments.add((Expression) constructAst(s[1])); /* run on moreExpr */
+			} else {
+				arguments.add((Expression) constructAst(s[1])); /*
+																 * run on
+																 * moreExpr
+																 */
 				return constructAst(s[0]); /* run on expr */
 			}
 		case "moreExpr":
 			if (s.length == 0) {
 				return null;
-			}
-			else {
+			} else {
 				arguments.add((Expression) constructAst(s[2])); /* run on expr* */
 				return constructAst(s[1]); /* run on expr */
 			}
@@ -551,15 +514,20 @@ public class Calc {
 			Object value = ((Token) s[0].root).value;
 			switch (s[0].root.tag) {
 			case "INTEGER":
-				return new Literal(((Token) s[0].root).line, DataType.INT, value);
+				return new Literal(((Token) s[0].root).line, DataType.INT,
+						value);
 			case "STRING":
-				return new Literal(((Token) s[0].root).line, DataType.STRING, value);
+				return new Literal(((Token) s[0].root).line, DataType.STRING,
+						value);
 			case "true":
-				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN, value);
+				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN,
+						value);
 			case "false":
-				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN, value);
+				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN,
+						value);
 			case "null":
-				return new Literal(((Token) s[0].root).line, DataType.VOID, value);
+				return new Literal(((Token) s[0].root).line, DataType.VOID,
+						value);
 			default:
 				// TODO: throw error - invalid literal
 				break;
@@ -578,7 +546,8 @@ public class Calc {
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
-			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on moreIDs*
+			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on
+														// moreIDs*
 			return new DeclField(type, ((Token) s[2].root).value);
 		case "type":
 			switch (s[0].root.tag) {
@@ -612,13 +581,13 @@ public class Calc {
 			fields.add((DeclField) constructAst(s[2])); // run on moreIDs*
 			return new DeclField(type, ((Token) s[1].root).value);
 
-
 		default: /* should never get here */
-			throw new Error("internal error (unimplemented ast)"); // TODO : clean the unimplemented part
+			throw new Error("internal error (unimplemented ast)"); // TODO :
+																	// clean the
+																	// unimplemented
+																	// part
 		}
 	}
-
-	
 
 	public Node process(Iterable<Token> tokens) {
 		constructAst(parse(tokens));
