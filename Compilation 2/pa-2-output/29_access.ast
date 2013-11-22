@@ -1,1 +1,1 @@
-7:5 : syntax error; expected '!' or '(' or '-' or 'CLASS_ID' or 'ID' or 'false' or 'new' or 'null' or 'this' or 'true', but found ']'
+7:5 : syntax error; expected '!' or '(' or '-' or 'CLASS_ID' or 'ID' or 'INTEGER' or 'STRING' or 'false' or 'new' or 'null' or 'this' or 'true', but found ']'

@@ -160,7 +160,7 @@
  [63]                         +-- int: 1
  [65]         +-- Method call statement
  [65]             +-- Call to static method: print, in class Library
- [65]                 +-- string: ''\\n''
+ [65]                 +-- string: ''\n''
  [68]     +-- Declaration of static method: main
  [68]         +-- Primitive data type: void
  [68]         +-- Parameter: args

@@ -1,1 +1,1 @@
-4:7 : syntax error; expected '.' or '[', but found ';'
+4:8 : syntax error; expected '.' or '[', but found '='
