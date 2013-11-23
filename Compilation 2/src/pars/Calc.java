@@ -65,7 +65,7 @@ public class Calc {
 	String method_name;
 	UnaryOps unary_ops;
 	BinaryOps binary_ops;
-	StmtIf if_stmt = null;
+	Statement operation;
 
 	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
@@ -83,18 +83,25 @@ public class Calc {
 			+ "stmt* -> nextStmt | { nextStmt } |  \n" // TODO: deal with block
 														// stmt
 			+ "nextStmt -> stmt stmt* \n"
-			+ "stmt -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
+			+ "stmt -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt* | whileStmt | break ; | continue ; | localVar ; \n"
 			+ "stmtCall -> call \n"
 			+ "returnStmt -> return | return expr \n"
-//			+ "ifStmt* -> ifStmt ifStmt* elseStmt \n"
-			+ "ifStmt -> if ( expr ) ifOperation elseStmt \n"
-			+ "ifElseStmt -> ifStmt else stmt \n"
-			+ "ifOperation -> { blockStmt* } | stmt \n"
-			+ "blockStmt* -> nextBlockStmt |  \n"
-			+ "nextBlockStmt -> stmt blockStmt* \n"
+			+ "ifStmt* -> ifStmt | ifElseStmt \n"
+			+ "ifStmt -> if ( expr ) ifOperation \n"
+			+ "ifElseStmt -> if ( expr ) ifElseOperation else ifOperation \n"
+			+ "ifElseOperation -> { ifElseBlockStmt* } | stmtWOIf \n"
+			+ "ifElseBlockStmt* -> ifElseNextBlockStmt |  \n"
+			+ "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* \n"
+			+ "ifOperation -> { ifBlockStmt* } | stmt \n"
+			+ "ifBlockStmt* -> ifNextBlockStmt |  \n"
+			+ "ifNextBlockStmt -> stmt ifBlockStmt* \n"
+			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | localVar ; \n"
 			// + "stmtBlock -> nextStmt | { nextStmt } \n"
 			+ "elseStmt -> else ifOperation |  \n"
-			+ "whileStmt -> while ( expr ) stmt \n"
+			+ "whileStmt -> while ( expr ) whileOperation \n"
+			+ "whileOperation -> { whileBlockStmt* } | stmt \n"
+			+ "whileBlockStmt* -> whileNextBlockStmt |  \n"
+			+ "whileNextBlockStmt -> stmt whileBlockStmt* \n"
 			+ "localVar -> type array ID | type array ID = expr \n"
 			+ "expr -> expr || expr7 | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n"
@@ -137,7 +144,8 @@ public class Calc {
 			+ "returnStmt -> return | return expr \n"
 			+ "ifStmt -> if ( expr ) stmt elseStmt \n"
 			+ "elseStmt -> else stmt |  \n"
-			+ "whileStmt -> while ( expr ) stmt \n"
+			+ "whileStmt -> while ( expr ) whileOperation \n"
+			+ "whileOperation -> { stmt* } | stmt \n"
 			+ "localVar -> type array ID | type array ID = expr \n"
 			+ "expr -> expr || expr7  | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n"
@@ -167,7 +175,7 @@ public class Calc {
 			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
 			+ "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
 			+ "expr* -> expr moreExpr |  \n" + "moreExpr -> , expr expr* |  \n"
-			+ "literal -> INTEGER | STRING | true | false | null \n"
+			+ "literal -> INTEGER | STRING | BOOLEAN | null \n"//true | false | null \n"
 			+ "field* -> nextField |  \n"
 			+ "nextField -> field fieldORmethod* \n"
 			+ "field -> type array ID moreIDs* ; \n"
@@ -218,7 +226,7 @@ public class Calc {
 			}
 			throw new Error("parse error");
 		}
-		System.out.println("Parse complete");
+//		System.out.println("Parse complete");
 		return pts.get(0).parseTree();
 	}
 
@@ -376,6 +384,23 @@ public class Calc {
 			default:
 				// TODO throw error invalid statement
 			}
+		case "stmtWOIf":
+			switch (s.length) {
+			case 1:
+				return constructAst(s[0]); /* run on ifStmt / whileStmt */
+			case 2:
+				return constructAst(s[0]); /*
+											 * run on returnStmt / call / break
+											 * / continue / localVar
+											 */
+			case 4:
+				Ref variable = (Ref) constructAst(s[0]); /* run on location */
+				expr1 = (Expression) constructAst(s[2]); /* run on expr */
+				return new StmtAssignment(variable, expr1);
+				// TODO throw error if '=' doesn't appear
+			default:
+				// TODO throw error invalid statement
+			}
 		case "break":
 			return new StmtBreak(((Token) s[0].root).line);
 		case "continue":
@@ -391,44 +416,61 @@ public class Calc {
 				// TODO throw error invalid return statement
 			}
 
-			// + "ifStmt -> if ( expr ) ifOperation | ifElseStmt \n"
-			// + "ifElseStmt -> ifStmt else stmt \n"
-			// + "ifOperation -> { blockStmt* } | stmt \n"
+//			+ "ifStmt* -> ifStmt | ifElseStmt \n"
+//			+ "ifStmt -> if ( expr ) ifOperation \n"
+//			+ "ifElseStmt -> if ( expr ) ifElseOperation else ifOperation \n"
+//			+ "ifElseOperation -> { ifElseBlockStmt* } | stmtWOIf \n"
+//			+ "ifElseBlockStmt* -> ifElseNextBlockStmt |  \n"
+//			+ "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* \n"
+//			+ "ifOperation -> { ifBlockStmt* } | stmt \n"
+//			+ "ifBlockStmt* -> ifNextBlockStmt |  \n"
+//			+ "ifNextBlockStmt -> stmt ifBlockStmt* \n"
+//			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | localVar ; \n"
 
+		case "ifStmt*":
+			return constructAst(s[0]);
 		case "ifStmt":
-			if (s.length == 1) {
-				return constructAst(s[0]);
-			}
 			expr1 = (Expression) constructAst(s[2]);
-			Statement operation = (Statement) constructAst(s[4]);
-			elseStmt = (Statement) constructAst(s[5]);
-			if (elseStmt == null) {
-				return new StmtIf(expr1, operation);
-			} else {
-				return new StmtIf(expr1, operation, elseStmt);
-			}
+			operation = (Statement) constructAst(s[4]);
+			return new StmtIf(expr1, operation);
 		case "ifElseStmt":
-			StmtIf if_stmt = (StmtIf) constructAst(s[0]);
-			elseStmt = (Statement) constructAst(s[2]);
-			return new StmtIf(if_stmt.getCondition(), if_stmt.getOperation(),
-					elseStmt);
+			expr1 = (Expression) constructAst(s[2]);
+			operation = (Statement) constructAst(s[4]);
+			elseStmt = (Statement) constructAst(s[6]);
+			return new StmtIf(expr1, operation, elseStmt);
 		case "ifOperation":
-			StmtBlock stmt_block1 = null;
 			statementsBlock = new ArrayList<Statement>();
 			if (s.length == 1) {
 				return constructAst(s[0]);
 			} else if (s.length == 3) {
-				constructAst(s[1]); /* run on blockStmt* */
+				constructAst(s[1]); /* run on ifBlockStmt* */
+				return new StmtBlock(((Token) s[0].root).line, statementsBlock);
+			}
+		case "ifElseOperation":
+			statementsBlock = new ArrayList<Statement>();
+			if (s.length == 1) {
+				return constructAst(s[0]);
+			} else if (s.length == 3) {
+				constructAst(s[1]); /* run on ifElseBlockStmt* */
 				return new StmtBlock(((Token) s[0].root).line, statementsBlock);
 			}
 
-		case "blockStmt*":
+		case "ifBlockStmt*":
 			if (s.length == 0) {
 				return null;
 			} else {
 				return constructAst(s[0]); /* run on nextBlockStmt */
 			}
-		case "nextBlockStmt":
+		case "ifElseBlockStmt*":
+			if (s.length == 0) {
+				return null;
+			} else {
+				return constructAst(s[0]); /* run on nextBlockStmt */
+			}
+		case "ifNextBlockStmt":
+			statementsBlock.add((Statement) constructAst(s[1]));
+			return constructAst(s[0]);
+		case "ifElseNextBlockStmt":
 			statementsBlock.add((Statement) constructAst(s[1])); /*
 																 * run on
 																 * blockStmt*
@@ -443,13 +485,35 @@ public class Calc {
 			// else {
 			// // TODO: throw error invalid if-else statement
 			// }
+			
+//			+ "whileStmt -> while ( expr ) whileOperation \n"
+//			+ "whileOperation -> { whileBlockStmt* } | stmt \n"
+//			+ "whileBlockStmt* -> whileNextBlockStmt |  \n"
+//			+ "whileNextBlockStmt -> stmt whileBlockStmt* \n"
+			
 		case "whileStmt":
 			expr1 = (Expression) constructAst(s[2]);
-			stmt = (Statement) constructAst(s[4]);
-			return new StmtWhile(expr1, stmt);
+			operation = (Statement) constructAst(s[4]);
+			return new StmtWhile(expr1, operation);
+		case "whileOperation":
+			statementsBlock = new ArrayList<Statement>();
+			if (s.length == 1) {
+				return constructAst(s[0]);
+			} else if (s.length == 3) {
+				constructAst(s[1]); /* run on whileBlockStmt* */
+				return new StmtBlock(((Token) s[0].root).line, statementsBlock);
+			}
+		case "whileBlockStmt*":
+			if (s.length == 0) {
+				return null;
+			} else {
+				return constructAst(s[0]); /* run on whileNextBlockStmt */
+			}
+		case "whileNextBlockStmt":
+			statementsBlock.add((Statement) constructAst(s[1]));
+			return constructAst(s[0]);
 
 			// + "localVar -> type array ID ; | type array ID = expr ; \n"
-
 		case "localVar":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
@@ -766,6 +830,7 @@ public class Calc {
 				return new Literal(((Token) s[0].root).line, DataType.INT,
 						value);
 			case "STRING":
+				value = value.toString().replaceAll("\"", "");
 				return new Literal(((Token) s[0].root).line, DataType.STRING,
 						value);
 			case "true":
