@@ -35,10 +35,12 @@ public class Main {
 			System.out.println(ast.accept(printer));
 
 		} catch (Throwable e) {
+
 //			for (Token tok : tokens)
 //				System.out.println(tok);
 //			System.err.println(e);
 			return;
+
 		}
 	}
 }
