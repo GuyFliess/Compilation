@@ -113,7 +113,7 @@ public class Calc {
 			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
 			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3 % expr2 | expr2 \n"
 			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
-			+ "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
+			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
 			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
 			+ "location -> ID | expr0 . ID | expr0 [ expr ] \n"
 			+ "call -> staticCall | virtualCall \n"
@@ -127,7 +127,8 @@ public class Calc {
 			+ "field -> type array ID moreIDs* ; \n"
 			+ "moreIDs* -> anotherID |  \n" + "anotherID -> , ID moreIDs* \n"
 			+ "type -> int | boolean | string | CLASS_ID \n"
-			+ "array -> dimension |  \n" + "dimension -> [ ] array \n";
+			+ "array -> dimension |  \n" 
+			+ "dimension -> [ ] array \n";
 	String GRAMMAR2 = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
 			+ "classDecl* -> classDecl program |  \n"
@@ -680,10 +681,14 @@ public class Calc {
 				}
 			}
 			return constructAst(s[0]);
+//			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
+
 		case "expr1":
-			if (s.length == 5) {
+			if (s.length == 6) {
 				type = (Type) constructAst(s[1]); /* run on type */
-				expr1 = (Expression) constructAst(s[3]); /* run on expr */
+				constructAst(s[2]);
+				type.incrementDimension();
+				expr1 = (Expression) constructAst(s[4]); /* run on expr */
 				return new NewArray(type, expr1);
 			}
 			if (s.length == 4) {
