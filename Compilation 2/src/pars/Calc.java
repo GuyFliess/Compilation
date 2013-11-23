@@ -1,7 +1,6 @@
 package pars;
 
 import ic.ast.Node;
-import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
@@ -68,7 +67,8 @@ public class Calc {
 	BinaryOps binary_ops;
 	Statement operation;
 	StmtBlock stmt_block;
-	int current_block;
+	boolean negativeInteger = false; 
+	
 
 	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
@@ -129,68 +129,6 @@ public class Calc {
 			+ "type -> int | boolean | string | CLASS_ID \n"
 			+ "array -> dimension |  \n" 
 			+ "dimension -> [ ] array \n";
-	String GRAMMAR2 = "S -> program \n"
-			+ "program -> classDecl classDecl* |  \n"
-			+ "classDecl* -> classDecl program |  \n"
-			+ "classDecl -> class CLASS_ID { fieldORmethod* } | class CLASS_ID extends CLASS_ID { fieldORmethod* }\n"
-			+ "fieldORmethod* -> nextMethod | nextField |  \n"
-			+ "method* -> nextMethod |  \n"
-			+ "nextMethod -> method fieldORmethod* \n"
-			+ "method -> static methodDecl | methodDecl \n"
-			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
-			+ "methodType -> type | void \n"
-			+ "void ->  \n"
-			+ "formals* -> formal | , formal |  \n"
-			+ "formal -> type array ID formals* \n"
-			+ "stmt* -> nextStmt | { nextStmt } |  \n" // TODO: deal with block
-														// stmt
-			+ "nextStmt -> stmt stmt* \n"
-			+ "stmt -> location = expr ; | call ; | returnStmt ; | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
-			+ "returnStmt -> return | return expr \n"
-			+ "ifStmt -> if ( expr ) stmt elseStmt \n"
-			+ "elseStmt -> else stmt |  \n"
-			+ "whileStmt -> while ( expr ) whileOperation \n"
-			+ "whileOperation -> { stmt* } | stmt \n"
-			+ "localVar -> type array ID | type array ID = expr \n"
-			+ "expr -> expr || expr7  | expr7 \n"
-			+ "expr7 -> expr7 && expr6 | expr6 \n"
-			+ "expr6 -> expr6 == expr5 | exp6 != expr5 | expr5 \n"
-			+ "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
-			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
-			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3  % expr2 | expr2 \n"
-			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
-			+ "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-			// + "expr ->  expr2 | paranthesisExpr   \n"
-			// + "expr2 ->  expr3 | unOpExpr \n"
-			// + "expr3 ->  expr4 | binOpExpr \n"
-			// +
-			// "expr4 -> location | call | lengthExpr | this | newClassExpr | newTypeExpr  | literal  \n"
-			// + "newClassExpr -> new CLASS_ID ( ) \n"
-			// + "paranthesisExpr -> ( expr ) \n"
-			// + "binOpExpr -> expr3 binop expr3 \n"
-			// + "unOpExpr -> unop expr2 \n"
-			// + "newTypeExpr -> new type [ expr ] \n"
-			// + "lengthExpr -> expr . length \n"
-			// + "unop -> - | ! \n"
-			// +
-			// "binop -> + | - | * | / | % | && | || | < | <= | > | >= | == | != \n"
-			+ "location -> ID | expr1 . ID | expr0 [ expr ] \n"
-			+ "call -> staticCall | virtualCall \n"
-			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
-			+ "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
-			+ "expr* -> expr moreExpr |  \n"
-			+ "moreExpr -> , expr expr* |  \n"
-			+ "literal -> INTEGER | STRING | BOOLEAN | null \n"// true | false |
-																// null \n"
-			+ "field* -> nextField |  \n"
-			+ "nextField -> field fieldORmethod* \n"
-			+ "field -> type array ID moreIDs* ; \n"
-			+ "moreIDs* -> anotherID |  \n" + "anotherID -> , ID moreIDs* \n"
-			+ "type -> int | boolean | string | CLASS_ID \n"
-			+ "array -> dimension |  \n" + "dimension -> [ ] array \n";
-
-	;
 
 	Grammar grammar;
 
@@ -203,7 +141,6 @@ public class Calc {
 		List<EarleyState> pts = e.getCompletedParses();
 		if (pts.size() != 1) {
 			EarleyParser.PostMortem diagnosis = e.diagnoseError();
-			// line:column : type-of-error; error-description
 			ArrayList<String> expectedList = new ArrayList<>();
 			for (String expected : diagnosis.expecting) {
 				expectedList.add(expected);
@@ -676,8 +613,11 @@ public class Calc {
 							expr1);
 				}
 				if (s[0].root.tag == "-") {
-					return new UnaryOp(((Token) s[0].root).line,
+					negativeInteger = true;
+					UnaryOp unaryOp = new UnaryOp(((Token) s[0].root).line,
 							UnaryOps.UMINUS, expr1);
+					negativeInteger = false;
+					return unaryOp;
 				}
 			}
 			return constructAst(s[0]);
@@ -872,10 +812,27 @@ public class Calc {
 			return null;
 		case "literal":
 			Object value = ((Token) s[0].root).value;
+			Token token = (Token) s[0].root;
 			switch (s[0].root.tag) {
 			case "INTEGER":
+				long max = 2147483647  ;
+				max+= 1;
+				long parsedNumber = Long.parseLong((String) value);
+				if (negativeInteger && (parsedNumber > max ))
+				{
+					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
+					System.out.println(format);
+					throw new Error("parse error");
+				}
+				if (!negativeInteger && (parsedNumber > max -1))
+				{
+					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
+					System.out.println(format);
+					throw new Error("parse error");
+				}
 				return new Literal(((Token) s[0].root).line, DataType.INT,
 						value);
+			
 			case "STRING":
 				value = value.toString().replaceAll("\"", "");
 //				value = value.toString().replaceAll("\\\\\n", "\\\n");
