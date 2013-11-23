@@ -38,7 +38,7 @@ public class Main {
 //			for (Token tok : tokens)
 //				System.out.println(tok);
 //			System.err.println(e);
-			System.exit(1);
+			return;
 		}
 	}
 }
