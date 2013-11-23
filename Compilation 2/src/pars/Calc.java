@@ -607,13 +607,14 @@ public class Calc {
 			return constructAst(s[0]);
 		case "expr2":
 			if (s.length == 2) {
-				expr1 = (Expression) constructAst(s[1]);
 				if (s[0].root.tag == "!") {
+					expr1 = (Expression) constructAst(s[1]);
 					return new UnaryOp(((Token) s[0].root).line, UnaryOps.LNEG,
 							expr1);
 				}
 				if (s[0].root.tag == "-") {
 					negativeInteger = true;
+					expr1 = (Expression) constructAst(s[1]);
 					UnaryOp unaryOp = new UnaryOp(((Token) s[0].root).line,
 							UnaryOps.UMINUS, expr1);
 					negativeInteger = false;
@@ -815,16 +816,15 @@ public class Calc {
 			Token token = (Token) s[0].root;
 			switch (s[0].root.tag) {
 			case "INTEGER":
-				long max = 2147483647  ;
-				max+= 1;
+				long max = 2147483647;
 				long parsedNumber = Long.parseLong((String) value);
-				if (negativeInteger && (parsedNumber > max ))
+				if (negativeInteger && (parsedNumber > max + 1))
 				{
 					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
 					System.out.println(format);
 					throw new Error("parse error");
 				}
-				if (!negativeInteger && (parsedNumber > max -1))
+				if (!negativeInteger && (parsedNumber > max))
 				{
 					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
 					System.out.println(format);
