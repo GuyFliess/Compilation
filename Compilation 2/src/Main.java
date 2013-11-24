@@ -17,8 +17,7 @@ public class Main {
 		List<Token> tokensForLib = new LinkedList<Token>();
 		try {
 			lex.process(args[0], tokens);
-			if (args.length == 2 && args[1].startsWith("-L"))
-			{
+			if (args.length == 2 && args[1].startsWith("-L")) {
 				lex.process(args[1].substring(2), tokensForLib);
 				LibCalc calcLib = new LibCalc();
 				Node ast = calcLib.process(tokensForLib);
@@ -29,6 +28,7 @@ public class Main {
 
 		} catch (Throwable e) {
 			return;
+
 		}
 	}
 }
