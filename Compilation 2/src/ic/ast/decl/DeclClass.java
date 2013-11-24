@@ -82,23 +82,5 @@ public class DeclClass extends Node {
 	public List<DeclMethod> getMethods() {
 		return methods;
 	}
-	
-	public void removeNulls() {
-         int index;
-         index = fields.size() - 1;
-         while (fields.size() != 0 && index != -1) {
-                 if (fields.get(index) == null) {
-                         fields.remove(index);
-                 }
-                 index--;
-         }
-         index = methods.size() - 1;
-         while (methods.size() != 0 && index != -1) {
-                 if (methods.get(index) == null) {
-                         methods.remove(index);
-                 }
-                 index--;
-         }
- }
 
 }

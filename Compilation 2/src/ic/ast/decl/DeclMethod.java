@@ -56,21 +56,4 @@ public abstract class DeclMethod extends Node {
 		return statements;
 	}
 	
-	public void removeNulls() {
-        int index;
-        index = formals.size() - 1;
-        while (formals.size() != 0 && index != -1) {
-                if (formals.get(index) == null) {
-                        formals.remove(index);
-                }
-                index--;
-        }
-        index = statements.size() - 1;
-        while (statements.size() != 0 && index != -1) {
-                if (statements.get(index) == null) {
-                        statements.remove(index);
-                }
-                index--;
-        }
-}
 }

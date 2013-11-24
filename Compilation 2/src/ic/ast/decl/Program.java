@@ -31,16 +31,5 @@ public class Program extends Node {
 	public List<DeclClass> getClasses() {
 		return classes;
 	}
-	
-	public void removeNulls() {
-        int index;
-        index = classes.size() - 1;
-        while (classes.size() != 0 && index != -1) {
-                if (classes.get(index) == null) {
-                        classes.remove(index);
-                }
-                index--;
-        }
-}
 
 }

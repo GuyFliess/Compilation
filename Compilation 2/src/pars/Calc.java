@@ -39,11 +39,7 @@ import ic.ast.stmt.StmtContinue;
 import ic.ast.stmt.StmtIf;
 import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
-
 import java.util.*;
-
-import org.codehaus.groovy.ast.stmt.IfStatement;
-
 import fun.grammar.Grammar;
 import fun.grammar.Word;
 import fun.parser.earley.EarleyParser;
@@ -67,8 +63,7 @@ public class Calc {
 	BinaryOps binary_ops;
 	Statement operation;
 	StmtBlock stmt_block;
-	boolean negativeInteger = false; 
-	
+	boolean negativeInteger = false;
 
 	String GRAMMAR = "S -> program \n"
 			+ "program -> classDecl classDecl* |  \n"
@@ -99,36 +94,23 @@ public class Calc {
 			+ "ifBlockStmt* -> ifNextBlockStmt |  \n"
 			+ "ifNextBlockStmt -> stmt ifBlockStmt* \n"
 			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | localVar ; \n"
-			// + "stmtBlock -> nextStmt | { nextStmt } \n"
-			// + "elseStmt -> else ifOperation |  \n"
-			+ "whileStmt -> while ( expr ) whileOperation \n"
-			+ "whileOperation -> { whileBlockStmt* } | stmt \n"
-			+ "whileBlockStmt* -> whileNextBlockStmt |  \n"
-			+ "whileNextBlockStmt -> stmt whileBlockStmt* \n"
-			+ "localVar -> type array ID | type array ID = expr \n"
-			+ "expr -> expr || expr7 | expr7 \n"
-			+ "expr7 -> expr7 && expr6 | expr6 \n"
-			+ "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
+			+ "whileStmt -> while ( expr ) whileOperation \n" + "whileOperation -> { whileBlockStmt* } | stmt \n"
+			+ "whileBlockStmt* -> whileNextBlockStmt |  \n" + "whileNextBlockStmt -> stmt whileBlockStmt* \n"
+			+ "localVar -> type array ID | type array ID = expr \n" + "expr -> expr || expr7 | expr7 \n"
+			+ "expr7 -> expr7 && expr6 | expr6 \n" + "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
 			+ "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
 			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
 			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3 % expr2 | expr2 \n"
 			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
-			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-			+ "location -> ID | expr0 . ID | expr0 [ expr ] \n"
-			+ "call -> staticCall | virtualCall \n"
-			+ "staticCall -> CLASS_ID . ID ( expr* ) \n"
-			+ "virtualCall -> expr0 . ID ( expr* ) | ID ( expr* ) \n"
-			+ "expr* -> expr moreExpr |  \n"
-			+ "moreExpr -> , expr moreExpr |  \n"
-			+ "literal -> INTEGER | STRING | true | false | null \n"
-			+ "field* -> nextField |  \n"
-			+ "nextField -> field fieldORmethod* \n"
-			+ "field -> type array ID moreIDs* ; \n"
+			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0 \n"
+			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal \n"
+			+ "location -> ID | expr0 . ID | expr0 [ expr ] \n" + "call -> staticCall | virtualCall \n"
+			+ "staticCall -> CLASS_ID . ID ( expr* ) \n" + "virtualCall -> expr1 . ID ( expr* ) | ID ( expr* ) \n"
+			+ "expr* -> expr moreExpr |  \n" + "moreExpr -> , expr moreExpr |  \n"
+			+ "literal -> INTEGER | STRING | true | false | null \n" + "field* -> nextField |  \n"
+			+ "nextField -> field fieldORmethod* \n" + "field -> type array ID moreIDs* ; \n"
 			+ "moreIDs* -> anotherID |  \n" + "anotherID -> , ID moreIDs* \n"
-			+ "type -> int | boolean | string | CLASS_ID \n"
-			+ "array -> dimension |  \n" 
-			+ "dimension -> [ ] array \n";
+			+ "type -> int | boolean | string | CLASS_ID \n" + "array -> dimension |  \n" + "dimension -> [ ] array \n";
 
 	Grammar grammar;
 
@@ -159,30 +141,23 @@ public class Calc {
 
 			if (diagnosis.token instanceof Token) {
 				Token token = (Token) diagnosis.token;
-				String errmsg = String.format(
-						"%d:%d : syntax error; expected %s, but found '%s'",
-						token.line, token.column, tmpString, diagnosis.token);
+				String errmsg = String.format("%d:%d : syntax error; expected %s, but found '%s'", token.line,
+						token.column, tmpString, diagnosis.token);
 				System.out.println(errmsg);
 			} else {
-				System.out.println(String.format(
-						"at end of input : syntax error; expected %s",
-						tmpString));
+				System.out.println(String.format("at end of input : syntax error; expected %s", tmpString));
 			}
 			throw new Error("parse error");
 		}
-		// System.out.println("Parse complete");
 		return pts.get(0).parseTree();
 	}
 
 	Node constructAst(fun.parser.Tree parseTree) {
 		Expression expr1, expr2;
-		StmtBlock while_statements_block = null;
-		ArrayList<Statement> if_statements_block = null;
-		Statement stmt, elseStmt = null;
+		Statement elseStmt = null;
 
 		Word r = parseTree.root;
-		fun.parser.Tree[] s = parseTree.subtrees
-				.toArray(new fun.parser.Tree[0]);
+		fun.parser.Tree[] s = parseTree.subtrees.toArray(new fun.parser.Tree[0]);
 
 		/* Branch according to root */
 		switch (r.tag) {
@@ -191,19 +166,14 @@ public class Calc {
 		case "program":
 			if (s.length == 0) {
 				program = new Program(classes);
-				program.removeNulls();
 				return program;
 			} else {
 				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
 				return constructAst(s[1]); /* run on classDecl* */
 			}
-			// DeclClass decl_class = (DeclClass) constructAst(s[0]);
-			// decl_class.removeNulls();
-			// return decl_class;
 		case "classDecl*":
 			if (s.length == 0) {
 				program = new Program(classes);
-				program.removeNulls();
 				return program;
 			} else {
 				classes.add((DeclClass) constructAst(s[0])); /* run on classDecl */
@@ -214,21 +184,15 @@ public class Calc {
 			methods = new ArrayList<DeclMethod>();
 			if (s.length == 5) { /* not a derived class */
 				constructAst(s[3]); /* run on fieldORmethod* */
-				return new DeclClass(((Token) s[0].root).line,
-						((Token) s[1].root).value, fields, methods);
+				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, fields, methods);
 			} else if (s.length == 7) { /* extends a class */
 				constructAst(s[5]); /* run on fieldORmethod* */
-				return new DeclClass(((Token) s[0].root).line,
-						((Token) s[1].root).value, ((Token) s[3].root).value,
+				return new DeclClass(((Token) s[0].root).line, ((Token) s[1].root).value, ((Token) s[3].root).value,
 						fields, methods);
 			}
-			// else {
-			// // TODO: throw error - invalid class declaration
-			// }
-			return null;
 		case "fieldORmethod*":
 			if (s.length == 1) {
-				return constructAst(s[0]);
+				return constructAst(s[0]); /* run on nextMethod / nextField */
 			} else {
 				return null;
 			}
@@ -240,22 +204,16 @@ public class Calc {
 			}
 		case "nextMethod":
 			methods.add((DeclMethod) constructAst(s[0])); /* run on method */
-			return constructAst(s[1]); /* run on method* */
+			return constructAst(s[1]); /* run on fieldORMethod* */
 		case "method":
 			DeclMethod method = null;
 			if (s.length == 1) { /* virtual method */
 				constructAst(s[0]); /* run on methodDecl */
-				method = new DeclVirtualMethod(method_type, method_name,
-						formals, statements);
+				method = new DeclVirtualMethod(method_type, method_name, formals, statements);
 			} else if (s.length == 2) { /* static method */
 				constructAst(s[1]); /* run on methodDecl */
-				method = new DeclStaticMethod(method_type, method_name,
-						formals, statements);
+				method = new DeclStaticMethod(method_type, method_name, formals, statements);
 			}
-			// else {
-			// TODO: throw error: invalid method declaration
-			// }
-			method.removeNulls();
 			return method;
 		case "methodDecl":
 			formals = new ArrayList<Parameter>();
@@ -263,17 +221,11 @@ public class Calc {
 			dimensions = 0;
 			method_type = (Type) constructAst(s[0]); /* run on methodType */
 			method_name = ((Token) s[1].root).value;
-			formals.add((Parameter) constructAst(s[3])); /* run on formals* */
-			statements.add((Statement) constructAst(s[6])); /* run on stmt* */
+			constructAst(s[3]); /* run on formals* */
+			constructAst(s[6]); /* run on stmt* */
 			return null;
 		case "methodType":
-			// if (((Token) s[0].root).tag == "void") {
-			// return new PrimitiveType(((Token) s[0].root).line,
-			// DataType.VOID);
-			// }
-			// else {
-			return constructAst(s[0]); /* run on type / void */
-			// }
+			return constructAst(s[0]); /* run on type / voidType */
 		case "voidType":
 			return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
 		case "formals*":
@@ -281,203 +233,125 @@ public class Calc {
 				return null;
 			} else if (s.length == 1) { /* the first formal */
 				return constructAst(s[0]); /* run on formal */
-			} else if (s.length == 2) { /* there is more than one formal */// TODO:
-																			// make
-																			// sure
-																			// it's
-																			// with
-																			// ,
-				return constructAst(s[1]);
+			} else if (s.length == 2) { /* there is more than one formal */
+				return constructAst(s[1]); /* run on formal */
 			}
 		case "formal":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
 			formals.add(new Parameter(type, ((Token) s[2].root).value));
-			return constructAst(s[3]);
-			
-//			+ "stmt* -> nextStmt |  \n"
-//			+ "nextStmt ->  stmt stmt* | blockStmt stmt* \n"
-//			+ "blockStmt -> { stmt* } \n"
-			
+			return constructAst(s[3]); /* run on formals* */
 		case "stmt*":
 			if (s.length == 0) { /* there aren't any more statements */
 				return null;
-			} else if (s.length == 1) { /* in a case of stmt */
+			}
+			if (s.length == 1) { /* in a case of stmt */
 				return constructAst(s[0]); /* run on nextStmt */
 			}
-			// else {
-			// //TODO: throw error on stmt declaration
-			// }
 		case "nextStmt":
 			statements.add((Statement) constructAst(s[0])); /* run on stmt / blockStmt */
 			return constructAst(s[1]); /* run on stmt* */
 		case "blockStmt":
 			stmt_list.add(new ArrayList<Statement>());
 			constructAst(s[1]); /* run on stmt* */
-			stmt_block = new StmtBlock(((Token) s[0].root).line,
-					stmt_list.get(stmt_list.size() - 1));
+			stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
 			stmt_list.remove(stmt_list.size() - 1);
 			return stmt_block;
-			// "stmt -> location = expr ; | call ; | returnStmt | ifStmt | whileStmt | break ; | continue ; | localVar ; \n"
 		case "stmt":
 			switch (s.length) {
 			case 1:
-				return constructAst(s[0]); /* run on ifStmt / whileStmt */
+				return constructAst(s[0]); /* run on ifStmt* / whileStmt */
 			case 2:
-				return constructAst(s[0]); /*
-											 * run on returnStmt / call / break
-											 * / continue / localVar
-											 */
+				return constructAst(s[0]); /* run on stmtCall / returnStmt / break / continue / localVar */
 			case 4:
 				Ref variable = (Ref) constructAst(s[0]); /* run on location */
 				expr1 = (Expression) constructAst(s[2]); /* run on expr */
 				return new StmtAssignment(variable, expr1);
-				// TODO throw error if '=' doesn't appear
-			default:
-				// TODO throw error invalid statement
 			}
-		case "stmtWOIf":
-			switch (s.length) {
-			case 1:
-				return constructAst(s[0]); /* run on ifStmt / whileStmt */
-			case 2:
-				return constructAst(s[0]); /*
-											 * run on returnStmt / call / break
-											 * / continue / localVar
-											 */
-			case 4:
-				Ref variable = (Ref) constructAst(s[0]); /* run on location */
-				expr1 = (Expression) constructAst(s[2]); /* run on expr */
-				return new StmtAssignment(variable, expr1);
-				// TODO throw error if '=' doesn't appear
-			default:
-				// TODO throw error invalid statement
-			}
-		case "break":
-			return new StmtBreak(((Token) r).line);
-		case "continue":
-			return new StmtContinue(((Token) r).line);
+		case "stmtCall":
+			return new StmtCall((Call) constructAst(s[0])); /* run on call */
 		case "returnStmt":
 			switch (s.length) {
 			case 1:
 				return new StmtReturn(((Token) s[0].root).line);
 			case 2:
-				expr1 = (Expression) constructAst(s[1]);
+				expr1 = (Expression) constructAst(s[1]); /* run on expr */
 				return new StmtReturn(((Token) s[0].root).line, expr1);
-			default:
-				// TODO throw error invalid return statement
 			}
-
-			// + "ifStmt* -> ifStmt | ifElseStmt \n"
-			// + "ifStmt -> if ( expr ) ifOperation \n"
-			// + "ifElseStmt -> if ( expr ) ifElseOperation else ifOperation \n"
-			// + "ifElseOperation -> { ifElseBlockStmt* } | stmtWOIf \n"
-			// + "ifElseBlockStmt* -> ifElseNextBlockStmt |  \n"
-			// + "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* \n"
-			// + "ifOperation -> { ifBlockStmt* } | stmt \n"
-			// + "ifBlockStmt* -> ifNextBlockStmt |  \n"
-			// + "ifNextBlockStmt -> stmt ifBlockStmt* \n"
-			// +
-			// "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | localVar ; \n"
-
 		case "ifStmt*":
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on ifStmt / ifElseStmt */
 		case "ifStmt":
-			expr1 = (Expression) constructAst(s[2]);
-			operation = (Statement) constructAst(s[4]);
+			expr1 = (Expression) constructAst(s[2]); /* run on expr */
+			operation = (Statement) constructAst(s[4]); /* run on ifOperation */
 			return new StmtIf(expr1, operation);
 		case "ifElseStmt":
-			expr1 = (Expression) constructAst(s[2]);
-			operation = (Statement) constructAst(s[4]);
-			elseStmt = (Statement) constructAst(s[6]);
+			expr1 = (Expression) constructAst(s[2]); /* run on expr */
+			operation = (Statement) constructAst(s[4]); /* run on ifElseOperation */
+			elseStmt = (Statement) constructAst(s[6]); /* run on ifOperation */
 			return new StmtIf(expr1, operation, elseStmt);
+		case "ifElseOperation":
+			statementsBlock = new ArrayList<Statement>();
+			if (s.length == 1) {
+				return constructAst(s[0]); /* run on stmtWOIf */
+			} else if (s.length == 3) {
+				stmt_list.add(new ArrayList<Statement>());
+				constructAst(s[1]); /* run on ifElseBlockStmt* */
+				stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
+				stmt_list.remove(stmt_list.size() - 1);
+				return stmt_block;
+			}
+		case "ifElseBlockStmt*":
+			if (s.length == 0) {
+				return null;
+			} else {
+				return constructAst(s[0]); /* run on ifElseNextBlockStmt */
+			}
+		case "ifElseNextBlockStmt":
+			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmtWOIf */
+			return constructAst(s[1]); /* run on ifElseBlockStmt* */
 		case "ifOperation":
 			if (s.length == 1) {
 				return constructAst(s[0]); /* run on stmt */
 			} else if (s.length == 3) {
 				stmt_list.add(new ArrayList<Statement>());
 				constructAst(s[1]); /* run on ifBlockStmt* */
-				stmt_block = new StmtBlock(((Token) s[0].root).line,
-						stmt_list.get(stmt_list.size() - 1));
+				stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
 				stmt_list.remove(stmt_list.size() - 1);
 				return stmt_block;
 			}
-		case "ifElseOperation":
-			statementsBlock = new ArrayList<Statement>();
-			if (s.length == 1) {
-				return constructAst(s[0]);
-			} else if (s.length == 3) {
-				stmt_list.add(new ArrayList<Statement>());
-//				current_block++;
-				constructAst(s[1]); /* run on ifElseBlockStmt* */
-				stmt_block = new StmtBlock(((Token) s[0].root).line,
-						stmt_list.get(stmt_list.size() - 1));
-				stmt_list.remove(stmt_list.size() - 1);
-//				current_block--;
-				return stmt_block;
-			}
-
 		case "ifBlockStmt*":
 			if (s.length == 0) {
 				return null;
 			} else {
 				return constructAst(s[0]); /* run on ifNextBlockStmt */
 			}
-		case "ifElseBlockStmt*":
-			if (s.length == 0) {
-				return null;
-			} else {
-				return constructAst(s[0]); /* run on ifElseextBlockStmt */
-			}
 		case "ifNextBlockStmt":
-			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /*
-																			 * run
-																			 * on
-																			 * stmt
-																			 */
+			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmt */
 			return constructAst(s[1]); /* run on ifBlockStmt* */
-		case "ifElseNextBlockStmt":
-			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /*
-																			 * run
-																			 * on
-																			 * stmtWOIf
-																			 */
-			return constructAst(s[1]); /* run on ifElseBlockStmt* */
-			// case "elseStmt":
-			// if (s.length == 0) { /* there isn't an else statement */
-			// return null;
-			// } else if (s.length == 2) {
-			// return constructAst(s[1]); /* run on stmt */
-			// }
-			// else {
-			// // TODO: throw error invalid if-else statement
-			// }
-
-			// + "whileStmt -> while ( expr ) whileOperation \n"
-			// + "whileOperation -> { whileBlockStmt* } | stmt \n"
-			// + "whileBlockStmt* -> whileNextBlockStmt |  \n"
-			// + "whileNextBlockStmt -> stmt whileBlockStmt* \n"
-
+		case "stmtWOIf":
+			switch (s.length) {
+			case 1:
+				return constructAst(s[0]); /* run on whileStmt */
+			case 2:
+				return constructAst(s[0]); /* run on stmtCall / returnStmt / break / continue / localVar */
+			case 4:
+				Ref variable = (Ref) constructAst(s[0]); /* run on location */
+				expr1 = (Expression) constructAst(s[2]); /* run on expr */
+				return new StmtAssignment(variable, expr1);
+			}
 		case "whileStmt":
-			expr1 = (Expression) constructAst(s[2]);
-			operation = (Statement) constructAst(s[4]);
+			expr1 = (Expression) constructAst(s[2]); /* run on expr */
+			operation = (Statement) constructAst(s[4]); /* run on whileOperation */
 			return new StmtWhile(expr1, operation);
 		case "whileOperation":
 			if (s.length == 1) {
-				return constructAst(s[0]);
+				return constructAst(s[0]); /* run on stmt */
 			} else if (s.length == 3) {
 				stmt_list.add(new ArrayList<Statement>());
-//				if (current_block > 0) {
-//					current_block++;
-//				}
 				constructAst(s[1]); /* run on whileBlockStmt* */
-				stmt_block = new StmtBlock(((Token) s[0].root).line,
-						stmt_list.get(stmt_list.size() - 1));
+				stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
 				stmt_list.remove(stmt_list.size() - 1);
-//				if (current_block > 0) {
-//					current_block--;
-//				}
 				return stmt_block;
 			}
 		case "whileBlockStmt*":
@@ -487,255 +361,162 @@ public class Calc {
 				return constructAst(s[0]); /* run on whileNextBlockStmt */
 			}
 		case "whileNextBlockStmt":
-			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /*
-																			 * run
-																			 * on
-																			 * stmt
-																			 */
+			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmt */
 			return constructAst(s[1]); /* run on whileBlockStmt* */
-
-			// + "localVar -> type array ID ; | type array ID = expr ; \n"
 		case "localVar":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
 			if (s.length == 3) {
-				return new LocalVariable(type.getLine(), type,
-						((Token) s[2].root).value);
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value);
 			} else if (s.length == 5) {
 				expr1 = (Expression) constructAst(s[4]); /* run on expr */
-				return new LocalVariable(type.getLine(), type,
-						((Token) s[2].root).value, expr1);
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value, expr1);
 			}
-
-			// + "expr -> expr || expr7  | expr7 \n"
-			// + "expr7 -> expr7 && expr6 | expr6 \n"
-			// + "expr6 -> expr6 == expr5 | exp6 != expr5 | expr5 \n"
-			// +
-			// "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
-			// + "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
-			// +
-			// "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3  % expr2 | expr2 \n"
-			// + "expr2 -> ! expr2 | - expr2 | expr1 \n"
-			// + "expr1 -> new type [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-			// +
-			// "expr0 -> ( expr ) | expr0 . length | location | call | this | literal  \n"
-
+		case "break":
+			return new StmtBreak(((Token) r).line);
+		case "continue":
+			return new StmtContinue(((Token) r).line);
 		case "expr":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
-				return new BinaryOp(((Token) s[1].root).line, expr1,
-						BinaryOps.LOR, expr2);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr7 */
+				return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.LOR, expr2);
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr7 */
 		case "expr7":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
-				return new BinaryOp(((Token) s[1].root).line, expr1,
-						BinaryOps.LAND, expr2);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr7 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr6 */
+				return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.LAND, expr2);
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr6 */
 		case "expr6":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr6 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr5 */
 				if (s[1].root.tag == "==") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.EQUAL, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.EQUAL, expr2);
 				}
 				if (s[1].root.tag == "!=") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.NEQUAL, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.NEQUAL, expr2);
 				}
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr5 */
 		case "expr5":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr5 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr4 */
 				if (s[1].root.tag == "<=") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.LTE, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.LTE, expr2);
 				}
 				if (s[1].root.tag == "<") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.LT, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.LT, expr2);
 				}
 				if (s[1].root.tag == ">=") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.GTE, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.GTE, expr2);
 				}
 				if (s[1].root.tag == ">") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.GT, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.GT, expr2);
 				}
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr4 */
 		case "expr4":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr4 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr3 */
 				if (s[1].root.tag == "+") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.PLUS, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.PLUS, expr2);
 				}
 				if (s[1].root.tag == "-") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.MINUS, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.MINUS, expr2);
 				}
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr3 */
 		case "expr3":
 			if (s.length == 3) {
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr3 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr2 */
 				if (s[1].root.tag == "*") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.MULTIPLY, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.MULTIPLY, expr2);
 				}
 				if (s[1].root.tag == "/") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.DIVIDE, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.DIVIDE, expr2);
 				}
 				if (s[1].root.tag == "%") {
-					return new BinaryOp(((Token) s[1].root).line, expr1,
-							BinaryOps.MOD, expr2);
+					return new BinaryOp(((Token) s[1].root).line, expr1, BinaryOps.MOD, expr2);
 				}
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr2 */
 		case "expr2":
 			if (s.length == 2) {
 				if (s[0].root.tag == "!") {
-					expr1 = (Expression) constructAst(s[1]);
-					return new UnaryOp(((Token) s[0].root).line, UnaryOps.LNEG,
-							expr1);
+					expr1 = (Expression) constructAst(s[1]); /* run on expr2 */
+					return new UnaryOp(((Token) s[0].root).line, UnaryOps.LNEG, expr1);
 				}
 				if (s[0].root.tag == "-") {
-					negativeInteger = true;
-					expr1 = (Expression) constructAst(s[1]);
-					UnaryOp unaryOp = new UnaryOp(((Token) s[0].root).line,
-							UnaryOps.UMINUS, expr1);
-					negativeInteger = false;
+					negativeInteger = !negativeInteger;
+					expr1 = (Expression) constructAst(s[1]); /* run on expr2 */
+					UnaryOp unaryOp = new UnaryOp(((Token) s[0].root).line, UnaryOps.UMINUS, expr1);
+					negativeInteger = !negativeInteger;
 					return unaryOp;
 				}
 			}
-			return constructAst(s[0]);
-//			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0   \n"
-
+			return constructAst(s[0]); /* run on expr1 */
 		case "expr1":
 			if (s.length == 6) {
 				type = (Type) constructAst(s[1]); /* run on type */
-				constructAst(s[2]);
-				type.incrementDimension();
-				expr1 = (Expression) constructAst(s[4]); /* run on expr */
+				constructAst(s[2]); /* run on array */
+				expr1 = (Expression) constructAst(s[4]); /* run on expr1 */
 				return new NewArray(type, expr1);
 			}
 			if (s.length == 4) {
-				return new NewInstance(((Token) s[0].root).line,
-						((Token) s[1].root).value);
+				return new NewInstance(((Token) s[0].root).line, ((Token) s[1].root).value);
 			}
-			return constructAst(s[0]);
+			return constructAst(s[0]); /* run on expr0 */
 		case "expr0":
 			if (s.length == 3) {
 				if (s[0].root.tag == "(" && s[2].root.tag == ")") {
-					// expr1 = (Expression) constructAst(s[1]); /* run on expr
-					// */
-					return constructAst(s[1]);// new ExpressionBlock(expr1);
+					return constructAst(s[1]); /* run on expr */
 				} else if (s[1].root.tag == ".") {
-					expr1 = (Expression) constructAst(s[0]); /* run on expr */
+					expr1 = (Expression) constructAst(s[0]); /* run on expr0 */
 					return new Length(((Token) s[1].root).line, expr1);
 				}
 			}
-			return constructAst(s[0]);
-			// case "newClassExpr":
-			// return new NewInstance(((Token) s[0].root).line,
-			// ((Token) s[1].root).value);
-			// case "paranthesisExpr":
-			// expr1 = (Expression) constructAst(s[1]); /* run on expr */
-			// return new ExpressionBlock(expr1);
-			// case "binOpExpr":
-			// expr1 = (Expression) constructAst(s[0]); /* run on first expr */
-			// expr2 = (Expression) constructAst(s[2]); /* run on second expr */
-			// constructAst(s[1]); /* run on binop */
-			// return new BinaryOp(expr1.getLine(), expr1, binary_ops, expr2);
-			// case "unOpExpr":
-			// expr1 = (Expression) constructAst(s[1]);
-			// constructAst(s[0]); /* run on unop */
-			// return new UnaryOp(((Token) s[0].root).line, unary_ops, expr1);
-			// case "newTypeExpr":
-			// type = (Type) constructAst(s[1]); /* run on type */
-			// expr1 = (Expression) constructAst(s[3]); /* run on expr */
-			// return new NewArray(type, expr1);
-			// case "lengthExpr":
-			// expr1 = (Expression) constructAst(s[0]); /* run on expr */
-			// return new Length(((Token) s[0].root).line, expr1);
-			// // + "location -> ID | expr . ID | expr [ expr ] \n"
+			return constructAst(s[0]); /* run on location / call / this / literal */
 		case "location":
 			switch (s.length) {
-			case 1: /* run on ID */
-				return new RefVariable(((Token) s[0].root).line,
-						((Token) s[0].root).value);
-			case 3: /* run on expr.ID */
-				if (s[1].root.tag != ".") {
-					// TODO: throw error - invalid field reference
-				}
-				expr1 = (Expression) constructAst(s[0]);
-				return new RefField(((Token) s[1].root).line, expr1,
-						((Token) s[2].root).value);
+			case 1: /* ID */
+				return new RefVariable(((Token) s[0].root).line, ((Token) s[0].root).value);
+			case 3:
+				expr1 = (Expression) constructAst(s[0]); /* run on expr0 */
+				return new RefField(((Token) s[1].root).line, expr1, ((Token) s[2].root).value);
 			case 4:
-				if (s[1].root.tag != "[" && s[3].root.tag != "]") {
-					// TODO: throw error - invalid array reference
-				}
-				expr1 = (Expression) constructAst(s[0]);
-				expr2 = (Expression) constructAst(s[2]);
+				expr1 = (Expression) constructAst(s[0]); /* run on expr0 */
+				expr2 = (Expression) constructAst(s[2]); /* run on expr */
 				return new RefArrayElement(expr1, expr2);
-
-			default:
-				// TODO: throw error - invalid reference declaration
-				break;
 			}
 			return null;
-		case "stmtCall":
-			return new StmtCall((Call) constructAst(s[0]));
 		case "call":
 			return constructAst(s[0]); /* run on staticCall / virtualCall */
-
-			// + "staticCall -> CLASS_ID . ID ( expr* ) \n"
-			// + "virtualCall -> expr . ID ( expr* ) | ID ( expr* ) \n"
-
 		case "staticCall":
-			// StaticCall static_call = null;
 			arguments = new ArrayList<Expression>();
-			arguments.add((Expression) constructAst(s[4])); /* run on expr* */
-			StaticCall static_call = new StaticCall(((Token) s[0].root).line,
-					((Token) s[0].root).value, ((Token) s[2].root).value,
-					arguments);
-			static_call.removeNulls();
+			constructAst(s[4]); /* run on expr* */
+			StaticCall static_call = new StaticCall(((Token) s[0].root).line, ((Token) s[0].root).value,
+					((Token) s[2].root).value, arguments);
 			return static_call;
 		case "virtualCall":
 			VirtualCall virtual_call = null;
 			arguments = new ArrayList<Expression>();
 			if (s.length == 4) { /* run on ID(expr*) */
-				arguments.add((Expression) constructAst(s[2])); /* run on expr* */
-				virtual_call = new VirtualCall(((Token) s[0].root).line,
-						((Token) s[0].root).value, arguments);
+				constructAst(s[2]); /* run on expr* */
+				virtual_call = new VirtualCall(((Token) s[0].root).line, ((Token) s[0].root).value, arguments);
 			} else if (s.length == 6) { /* run on expr.ID(expr*) */
 				expr1 = (Expression) constructAst(s[0]); /* run on expr */
-				arguments.add((Expression) constructAst(s[4])); /* run on expr* */
-				virtual_call = new VirtualCall(((Token) s[1].root).line, expr1,
-						((Token) s[2].root).value, arguments);
+				constructAst(s[4]); /* run on expr* */
+				virtual_call = new VirtualCall(((Token) s[1].root).line, expr1, ((Token) s[2].root).value, arguments);
 			}
-			virtual_call.removeNulls();
 			return virtual_call;
-			// else {
-			// // TODO: throw error - invalid virtual call
-			// }
-			
-//			+ "expr* -> expr moreExpr |  \n"
-//			+ "moreExpr -> , expr moreExpr |  \n"
-			
 		case "expr*":
 			if (s.length == 0) { /* there aren't any more expressions */
 				return null;
@@ -752,65 +533,6 @@ public class Calc {
 			}
 		case "this":
 			return new This(((Token) s[0].root).line);
-		case "binop":
-			switch (s[0].root.tag) {
-			case "+":
-				binary_ops = BinaryOps.PLUS;
-				break;
-			case "-":
-				binary_ops = BinaryOps.MINUS;
-				break;
-			case "*":
-				binary_ops = BinaryOps.MULTIPLY;
-				break;
-			case "/":
-				binary_ops = BinaryOps.DIVIDE;
-				break;
-			case "%":
-				binary_ops = BinaryOps.MOD;
-				break;
-			case "&&":
-				binary_ops = BinaryOps.LAND;
-				break;
-			case "||":
-				binary_ops = BinaryOps.LOR;
-				break;
-			case "<":
-				binary_ops = BinaryOps.LT;
-				break;
-			case "<=":
-				binary_ops = BinaryOps.LTE;
-				break;
-			case ">":
-				binary_ops = BinaryOps.GT;
-				break;
-			case ">=":
-				binary_ops = BinaryOps.GTE;
-				break;
-			case "==":
-				binary_ops = BinaryOps.EQUAL;
-				break;
-			case "!=":
-				binary_ops = BinaryOps.NEQUAL;
-				break;
-			default:
-				// TODO: throw error - invalid binary operation
-				break;
-			}
-			return null;
-		case "unop":
-			switch (s[0].root.tag) {
-			case "-":
-				unary_ops = UnaryOps.UMINUS;
-				break;
-			case "!":
-				unary_ops = unary_ops.LNEG;
-				break;
-			default:
-				// TODO: throw error - invalid unary operation
-				break;
-			}
-			return null;
 		case "literal":
 			Object value = ((Token) s[0].root).value;
 			Token token = (Token) s[0].root;
@@ -818,38 +540,31 @@ public class Calc {
 			case "INTEGER":
 				long max = 2147483647;
 				long parsedNumber = Long.parseLong((String) value);
-				if (negativeInteger && (parsedNumber > max + 1))
-				{
-					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
+				if (negativeInteger && (parsedNumber > max + 1)) {
+					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line,
+							token.column, value);
 					System.out.println(format);
 					throw new Error("parse error");
 				}
-				if (!negativeInteger && (parsedNumber > max))
-				{
-					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line, token.column, value);
+				if (!negativeInteger && (parsedNumber > max)) {
+					String format = String.format("%d:%d : syntax error; numeric literal out of range: %s", token.line,
+							token.column, value);
 					System.out.println(format);
 					throw new Error("parse error");
 				}
-				return new Literal(((Token) s[0].root).line, DataType.INT,
-						value);
-			
+				return new Literal(((Token) s[0].root).line, DataType.INT, value);
 			case "STRING":
 				value = value.toString().replaceAll("\"", "");
-//				value = value.toString().replaceAll("\\\\\n", "\\\n");
-				return new Literal(((Token) s[0].root).line, DataType.STRING,
-						value);
+				value = value.toString().replaceAll("\\\\n", "\n");
+				value = value.toString().replaceAll("\\\\t", "\t");
+				value = value.toString().replaceAll("\\\\", "\\");
+				return new Literal(((Token) s[0].root).line, DataType.STRING, value);
 			case "true":
-				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN,
-						value);
+				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN, value);
 			case "false":
-				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN,
-						value);
+				return new Literal(((Token) s[0].root).line, DataType.BOOLEAN, value);
 			case "null":
-				return new Literal(((Token) s[0].root).line, DataType.VOID,
-						value);
-			default:
-				// TODO: throw error - invalid literal
-				break;
+				return new Literal(((Token) s[0].root).line, DataType.VOID, value);
 			}
 			return null;
 		case "field*":
@@ -860,64 +575,49 @@ public class Calc {
 			}
 		case "nextField":
 			fields.add((DeclField) constructAst(s[0])); /* run on field */
-			return constructAst(s[1]); /* run on field* */
+			return constructAst(s[1]); /* run on fieldORMethod* */
 		case "field":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
 			constructAst(s[1]); /* run on array */
-			fields.add((DeclField) constructAst(s[3])); // add more IDs - run on
-														// moreIDs*
+			constructAst(s[3]); /* run on moreIDs* */
 			return new DeclField(type, ((Token) s[2].root).value);
+		case "moreIDs*":
+			if (s.length == 0) { /* there aren't any more IDs */
+				return null;
+			} else { 
+				return constructAst(s[0]); /* run on anotherID */
+			}
+		case "anotherID":
+			fields.add(new DeclField(type, ((Token) s[1].root).value)); /* run on moreIDs* */
+			return constructAst(s[2]); /* run on moreIDs* */
 		case "type":
 			switch (s[0].root.tag) {
 			case "int":
 				return new PrimitiveType(((Token) s[0].root).line, DataType.INT);
 			case "boolean":
-				return new PrimitiveType(((Token) s[0].root).line,
-						DataType.BOOLEAN);
+				return new PrimitiveType(((Token) s[0].root).line, DataType.BOOLEAN);
 			case "string":
-				return new PrimitiveType(((Token) s[0].root).line,
-						DataType.STRING);
+				return new PrimitiveType(((Token) s[0].root).line, DataType.STRING);
 			case "CLASS_ID":
-				return new ClassType(((Token) s[0].root).line,
-						((Token) s[0].root).value);
+				return new ClassType(((Token) s[0].root).line, ((Token) s[0].root).value);
 			}
 		case "array":
 			if (s.length > 0) {
-				constructAst(s[0]);
+				return constructAst(s[0]); /* run on dimension */
 			}
 			return null;
 		case "dimension":
 			type.incrementDimension();
-			return constructAst(s[2]);
-		case "moreIDs*":
-			if (s.length == 0) { /* there aren't any more IDs */
-				return null;
-			} else { /* there is another ID - run on anotherID */
-				return constructAst(s[0]);
-			}
-		case "anotherID":
-			fields.add((DeclField) constructAst(s[2])); // run on moreIDs*
-			return new DeclField(type, ((Token) s[1].root).value);
-
+			return constructAst(s[2]); /* run on array */
+		
 		default: /* should never get here */
-			throw new Error("internal error (unimplemented ast)"); // TODO :
-																	// clean the
-																	// unimplemented
-																	// part
+			throw new Error("internal error (unimplemented ast)");
 		}
 	}
 
 	public Node process(Iterable<Token> tokens) {
-		constructAst(parse(tokens));
-		program.removeNulls();
-		for (int i = 0; i < program.getClasses().size(); i++) {
-			program.getClasses().get(i).removeNulls();
-			for (int j = 0; j < program.getClasses().get(i).getMethods().size(); j++) {
-				program.getClasses().get(i).getMethods().get(j).removeNulls();
-			}
-		}
-		return program;
+		return constructAst(parse(tokens));
 	}
 
 }
