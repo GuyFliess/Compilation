@@ -90,13 +90,15 @@ public class Calc {
 			+ "ifElseOperation -> { ifElseBlockStmt* } | stmtWOIf \n"
 			+ "ifElseBlockStmt* -> ifElseNextBlockStmt |  \n"
 			+ "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* \n"
-			+ "ifOperation -> { ifBlockStmt* } | stmt \n"
+			+ "ifOperation -> { ifBlockStmt* } | stmtBonus1 \n"
 			+ "ifBlockStmt* -> ifNextBlockStmt |  \n"
 			+ "ifNextBlockStmt -> stmt ifBlockStmt* \n"
-			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | localVar ; \n"
+			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | type array ID = expr ; \n"
+			+ "stmtBonus1 -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt* | whileStmt | break ; | continue ; | type array ID = expr ; \n"
 			+ "whileStmt -> while ( expr ) whileOperation \n" + "whileOperation -> { whileBlockStmt* } | stmt \n"
 			+ "whileBlockStmt* -> whileNextBlockStmt |  \n" + "whileNextBlockStmt -> stmt whileBlockStmt* \n"
-			+ "localVar -> type array ID | type array ID = expr \n" + "expr -> expr || expr7 | expr7 \n"
+			+ "localVar -> type array ID | type array ID = expr \n" 
+			+ "expr -> expr || expr7 | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n" + "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
 			+ "expr5 -> expr5 < expr4 | expr5 <= expr4 | expr5 > expr4 | expr5 >= expr4 | expr4 \n"
 			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
@@ -312,7 +314,7 @@ public class Calc {
 			return constructAst(s[1]); /* run on ifElseBlockStmt* */
 		case "ifOperation":
 			if (s.length == 1) {
-				return constructAst(s[0]); /* run on stmt */
+				return constructAst(s[0]); /* run on stmtBonus1 */
 			} else if (s.length == 3) {
 				stmt_list.add(new ArrayList<Statement>());
 				constructAst(s[1]); /* run on ifBlockStmt* */
@@ -339,6 +341,29 @@ public class Calc {
 				Ref variable = (Ref) constructAst(s[0]); /* run on location */
 				expr1 = (Expression) constructAst(s[2]); /* run on expr */
 				return new StmtAssignment(variable, expr1);
+			case 6:
+				dimensions = 0;
+				type = (Type) constructAst(s[0]); /* run on type */
+				constructAst(s[1]); /* run on array */
+				expr1 = (Expression) constructAst(s[4]); /* run on expr */
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value, expr1);
+			}
+		case "stmtBonus1":
+			switch (s.length) {
+			case 1:
+				return constructAst(s[0]); /* run on ifStmt* / whileStmt */
+			case 2:
+				return constructAst(s[0]); /* run on stmtCall / returnStmt / break / continue */
+			case 4:
+				Ref variable = (Ref) constructAst(s[0]); /* run on location */
+				expr1 = (Expression) constructAst(s[2]); /* run on expr */
+				return new StmtAssignment(variable, expr1);
+			case 6:
+				dimensions = 0;
+				type = (Type) constructAst(s[0]); /* run on type */
+				constructAst(s[1]); /* run on array */
+				expr1 = (Expression) constructAst(s[4]); /* run on expr */
+				return new LocalVariable(type.getLine(), type, ((Token) s[2].root).value, expr1);
 			}
 		case "whileStmt":
 			expr1 = (Expression) constructAst(s[2]); /* run on expr */
