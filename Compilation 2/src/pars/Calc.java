@@ -471,7 +471,7 @@ public class Calc {
 				return new NewArray(type, expr1);
 			}
 			if (s.length == 4) {
-				return new NewInstance(((Token) s[1].root).line, ((Token) s[1].root).value);
+				return new NewInstance(((Token) s[0].root).line, ((Token) s[1].root).value);
 			}
 			return constructAst(s[0]); /* run on expr0 */
 		case "expr0":
