@@ -1,10 +1,8 @@
 package pars;
 
 import ic.ast.Node;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import lex.Token;
 import fun.grammar.Grammar;
 import fun.parser.earley.EarleyParser;
