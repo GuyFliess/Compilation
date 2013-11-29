@@ -54,6 +54,7 @@ public class Calc extends CalcBase {
 	List<Expression> arguments = new ArrayList<Expression>();
 	List<Statement> statementsBlock = new ArrayList<Statement>();
 	ArrayList<ArrayList<Statement>> stmt_list = new ArrayList<ArrayList<Statement>>();
+	ArrayList<ArrayList<Statement>> if_stmt_list = new ArrayList<ArrayList<Statement>>();
 	Type type, method_type;
 	int dimensions;
 	String method_name;
@@ -80,6 +81,7 @@ public class Calc extends CalcBase {
 			+ "nextStmt ->  stmt stmt* | blockStmt stmt* \n"
 			+ "blockStmt -> { stmt* } \n"
 			+ "stmt -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt* | whileStmt | break ; | continue ; | localVar ; \n"
+			+ "stmtBlock -> stmt stmtBlock |  \n"
 			+ "stmtCall -> call \n"
 			+ "returnStmt -> return | return expr \n"
 			+ "ifStmt* -> ifStmt | ifElseStmt \n"
@@ -87,14 +89,18 @@ public class Calc extends CalcBase {
 			+ "ifElseStmt -> if ( expr ) ifElseOperation else ifOperation \n"
 			+ "ifElseOperation -> { ifElseBlockStmt* } | stmtWOIf \n"
 			+ "ifElseBlockStmt* -> ifElseNextBlockStmt |  \n"
-			+ "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* \n"
+			+ "ifElseNextBlockStmt -> stmtWOIf ifElseBlockStmt* | ifBlockStmt ifElseBlockStmt* \n"
 			+ "ifOperation -> { ifBlockStmt* } | stmtBonus1 \n"
 			+ "ifBlockStmt* -> ifNextBlockStmt |  \n"
-			+ "ifNextBlockStmt -> stmt ifBlockStmt* \n"
+			+ "ifNextBlockStmt -> stmt ifBlockStmt* | ifBlockStmt ifBlockStmt* \n"
+			+ "ifBlockStmt -> { ifBlockStmt* } \n"
 			+ "stmtWOIf -> location = expr ; | stmtCall ; | returnStmt ; | whileStmt | break ; | continue ; | type array ID = expr ; \n"
 			+ "stmtBonus1 -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt* | whileStmt | break ; | continue ; | type array ID = expr ; \n"
-			+ "whileStmt -> while ( expr ) whileOperation \n" + "whileOperation -> { whileBlockStmt* } | stmt \n"
-			+ "whileBlockStmt* -> whileNextBlockStmt |  \n" + "whileNextBlockStmt -> stmt whileBlockStmt* \n"
+			+ "whileStmt -> while ( expr ) whileOperation \n" 
+			+ "whileOperation -> { whileBlockStmt* } | stmt \n"
+			+ "whileBlockStmt* -> whileNextBlockStmt |  \n" 
+			+ "whileNextBlockStmt -> stmt whileBlockStmt* | whileBlockStmt whileBlockStmt* \n"
+			+ "whileBlockStmt -> { whileBlockStmt* } \n"
 			+ "localVar -> type array ID | type array ID = expr \n" 
 			+ "expr -> expr || expr7 | expr7 \n"
 			+ "expr7 -> expr7 && expr6 | expr6 \n" + "expr6 -> expr6 == expr5 | expr6 != expr5 | expr5 \n"
@@ -224,6 +230,9 @@ public class Calc extends CalcBase {
 			stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
 			stmt_list.remove(stmt_list.size() - 1);
 			return stmt_block;
+			
+			
+			
 		case "stmt":
 			switch (s.length) {
 			case 1:
@@ -294,7 +303,13 @@ public class Calc extends CalcBase {
 			}
 		case "ifNextBlockStmt":
 			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmt */
-			return constructAst(s[1]); /* run on ifBlockStmt* */
+			return constructAst(s[1]); /* run on ifBlockStmt* */			
+		case "ifBlockStmt":
+			stmt_list.add(new ArrayList<Statement>());
+			constructAst(s[1]); /* run on stmt* */
+			StmtBlock if_stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
+			stmt_list.remove(stmt_list.size() - 1);
+			return if_stmt_block;
 		case "stmtWOIf":
 			switch (s.length) {
 			case 1:
@@ -352,6 +367,12 @@ public class Calc extends CalcBase {
 		case "whileNextBlockStmt":
 			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmt */
 			return constructAst(s[1]); /* run on whileBlockStmt* */
+		case "whileBlockStmt":
+			stmt_list.add(new ArrayList<Statement>());
+			constructAst(s[1]); /* run on stmt* */
+			StmtBlock while_stmt_block = new StmtBlock(((Token) s[0].root).line, stmt_list.get(stmt_list.size() - 1));
+			stmt_list.remove(stmt_list.size() - 1);
+			return while_stmt_block;
 		case "localVar":
 			dimensions = 0;
 			type = (Type) constructAst(s[0]); /* run on type */
