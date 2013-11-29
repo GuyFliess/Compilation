@@ -1,0 +1,16 @@
+class Test{
+
+		int foo(int a){
+			int c;
+			doo(3);
+			return 0;
+		}
+		
+}
+
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

@@ -1,0 +1,14 @@
+class Test{
+
+		int foo(int a){
+			int c; return 0;
+		}
+		
+		static void main(string[] args){}
+		
+}
+
+class Test2{
+
+	static void main(string[] args){}
+}

@@ -1,0 +1,22 @@
+class Test{
+	int l;
+
+	int foo(int a,boolean b){
+		int c;
+		return 0;
+	}
+	
+}
+
+class Test2 extends Test{
+	int l;
+}
+
+	
+
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

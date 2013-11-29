@@ -1,0 +1,9 @@
+class Test{
+
+	
+	int doo(int c){
+		return true;
+	}
+	
+	static void main(string[] args){}
+}

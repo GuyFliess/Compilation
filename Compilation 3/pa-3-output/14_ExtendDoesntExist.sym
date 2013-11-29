@@ -1,0 +1,1 @@
+10: semantic error; Class Test1 cannot extend Test2, since it's not yet defined

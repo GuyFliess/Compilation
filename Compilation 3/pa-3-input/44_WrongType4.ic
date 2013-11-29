@@ -1,0 +1,17 @@
+class Test{
+
+	int foo(int a,boolean b){
+		int c;
+		return 0;
+	}
+	
+	static int doo(int c){
+		return true;
+	}
+}
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

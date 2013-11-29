@@ -1,0 +1,47 @@
+
+Global Symbol Table
+    Class:  A
+    Class:  B
+    Class:  C
+
+Class Symbol Table: A
+    Field:  str : string
+    Field:  i : int
+    Static method:  sfunc : boolean -> int
+    Virtual method:  vfunc : A, int, int -> void
+
+Method Symbol Table: sfunc  (parent = A)
+    Parameter:  b : boolean
+
+Statement Block Symbol Table: @sfunc  (parent = sfunc)
+
+Statement Block Symbol Table: @sfunc  (parent = @sfunc)
+    Local variable:  k : int
+
+Statement Block Symbol Table: @sfunc  (parent = sfunc)
+    Local variable:  x : A
+
+Statement Block Symbol Table: @vfunc  (parent = sfunc)
+
+Method Symbol Table: vfunc  (parent = A)
+    Parameter:  a : A
+    Parameter:  max : int
+    Parameter:  val : int
+    Local variable:  arr : int[]
+    Local variable:  i : int
+
+Class Symbol Table: B  (parent = A)
+    Field:  j : int
+    Virtual method:  vfunc : A, int, int -> void
+
+Method Symbol Table: vfunc  (parent = B)
+    Parameter:  a : A
+    Parameter:  max : int
+    Parameter:  val : int
+
+Class Symbol Table: C
+    Static method:  main : string[] -> void
+
+Method Symbol Table: main  (parent = C)
+    Parameter:  args : string[]
+    Local variable:  a : A[][]

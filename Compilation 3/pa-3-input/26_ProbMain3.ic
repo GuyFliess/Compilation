@@ -1,0 +1,9 @@
+class Test{
+
+		void foo(int a){
+			int c;
+		}
+		
+		static void main(int args){}
+		
+}

@@ -1,0 +1,17 @@
+class Test{
+
+	void foo(int a, boolean b){
+		while(true){
+			int e;
+			e =3;
+		}
+		continue;
+	}
+	
+}
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

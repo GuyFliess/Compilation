@@ -1,0 +1,20 @@
+class A {
+  string str;
+  int i;
+
+  static int sfunc() {
+   i = 5;
+   return i;
+  }
+
+  int vfunc() {
+    return 1;
+  }
+}
+
+class C {
+  static void main(string[] args) {
+    A a;
+	A.sfunc();
+  }
+}

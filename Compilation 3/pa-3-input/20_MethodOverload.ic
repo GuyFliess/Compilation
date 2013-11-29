@@ -1,0 +1,21 @@
+class Test{
+
+	int foo(int a, boolean b){
+		int c;
+		return 0;
+	}
+}
+
+class Test2 extends Test{
+
+	int foo(boolean a, int b){
+		int c;
+		return 0;
+	}
+}
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

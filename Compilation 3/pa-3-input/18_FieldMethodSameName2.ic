@@ -1,0 +1,17 @@
+class Test{
+	int d;
+		int foo(int a){
+			int c;
+			return 0;
+		}
+		
+}
+
+class Test1 extends Test{
+	
+	int d(boolean a){
+	 return 0;
+	}
+	
+	static void main(string[] args){}
+}

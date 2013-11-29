@@ -1,0 +1,15 @@
+class Test{
+
+	int foo(int a, boolean b){
+		this.doo();
+		return 0;
+	}
+}
+
+
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

@@ -1,0 +1,18 @@
+class Test{
+
+		int foo(int a){
+			int c;
+			return 0;
+		}
+		
+}
+
+class Test1 extends Test2{
+	int d;
+}
+
+class C {
+  static void main(string[] args) {
+   int a;
+  }
+}

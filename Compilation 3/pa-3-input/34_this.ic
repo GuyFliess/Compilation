@@ -1,0 +1,13 @@
+class Test{
+
+	static int hello(int a){
+	a =5;
+	{
+	this.doo();
+	} return 0;
+	}
+	
+	int doo(){ return 0; }
+	
+	static void main(string[] args){}
+}
