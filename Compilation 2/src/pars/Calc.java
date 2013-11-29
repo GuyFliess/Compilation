@@ -54,7 +54,6 @@ public class Calc extends CalcBase {
 	List<Expression> arguments = new ArrayList<Expression>();
 	List<Statement> statementsBlock = new ArrayList<Statement>();
 	ArrayList<ArrayList<Statement>> stmt_list = new ArrayList<ArrayList<Statement>>();
-	ArrayList<ArrayList<Statement>> if_stmt_list = new ArrayList<ArrayList<Statement>>();
 	Type type, method_type;
 	int dimensions;
 	String method_name;
