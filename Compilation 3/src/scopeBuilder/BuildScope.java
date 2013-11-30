@@ -32,7 +32,6 @@ import scope.*;
 
 public class BuildScope implements Visitor{
 	
-	GlobalScope scope = new GlobalScope();
 	
 	public GlobalScope build(Node programAst) {
 		
@@ -65,7 +64,7 @@ public class BuildScope implements Visitor{
 		}
 		
 		for (DeclMethod method : icClass.getMethods()) {
-			
+			classS.addMethod(method);
 		}
 		
 		return null;

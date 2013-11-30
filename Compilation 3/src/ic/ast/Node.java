@@ -1,4 +1,5 @@
 package ic.ast;
+import scope.*;
 
 
 /**
@@ -7,6 +8,7 @@ package ic.ast;
 public abstract class Node {
 
 	private int line;
+	private Scope scope;
 
 	/**
 	 * Double dispatch method, to allow a visitor to visit a specific subclass.
