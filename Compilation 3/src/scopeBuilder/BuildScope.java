@@ -66,14 +66,14 @@ public class BuildScope implements Visitor{
 		
 		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
-			method.accept(this);
+			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod)
 			{
-				classScope.addMethod((DeclStaticMethod) method);
+				classScope.addMethod((DeclStaticMethod) method, methodScope);
 			}
 			if (method instanceof DeclVirtualMethod)
 			{
-				classScope.addMethod((DeclVirtualMethod) method);
+				classScope.addMethod((DeclVirtualMethod) method, methodScope);
 			}
 		}
 		
@@ -88,8 +88,8 @@ public class BuildScope implements Visitor{
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		
 		MethodScope methodscope = new MethodScope(currentScope);
+		
 		currentScope = methodscope;		
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals())
@@ -99,8 +99,10 @@ public class BuildScope implements Visitor{
 		}
 		for (Statement statement : method.getStatements())
 		{
+			
 			statement.accept(this);
 		}
+		
 		return null;
 	}
 

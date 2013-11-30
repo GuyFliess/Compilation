@@ -1,8 +1,8 @@
 package scope;
 
-import ic.ast.decl.DeclClass;
+
 import ic.ast.decl.DeclField;
-import ic.ast.decl.DeclMethod;
+
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Type;
@@ -29,22 +29,13 @@ public class ClassScope extends Scope {
 		fields.put(field.toString(), field.getType());
 	}
 
-	public void addMethod(DeclStaticMethod method) {
-
+	public void addMethod(DeclStaticMethod method, MethodScope scope) {
+		staticMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope));
 	}
 
-	public void addMethod(DeclVirtualMethod method) {
-
+	public void addMethod(DeclVirtualMethod method, MethodScope scope) {
+		virtualMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope));
 	}
 
-	public void addClass(DeclClass icClass) {
-		for (DeclField field : icClass.getFields()) {
-			fields.put(field.toString(), field.getType());
-		}
 
-		for (DeclMethod method : icClass.getMethods()) {
-
-		}
-
-	}
 }

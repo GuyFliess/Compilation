@@ -1,5 +1,6 @@
 package scope;
 
+import ic.ast.decl.Parameter;
 import ic.ast.decl.Type;
 
 import java.util.ArrayList;
@@ -12,13 +13,13 @@ public class MethodTypeWrapper {
 	Type ReturnType;
 	MethodScope bodyScope;
 	
-	public MethodTypeWrapper (String name, Type returnType, Type[] parameters, MethodScope scope)
+	public MethodTypeWrapper (String name, Type returnType, Collection<Parameter> parameters, MethodScope scope)
 	{
 		Name = name;
 		ReturnType = returnType;
 		Parameters = new ArrayList<Type>();
-		for (Type type : parameters) {
-			Parameters.add(type);
+		for (Parameter parameter : parameters) {
+			Parameters.add(parameter.getType());
 		}
 		this.bodyScope = scope; 
 	}
