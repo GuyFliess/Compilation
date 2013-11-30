@@ -5,6 +5,8 @@ import ic.ast.Visitor;
 
 import java.util.List;
 
+import scope.Scope;
+
 /**
  * Root AST node for an IC program.
  * 

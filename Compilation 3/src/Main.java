@@ -7,6 +7,7 @@ import pars.Calc;
 import pars.LibCalc;
 import ic.ast.Node;
 import ic.ast.PrettyPrint;
+import ic.ast.decl.Program;
 
 public class Main {
 	public static void main(String[] args) {
@@ -33,6 +34,8 @@ public class Main {
 				System.out.println(libAst.accept(printer));
 			}
 			Node programAst = calc.process(programTokens); // process program
+			Program p = (Program) programAst;
+			
 			System.out.println(programAst.accept(printer));
 			int interpStartLocation = 1;
 			if (args.length > 1) {

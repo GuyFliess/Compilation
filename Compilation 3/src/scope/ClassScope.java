@@ -10,13 +10,19 @@ import ic.ast.decl.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClassScope {
+public class ClassScope extends Scope {
+
+	public ClassScope(Scope scope) {
+		super(scope);
+		// TODO Auto-generated constructor stub
+	}
 
 	// Static
 	// for each method we need: name, parametrs types, return type(, Scope??)
 	Map<String, MethodTypeWrapper> staticMethodScopes = new HashMap<>();
 	// instance
 	Map<String, MethodTypeWrapper> virtualMethodScopes = new HashMap<>();
+	
 	Map<String, Type> fields = new HashMap<>();
 
 	public void addField(DeclField field) {

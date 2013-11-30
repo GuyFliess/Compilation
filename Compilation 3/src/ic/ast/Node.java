@@ -33,5 +33,10 @@ public abstract class Node {
 	public int getLine() {
 		return line;
 	}
+	
+	public void SetScope(Scope scope)
+	{
+		this.scope = scope;
+	}
 
 }

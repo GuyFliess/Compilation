@@ -16,6 +16,7 @@ import ic.ast.expr.This;
 import ic.ast.expr.UnaryOp;
 import ic.ast.expr.VirtualCall;
 import ic.ast.stmt.LocalVariable;
+import ic.ast.stmt.Statement;
 import ic.ast.stmt.StmtAssignment;
 import ic.ast.stmt.StmtBlock;
 import ic.ast.stmt.StmtBreak;
@@ -31,14 +32,11 @@ import java.util.Map;
 import scope.*;
 
 public class BuildScope implements Visitor{
-	
+
+	Scope currentScope;
 	
 	public GlobalScope build(Node programAst) {
-		
-		
-		
-		
-		
+
 		
 		return null;
 		
@@ -46,41 +44,63 @@ public class BuildScope implements Visitor{
 
 	@Override
 	public Object visit(Program program) {
-
+		GlobalScope globalScope = new GlobalScope(null);		
+		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
-			scope.add(icClass.accept(this));/// TODO add class to classScope
-		}
-		
-		return null;
+			currentScope = globalScope;
+			globalScope.AddClassScope((ClassScope) icClass.accept(this), icClass);/// TODO add class to classScope			
+		}		
+		return globalScope;
 	}
 
 	@Override
 	public Object visit(DeclClass icClass) {
 		// TODO Auto-generated method stub
-		ClassScope classS = new ClassScope();
-		
+		ClassScope classScope = new ClassScope(currentScope);		
+		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
-			classS.addField(field);
+			
+			field.accept(this);
+			classScope.addField(field);
 		}
 		
 		for (DeclMethod method : icClass.getMethods()) {
-			classS.addMethod(method);
+			currentScope = classScope;
+			method.accept(this);
+			if (method instanceof DeclStaticMethod)
+			{
+				classScope.addMethod((DeclStaticMethod) method);
+			}
+			if (method instanceof DeclVirtualMethod)
+			{
+				classScope.addMethod((DeclVirtualMethod) method);
+			}
 		}
 		
-		return null;
+		return classScope;
 	}
 
 	@Override
 	public Object visit(DeclField field) {
-		// TODO Auto-generated method stub
-		
-		
+		field.SetScope(currentScope);		
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		// TODO Auto-generated method stub
+		
+		MethodScope methodscope = new MethodScope(currentScope);
+		currentScope = methodscope;		
+		method.getType().accept(this);
+		for (Parameter formal : method.getFormals())
+		{
+			methodscope.AddParameter(formal);		
+			formal.accept(this);
+		}
+		for (Statement statement : method.getStatements())
+		{
+			statement.accept(this);
+		}
 		return null;
 	}
 
