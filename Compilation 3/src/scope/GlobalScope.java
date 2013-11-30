@@ -9,5 +9,9 @@ public class GlobalScope {
 														// or just the class
 														// names, but this seems
 														// comfortable
+	
+	public void add(Object object) {
+		//TODO
+	}
 
 }
