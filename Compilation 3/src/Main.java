@@ -5,6 +5,8 @@ import lex.Lexer;
 import lex.Token;
 import pars.Calc;
 import pars.LibCalc;
+import scopeBuilder.BuildScope;
+import scopeBuilder.PrintScope;
 import ic.ast.Node;
 import ic.ast.PrettyPrint;
 import ic.ast.decl.Program;
@@ -36,6 +38,7 @@ public class Main {
 			Node programAst = calc.process(programTokens); // process program
 			Program p = (Program) programAst;
 			
+			
 			System.out.println(programAst.accept(printer));
 			int interpStartLocation = 1;
 			if (args.length > 1) {
@@ -60,7 +63,15 @@ public class Main {
 			}
 			else // SymbolTable and typecheck
 			{
+				
+				
 				System.out.println("Building symbol table");
+				
+				BuildScope scope = new BuildScope();
+				programAst.accept(scope);
+				
+				PrintScope printScope = new PrintScope();
+				printScope.Print(p);
 				
 				System.out.println("type checking");
 			}

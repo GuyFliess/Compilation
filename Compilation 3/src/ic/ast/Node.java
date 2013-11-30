@@ -38,5 +38,10 @@ public abstract class Node {
 	{
 		this.scope = scope;
 	}
+	
+	public Scope GetScope()
+	{
+		return scope;
+	}
 
 }

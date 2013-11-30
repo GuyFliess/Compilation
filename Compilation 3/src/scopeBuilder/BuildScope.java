@@ -64,6 +64,7 @@ public class BuildScope implements Visitor {
 
 		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
+			currentScope.parent = icClass.getName();
 			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);
@@ -72,7 +73,7 @@ public class BuildScope implements Visitor {
 				classScope.addMethod((DeclVirtualMethod) method, methodScope);
 			}
 		}
-
+		currentScope.parent = null;
 		return classScope;
 	}
 
@@ -94,7 +95,10 @@ public class BuildScope implements Visitor {
 		}
 		
 		for (Statement statement : method.getStatements()) {
+			currentScope = methodscope;
+			currentScope.parent = "@"+methodscope.parent;
 			statement.accept(this);
+			
 //			methodscope.AddStatement((StatementBlockScope) statement
 //					.accept(this));
 		}
@@ -114,7 +118,10 @@ public class BuildScope implements Visitor {
 		}
 		for (Statement statement : method.getStatements()) {
 //			methodscope.AddStatement((StatementBlockScope) statement
-					statement.accept(this);
+			currentScope = methodscope;
+			currentScope.parent = "@"+methodscope.parent;		
+			statement.accept(this);
+					
 		}
 
 		return methodscope;
@@ -197,7 +204,12 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(StmtBlock statementsBlock) {
-		// TODO Auto-generated method stub
+		StatementBlockScope statementBlockScope = new StatementBlockScope(currentScope);
+		currentScope = statementBlockScope;
+		
+		for (Statement statement : statementsBlock.getStatements()) {
+			statement.accept(this);
+		}
 		return null;
 	}
 

@@ -10,10 +10,19 @@ import java.util.List;
 public abstract class Scope {
 	
 	public Scope fatherScope;
+	public String parent;
 		
 	public Scope(Scope scope)
 	{
-		fatherScope = scope; 
+		if (scope != null) {
+			fatherScope = scope.fatherScope; 
+			parent = scope.parent;
+		}
+		else {
+			fatherScope = null;
+			parent = null;
+		}
+		
 	}
 	
 	public abstract void AddVar(Object type);
