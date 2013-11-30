@@ -25,10 +25,6 @@ import ic.ast.stmt.StmtContinue;
 import ic.ast.stmt.StmtIf;
 import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import scope.*;
 
 public class BuildScope implements Visitor {
@@ -59,9 +55,11 @@ public class BuildScope implements Visitor {
 		ClassScope classScope = new ClassScope(currentScope);
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
-
+			
 			field.accept(this);
-			classScope.addField(field);
+			
+//			classScope.addField(field);
+			classScope.AddVar(field);
 		}
 
 		for (DeclMethod method : icClass.getMethods()) {
@@ -91,15 +89,17 @@ public class BuildScope implements Visitor {
 		currentScope = methodscope;
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals()) {
-			methodscope.AddParameter(formal);
+			methodscope.AddParameter(formal);  //TODO change to Addvar
 			formal.accept(this);
 		}
+		
 		for (Statement statement : method.getStatements()) {
-			methodscope.AddStatement((StatementBlockScope) statement
-					.accept(this));
+			statement.accept(this);
+//			methodscope.AddStatement((StatementBlockScope) statement
+//					.accept(this));
 		}
 
-		return null;
+		return methodscope;
 	}
 
 	@Override
@@ -113,11 +113,11 @@ public class BuildScope implements Visitor {
 			formal.accept(this);
 		}
 		for (Statement statement : method.getStatements()) {
-			methodscope.AddStatement((StatementBlockScope) statement
-					.accept(this));
+//			methodscope.AddStatement((StatementBlockScope) statement
+					statement.accept(this);
 		}
 
-		return null;
+		return methodscope;
 	}
 
 	@Override
@@ -203,7 +203,8 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		// TODO Auto-generated method stub
+		
+		currentScope.AddVar(localVariable);
 		return null;
 	}
 

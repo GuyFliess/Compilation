@@ -2,7 +2,6 @@ package scope;
 
 
 import ic.ast.decl.DeclField;
-
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Type;
@@ -25,9 +24,9 @@ public class ClassScope extends Scope {
 	
 	Map<String, Type> fields = new HashMap<>();
 
-	public void addField(DeclField field) {
-		fields.put(field.toString(), field.getType());
-	}
+//	public void addField(DeclField field) {
+//		fields.put(field.toString(), field.getType());
+//	}
 
 	public void addMethod(DeclStaticMethod method, MethodScope scope) {
 		staticMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope));
@@ -35,6 +34,14 @@ public class ClassScope extends Scope {
 
 	public void addMethod(DeclVirtualMethod method, MethodScope scope) {
 		virtualMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope));
+	}
+
+	@Override
+	public void AddVar(Object type) {
+		DeclField field = (DeclField) type;
+		fields.put(field.getName(), field.getType());
+		// TODO Auto-generated method stub
+		
 	}
 
 

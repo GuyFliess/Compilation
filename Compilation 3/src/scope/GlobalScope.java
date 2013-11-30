@@ -24,4 +24,11 @@ public class GlobalScope extends Scope {
 		
 	}
 
+
+	@Override
+	public void AddVar(Object type) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

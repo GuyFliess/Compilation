@@ -1,5 +1,7 @@
 package scope;
 
+import ic.ast.decl.Type;
+
 import java.util.List;
 
 
@@ -13,6 +15,8 @@ public abstract class Scope {
 	{
 		fatherScope = scope; 
 	}
+	
+	public abstract void AddVar(Object type);
 //	public List<Scope> childScopes;
 	
 // abstract public void add(Scope scope);
