@@ -50,8 +50,19 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclClass icClass) {
-		// TODO Auto-generated method stub
-		ClassScope classScope = new ClassScope(currentScope, icClass.getName());
+		ClassScope classScope;
+		if (icClass.hasSuperClass())
+		{
+			String superClassName = icClass.getSuperClassName();
+			ClassScope superScope = ((GlobalScope) currentScope).GetclassesScopes().get(superClassName);
+			classScope = new ClassScope(superScope, icClass.getName());
+			classScope.HasSuperNode = true;
+		}
+		else
+		{
+			 classScope = new ClassScope(currentScope, icClass.getName());
+		}
+		
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
 			

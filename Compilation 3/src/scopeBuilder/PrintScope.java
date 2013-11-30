@@ -45,7 +45,12 @@ public class PrintScope {
 
 	private void print(ClassScope classScope) {
 	
-		System.out.println("Class Symbol Table: "+classScope.getName());
+		System.out.print(String.format("Class Symbol Table: %s ",classScope.getName())); // TODO hadnle fathers
+		if (classScope.HasSuperNode)
+		{
+			System.out.print(String.format("(parent = %s)",classScope.fatherScope.getName()));
+		}
+		System.out.println();
 		
 		Map<String, Type> fields = classScope.getFields();
 		for (String name : fields.keySet()) {
@@ -92,7 +97,7 @@ public class PrintScope {
 	}
 
 	private void print(MethodScope bodyScope) {		
-		System.out.println(String.format("Method Symbol Table: %s",bodyScope.getName()));
+		System.out.println(String.format("Method Symbol Table: %s",bodyScope.getName())); // TODO hadnle fathers
 		
 		//print the symbol table
 		Map<String, Type> parameters = bodyScope.getParameters();
@@ -115,7 +120,7 @@ public class PrintScope {
 
 	private void print(StatementBlockScope blockScope) {
 		// TODO Auto-generated method stub
-		System.out.println(String.format("Statement Block Symbol Table: %s", blockScope.getName()));
+		System.out.println(String.format("Statement Block Symbol Table: %s", blockScope.getName())); // TODO hadnle fathers
 		
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {

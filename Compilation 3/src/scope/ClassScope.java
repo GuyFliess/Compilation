@@ -24,6 +24,8 @@ public class ClassScope extends Scope {
 	Map<String, MethodTypeWrapper> virtualMethodScopes = new HashMap<>();
 	
 	Map<String, Type> fields = new HashMap<>();
+	
+	public boolean HasSuperNode = false; 
 
 //	public void addField(DeclField field) {
 //		fields.put(field.toString(), field.getType());
