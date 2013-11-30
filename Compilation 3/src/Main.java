@@ -34,7 +34,7 @@ public class Main {
 			}
 			Node programAst = calc.process(programTokens); // process program
 			System.out.println(programAst.accept(printer));
-			int interpStartLocation = -1;
+			int interpStartLocation = 1;
 			if (args.length > 1) {
 				interpStartLocation = 1;
 
@@ -42,7 +42,7 @@ public class Main {
 					interpStartLocation = 2;
 				}
 			}
-			if (args.length >= interpStartLocation) // this means we have args
+			if (args.length > interpStartLocation) // this means we have args
 													// to interp, so do interp
 													// flow
 			{
