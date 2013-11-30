@@ -30,6 +30,7 @@ public class PrintScope {
 
 	public void Print(GlobalScope globalScope)
 	{
+		System.out.println("Global Symbol Table");
 		for (  String name : globalScope.GetclassesScopes().keySet())
 			{
 				System.out.println("    Class: "+ name);
@@ -80,7 +81,7 @@ public class PrintScope {
 		{
 			MethodTypeWrapper methodWrapper = methods.get(name);
 			StringBuffer output = new StringBuffer();
-			output.append(String.format("%s method:  %s : ",typeOfMethods, name ));
+			output.append(String.format("    %s method:  %s : ",typeOfMethods, name ));
 		
 			for (Type type : methodWrapper.getParameters()) { //TODO fix last ','
 				output.append(type.getDisplayName());
@@ -90,6 +91,7 @@ public class PrintScope {
 			output.append("-> ");
 			output.append(methodWrapper.getReturnType().getDisplayName());
 			
+		
 			System.out.println(output.toString());
 //			print(methodWrapper.getBodyScope());
 
@@ -97,22 +99,22 @@ public class PrintScope {
 	}
 
 	private void print(MethodScope bodyScope) {		
-		System.out.println(String.format("Method Symbol Table: %s",bodyScope.getName())); // TODO hadnle fathers
+		System.out.println(String.format("Method Symbol Table: %s (father = %s)",bodyScope.getName(),bodyScope.fatherScope.getName())); // TODO hadnle fathers
 		
 		//print the symbol table
 		Map<String, Type> parameters = bodyScope.getParameters();
 		for (String name : parameters.keySet()) {
-			System.out.println(String.format("Parameter:  %s : %s", name, parameters.get(name).getDisplayName()));
+			System.out.println(String.format("    Parameter:  %s : %s", name, parameters.get(name).getDisplayName()));
 		}
 		Map<String, Type> localVariables = bodyScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {
-			System.out.println(String.format("Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
+			System.out.println(String.format("    Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
 		}
 		System.out.println();
 		
 		//Recursively print child scopes
 		
-		for (StatementBlockScope blockScope : bodyScope.getStmtScopes()) {
+		for (StatementBlockScope blockScope : bodyScope.getBlockScopes()) {
 			print(blockScope);
 		}
 		
@@ -120,15 +122,15 @@ public class PrintScope {
 
 	private void print(StatementBlockScope blockScope) {
 		// TODO Auto-generated method stub
-		System.out.println(String.format("Statement Block Symbol Table: %s", blockScope.getName())); // TODO hadnle fathers
+		System.out.println(String.format("Statement Block Symbol Table: %s(father = %s)", blockScope.getName(),blockScope.fatherScope.getName())); // TODO hadnle fathers
 		
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {
-			System.out.println(String.format("Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
+			System.out.println(String.format("    Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
 		}
 		System.out.println();
 		
-		for (StatementBlockScope childScope : blockScope.getStmtBlocks().values()) {
+		for (StatementBlockScope childScope : blockScope.getBlockScopes()) {
 			print(childScope);
 		}
 		

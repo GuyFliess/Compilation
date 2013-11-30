@@ -62,7 +62,7 @@ public class BuildScope implements Visitor {
 		{
 			 classScope = new ClassScope(currentScope, icClass.getName());
 		}
-		
+		icClass.SetScope(classScope);
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
 			
@@ -95,7 +95,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclVirtualMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope, method.getName());
-
+		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals()) {
@@ -115,7 +115,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclStaticMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope, method.getName());
-
+		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals()) {
@@ -133,7 +133,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclLibraryMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope, method.getName());
-
+		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals()) {
@@ -153,48 +153,64 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(PrimitiveType type) {
+		type.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(ClassType type) {
+		type.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
+		assignment.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtCall callStatement) {
+		callStatement.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtReturn returnStatement) {
+		returnStatement.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
+		ifStatement.SetScope(currentScope);
+		
+		ifStatement.getCondition().accept(this);
+		
+		currentScope = ifStatement.GetScope();
+		ifStatement.getOperation().accept(this);
+		currentScope = ifStatement.GetScope();
+		if (ifStatement.hasElse())
+			ifStatement.getElseOperation().accept(this);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
+		whileStatement.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
+		breakStatement.SetScope(currentScope);
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -206,9 +222,35 @@ public class BuildScope implements Visitor {
 	}
 
 	@Override
-	public Object visit(StmtBlock statementsBlock) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object visit(StmtBlock statementsBlock)
+	{
+		StatementBlockScope blockscope;
+		if (currentScope instanceof MethodScope) //TODO a more proper inheritance would help avoid this switch
+		{
+			blockscope = new StatementBlockScope(currentScope, String.format("@%s", currentScope.getName()));
+//			((MethodScope) currentScope).AddStatementScope(blockscope); 
+		}
+		else if (currentScope instanceof StatementBlockScope)
+		{
+			blockscope = new StatementBlockScope(currentScope, currentScope.getName());	
+//			((StatementBlockScope) currentScope).AddStatementScope(blockscope);
+		}
+		else
+		{
+			throw new Error("Internal error, current scope should by either stmt block or method scope");
+		}
+		((StatementBlockScope) currentScope).AddStatementScope(blockscope);
+			
+		statementsBlock.SetScope(blockscope);
+		
+		
+		for (Statement statement : statementsBlock.getStatements())
+		{
+			currentScope = blockscope;
+			statement.accept(this);
+		}
+		
+		return blockscope;
 	}
 
 	@Override

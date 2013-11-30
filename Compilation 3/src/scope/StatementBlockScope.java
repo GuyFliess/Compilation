@@ -2,8 +2,9 @@ package scope;
 
 import ic.ast.decl.Type;
 import ic.ast.stmt.LocalVariable;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StatementBlockScope extends Scope {
@@ -14,11 +15,16 @@ public class StatementBlockScope extends Scope {
 	
 	Map<String, Type> localVariables = new HashMap<>();
 	
-	Map<String, StatementBlockScope> stmtBlocks = new HashMap<>();
+	List<StatementBlockScope> blockScopes = new ArrayList<>();
 	
 	public Map<String, Type> getLocalVariables() { return localVariables;}
 	
-	public Map<String, StatementBlockScope> getStmtBlocks() { return stmtBlocks;}
+	public List<StatementBlockScope> getBlockScopes() { return blockScopes;}
+	
+	public void AddStatementScope(StatementBlockScope stmtScope) {
+		this.blockScopes.add(stmtScope);		
+	}
+
 	
 	@Override
 	public void AddVar(Object type) {
