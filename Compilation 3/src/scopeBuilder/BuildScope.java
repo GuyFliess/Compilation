@@ -27,8 +27,7 @@ import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
 import scope.*;
 
-public class BuildScope implements Visitor {
-
+public class BuildScope implements Visitor { 
 	Scope currentScope;
 
 	public GlobalScope build(Node programAst) {
@@ -39,7 +38,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
-		GlobalScope globalScope = new GlobalScope(null);
+		GlobalScope globalScope = new GlobalScope(null,"Global");
 		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;
@@ -52,7 +51,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclClass icClass) {
 		// TODO Auto-generated method stub
-		ClassScope classScope = new ClassScope(currentScope);
+		ClassScope classScope = new ClassScope(currentScope, icClass.getName());
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
 			
@@ -64,7 +63,6 @@ public class BuildScope implements Visitor {
 
 		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
-			currentScope.parent = icClass.getName();
 			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);
@@ -73,7 +71,7 @@ public class BuildScope implements Visitor {
 				classScope.addMethod((DeclVirtualMethod) method, methodScope);
 			}
 		}
-		currentScope.parent = null;
+
 		return classScope;
 	}
 
@@ -85,7 +83,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope);
+		MethodScope methodscope = new MethodScope(currentScope, method.getName());
 
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -95,10 +93,7 @@ public class BuildScope implements Visitor {
 		}
 		
 		for (Statement statement : method.getStatements()) {
-			currentScope = methodscope;
-			currentScope.parent = "@"+methodscope.parent;
 			statement.accept(this);
-			
 //			methodscope.AddStatement((StatementBlockScope) statement
 //					.accept(this));
 		}
@@ -108,7 +103,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclStaticMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope);
+		MethodScope methodscope = new MethodScope(currentScope, method.getName());
 
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -118,10 +113,7 @@ public class BuildScope implements Visitor {
 		}
 		for (Statement statement : method.getStatements()) {
 //			methodscope.AddStatement((StatementBlockScope) statement
-			currentScope = methodscope;
-			currentScope.parent = "@"+methodscope.parent;		
-			statement.accept(this);
-					
+					statement.accept(this);
 		}
 
 		return methodscope;
@@ -129,7 +121,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclLibraryMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope);
+		MethodScope methodscope = new MethodScope(currentScope, method.getName());
 
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -204,12 +196,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(StmtBlock statementsBlock) {
-		StatementBlockScope statementBlockScope = new StatementBlockScope(currentScope);
-		currentScope = statementBlockScope;
-		
-		for (Statement statement : statementsBlock.getStatements()) {
-			statement.accept(this);
-		}
+		// TODO Auto-generated method stub
 		return null;
 	}
 

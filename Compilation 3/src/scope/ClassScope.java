@@ -11,11 +11,12 @@ import java.util.Map;
 
 public class ClassScope extends Scope {
 
-	public ClassScope(Scope scope) {
-		super(scope);
-		// TODO Auto-generated constructor stub
+	public ClassScope(Scope scope, String name) {
+		super(scope, name);		
 	}
 
+	
+	
 	// Static
 	// for each method we need: name, parametrs types, return type(, Scope??)
 	Map<String, MethodTypeWrapper> staticMethodScopes = new HashMap<>();
@@ -28,8 +29,11 @@ public class ClassScope extends Scope {
 //		fields.put(field.toString(), field.getType());
 //	}
 
+	
+	
 	public void addMethod(DeclStaticMethod method, MethodScope scope) {
-		staticMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope));
+		MethodTypeWrapper wrapper = new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), scope);
+		staticMethodScopes.put(method.getName(),wrapper);
 	}
 
 	public void addMethod(DeclVirtualMethod method, MethodScope scope) {
@@ -41,7 +45,21 @@ public class ClassScope extends Scope {
 		DeclField field = (DeclField) type;
 		fields.put(field.getName(), field.getType());
 		// TODO Auto-generated method stub
-		
+	}
+	
+	public Map<String, Type> getFields()
+	{
+		return fields;
+	}
+	
+	public Map<String, MethodTypeWrapper> getVirtualMethodScopes()
+	{
+		return virtualMethodScopes;
+	}
+	
+	public Map<String, MethodTypeWrapper> getStaticMethodScopes()
+	{
+		return staticMethodScopes;
 	}
 
 

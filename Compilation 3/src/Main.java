@@ -5,6 +5,7 @@ import lex.Lexer;
 import lex.Token;
 import pars.Calc;
 import pars.LibCalc;
+import scope.GlobalScope;
 import scopeBuilder.BuildScope;
 import scopeBuilder.PrintScope;
 import ic.ast.Node;
@@ -67,11 +68,13 @@ public class Main {
 				
 				System.out.println("Building symbol table");
 				
-				BuildScope scope = new BuildScope();
-				programAst.accept(scope);
+				BuildScope scopeBuilder = new BuildScope();
+				GlobalScope globalScope = (GlobalScope) programAst.accept(scopeBuilder);
 				
 				PrintScope printScope = new PrintScope();
-				printScope.Print(p);
+				printScope.Print(globalScope);
+				
+//				printScope.Print(p);
 				
 				System.out.println("type checking");
 			}

@@ -1,8 +1,6 @@
 package scope;
 
-import ic.ast.decl.Type;
 
-import java.util.List;
 
 
 
@@ -10,10 +8,13 @@ import java.util.List;
 public abstract class Scope {
 	
 	public Scope fatherScope;
-	public String parent;
+	private String name;
+	public String parent; //TODO Lital, I added a name for the scope itself, so I think we can remove this and go to fatherScope.GetName()
 		
-	public Scope(Scope scope)
+	public Scope(Scope scope, String name)
 	{
+		this.name = name;
+		
 		if (scope != null) {
 			fatherScope = scope.fatherScope; 
 			parent = scope.parent;
@@ -23,6 +24,11 @@ public abstract class Scope {
 			parent = null;
 		}
 		
+	}
+
+	public String getName()
+	{
+		return name;
 	}
 	
 	public abstract void AddVar(Object type);

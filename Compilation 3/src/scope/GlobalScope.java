@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GlobalScope extends Scope {
-	public GlobalScope(Scope scope) {
-		super(scope);
+	public GlobalScope(Scope scope, String name) {
+		super(scope, name);
 		// TODO Auto-generated constructor stub
 	}
 
 
-	Map<String, ClassScope> classes = new HashMap<>(); // TODO not sure if we
+	private Map<String, ClassScope> classes = new HashMap<>(); // TODO not sure if we
 														// need the class scopes
 														// or just the class
 														// names, but this seems
@@ -29,6 +29,11 @@ public class GlobalScope extends Scope {
 	public void AddVar(Object type) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public Map<String, ClassScope> GetclassesScopes()
+	{
+		return classes;
 	}
 
 }

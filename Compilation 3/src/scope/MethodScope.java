@@ -3,7 +3,7 @@ package scope;
 import ic.ast.decl.Parameter;
 import ic.ast.decl.Type;
 import ic.ast.stmt.LocalVariable;
-import ic.ast.stmt.Statement;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,17 +12,21 @@ import java.util.Map;
 
 
 public class MethodScope extends  Scope {
-	public MethodScope(Scope scope) {
-		super(scope);
+	public MethodScope(Scope scope, String name) {
+		super(scope, name);
 		// TODO Auto-generated constructor stub
 	}
-	Map<String, Type> Parameters = new HashMap<>();
-	Map<String, Type> localVariables = new HashMap<>();
-	List<StatementBlockScope> stmtScopes = new ArrayList<>();
+	private Map<String, Type> parameters = new HashMap<>();
+	private Map<String, Type> localVariables = new HashMap<>();
+	private List<StatementBlockScope> stmtScopes = new ArrayList<>();
+	
+	public Map<String, Type> getParameters() { return parameters;}
+	public Map<String, Type> getLocalVariables() {return localVariables;}
+	public List<StatementBlockScope> getStmtScopes() { return stmtScopes;}
 	
 	public void AddParameter(Parameter parameter)
 	{
-		Parameters.put(parameter.getName(), parameter.getType());
+		parameters.put(parameter.getName(), parameter.getType());
 	}
 	
 //	public void AddLocalVariable(Type type)
