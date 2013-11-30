@@ -31,96 +31,113 @@ import java.util.Map;
 
 import scope.*;
 
-public class BuildScope implements Visitor{
+public class BuildScope implements Visitor {
 
 	Scope currentScope;
-	
+
 	public GlobalScope build(Node programAst) {
 
-		
 		return null;
-		
+
 	}
 
 	@Override
 	public Object visit(Program program) {
-		GlobalScope globalScope = new GlobalScope(null);		
+		GlobalScope globalScope = new GlobalScope(null);
 		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;
-			globalScope.AddClassScope((ClassScope) icClass.accept(this), icClass);/// TODO add class to classScope			
-		}		
+			globalScope.AddClassScope((ClassScope) icClass.accept(this),
+					icClass);// / TODO add class to classScope
+		}
 		return globalScope;
 	}
 
 	@Override
 	public Object visit(DeclClass icClass) {
 		// TODO Auto-generated method stub
-		ClassScope classScope = new ClassScope(currentScope);		
+		ClassScope classScope = new ClassScope(currentScope);
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
-			
+
 			field.accept(this);
 			classScope.addField(field);
 		}
-		
+
 		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
 			MethodScope methodScope = (MethodScope) method.accept(this);
-			if (method instanceof DeclStaticMethod)
-			{
+			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);
 			}
-			if (method instanceof DeclVirtualMethod)
-			{
+			if (method instanceof DeclVirtualMethod) {
 				classScope.addMethod((DeclVirtualMethod) method, methodScope);
 			}
 		}
-		
+
 		return classScope;
 	}
 
 	@Override
 	public Object visit(DeclField field) {
-		field.SetScope(currentScope);		
+		field.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope);
-		
-		currentScope = methodscope;		
+
+		currentScope = methodscope;
 		method.getType().accept(this);
-		for (Parameter formal : method.getFormals())
-		{
-			methodscope.AddParameter(formal);		
+		for (Parameter formal : method.getFormals()) {
+			methodscope.AddParameter(formal);
 			formal.accept(this);
 		}
-		for (Statement statement : method.getStatements())
-		{
-			
-			statement.accept(this);
+		for (Statement statement : method.getStatements()) {
+			methodscope.AddStatement((StatementBlockScope) statement
+					.accept(this));
 		}
-		
+
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclStaticMethod method) {
-		// TODO Auto-generated method stub
+		MethodScope methodscope = new MethodScope(currentScope);
+
+		currentScope = methodscope;
+		method.getType().accept(this);
+		for (Parameter formal : method.getFormals()) {
+			methodscope.AddParameter(formal);
+			formal.accept(this);
+		}
+		for (Statement statement : method.getStatements()) {
+			methodscope.AddStatement((StatementBlockScope) statement
+					.accept(this));
+		}
+
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclLibraryMethod method) {
-		// TODO Auto-generated method stub
+		MethodScope methodscope = new MethodScope(currentScope);
+
+		currentScope = methodscope;
+		method.getType().accept(this);
+		for (Parameter formal : method.getFormals()) {
+			methodscope.AddParameter(formal);
+			formal.accept(this);
+		}
+
 		return null;
 	}
 
 	@Override
 	public Object visit(Parameter formal) {
-		// TODO Auto-generated method stub
+		formal.SetScope(currentScope);
+		formal.getType().accept(this);
 		return null;
 	}
 
@@ -261,6 +278,5 @@ public class BuildScope implements Visitor{
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
+
 }

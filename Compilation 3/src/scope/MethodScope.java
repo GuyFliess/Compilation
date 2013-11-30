@@ -2,6 +2,7 @@ package scope;
 
 import ic.ast.decl.Parameter;
 import ic.ast.decl.Type;
+import ic.ast.stmt.Statement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,11 @@ public class MethodScope extends  Scope {
 	public void AddLocalVariable(Type type)
 	{
 		localVariables.put(type.getDisplayName(), type);
+	}
+
+	public void AddStatement(StatementBlockScope stmtScope) {
+		this.stmtScope = stmtScope;
+		
 	}
 	
 }
