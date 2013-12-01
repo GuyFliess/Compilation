@@ -21,14 +21,14 @@ Statement Block Symbol Table: @sfunc  (parent = @sfunc)
 Statement Block Symbol Table: @sfunc  (parent = sfunc)
     Local variable:  x : A
 
-Statement Block Symbol Table: @vfunc  (parent = sfunc)
-
 Method Symbol Table: vfunc  (parent = A)
     Parameter:  a : A
     Parameter:  max : int
     Parameter:  val : int
     Local variable:  arr : int[]
     Local variable:  i : int
+
+Statement Block Symbol Table: @vfunc  (parent = vfunc)
 
 Class Symbol Table: B  (parent = A)
     Field:  j : int

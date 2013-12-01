@@ -1,0 +1,14 @@
+
+Global Symbol Table
+    Class:  Test
+
+Class Symbol Table: Test
+    Virtual method:  foo : int, boolean -> int
+    Static method:  main : string[] -> void
+
+Method Symbol Table: foo  (parent = Test)
+    Parameter:  a : int
+    Parameter:  b : boolean
+
+Method Symbol Table: main  (parent = Test)
+    Parameter:  args : string[]

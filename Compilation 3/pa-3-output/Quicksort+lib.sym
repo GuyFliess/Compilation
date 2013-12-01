@@ -1,0 +1,103 @@
+
+Global Symbol Table
+    Class:  Library
+    Class:  Quicksort
+
+Class Symbol Table: Library
+    Static method:  println : string -> void
+    Static method:  print : string -> void
+    Static method:  printi : int -> void
+    Static method:  printb : boolean -> void
+    Static method:  readi :  -> int
+    Static method:  readln :  -> string
+    Static method:  eof :  -> boolean
+    Static method:  stoi : string, int -> int
+    Static method:  itos : int -> string
+    Static method:  stoa : string -> int[]
+    Static method:  atos : int[] -> string
+    Static method:  random : int -> int
+    Static method:  time :  -> int
+    Static method:  exit : int -> int
+
+Method Symbol Table: println  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: print  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: printi  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: printb  (parent = Library)
+    Parameter:  b : boolean
+
+Method Symbol Table: readi  (parent = Library)
+
+Method Symbol Table: readln  (parent = Library)
+
+Method Symbol Table: eof  (parent = Library)
+
+Method Symbol Table: stoi  (parent = Library)
+    Parameter:  s : string
+    Parameter:  n : int
+
+Method Symbol Table: itos  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: stoa  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: atos  (parent = Library)
+    Parameter:  a : int[]
+
+Method Symbol Table: random  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: time  (parent = Library)
+
+Method Symbol Table: exit  (parent = Library)
+    Parameter:  i : int
+
+Class Symbol Table: Quicksort
+    Field:  a : int[]
+    Virtual method:  partition : int, int -> int
+    Virtual method:  quicksort : int, int -> void
+    Virtual method:  initArray :  -> void
+    Virtual method:  printArray :  -> void
+    Static method:  main : string[] -> void
+
+Method Symbol Table: partition  (parent = Quicksort)
+    Parameter:  low : int
+    Parameter:  high : int
+    Local variable:  pivot : int
+    Local variable:  i : int
+    Local variable:  j : int
+    Local variable:  tmp : int
+
+Statement Block Symbol Table: @partition  (parent = partition)
+
+Method Symbol Table: quicksort  (parent = Quicksort)
+    Parameter:  low : int
+    Parameter:  high : int
+
+Statement Block Symbol Table: @quicksort  (parent = quicksort)
+    Local variable:  mid : int
+
+Method Symbol Table: initArray  (parent = Quicksort)
+    Local variable:  i : int
+
+Statement Block Symbol Table: @initArray  (parent = initArray)
+
+Method Symbol Table: printArray  (parent = Quicksort)
+    Local variable:  i : int
+
+Statement Block Symbol Table: @printArray  (parent = printArray)
+
+Method Symbol Table: main  (parent = Quicksort)
+    Parameter:  args : string[]
+    Local variable:  n : int
+    Local variable:  s : Quicksort
+
+Statement Block Symbol Table: @main  (parent = main)
+
+Statement Block Symbol Table: @main  (parent = main)

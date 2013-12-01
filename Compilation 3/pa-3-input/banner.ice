@@ -1,11 +1,11 @@
 
 class Banner {
 
-	static String[] triangle(String msg, int height)
+	static string[] triangle(string msg, int height)
 	{
 		int i = 0;
-		String row = msg;
-		String[] arr = new String[height];
+		string row = msg;
+		string[] arr = new string[height];
 		
 		while (i < height) {
 			arr[i] = row;

@@ -10,6 +10,7 @@ import scope.GlobalScope;
 import scope.MethodScope;
 import scope.MethodTypeWrapper;
 import scope.StatementBlockScope;
+import groovyjarjarantlr.StringUtils;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
 import ic.ast.decl.DeclMethod;
@@ -67,11 +68,18 @@ public class PrintScope {
 		
 		System.out.println();
 		
-		//visit and print every method scope
+		//visit and print every static method scope
 		for  (MethodTypeWrapper methodWrapper : staticMethods.values())
 		{
 			print(methodWrapper.getBodyScope());
 		}
+		
+		//visit and print every virtual method scope
+				for  (MethodTypeWrapper methodWrapper : virtualMethods.values())
+					
+				{
+					print(methodWrapper.getBodyScope());
+				}
 		
 		
 	}
@@ -83,11 +91,13 @@ public class PrintScope {
 			StringBuffer output = new StringBuffer();
 			output.append(String.format("    %s method:  %s : ",typeOfMethods, name ));
 		
+			
 			for (Type type : methodWrapper.getParameters()) { //TODO fix last ','
 				output.append(type.getDisplayName());
 				output.append(",");
 				output.append(" ");
 			}
+			output.deleteCharAt(output.lastIndexOf(","));
 			output.append("-> ");
 			output.append(methodWrapper.getReturnType().getDisplayName());
 			
@@ -99,7 +109,7 @@ public class PrintScope {
 	}
 
 	private void print(MethodScope bodyScope) {		
-		System.out.println(String.format("Method Symbol Table: %s (father = %s)",bodyScope.getName(),bodyScope.fatherScope.getName())); // TODO hadnle fathers
+		System.out.println(String.format("Method Symbol Table: %s (parent = %s)",bodyScope.getName(),bodyScope.fatherScope.getName())); // TODO hadnle fathers
 		
 		//print the symbol table
 		Map<String, Type> parameters = bodyScope.getParameters();
@@ -122,7 +132,7 @@ public class PrintScope {
 
 	private void print(StatementBlockScope blockScope) {
 		// TODO Auto-generated method stub
-		System.out.println(String.format("Statement Block Symbol Table: %s(father = %s)", blockScope.getName(),blockScope.fatherScope.getName())); // TODO hadnle fathers
+		System.out.println(String.format("Statement Block Symbol Table: %s(parent = %s)", blockScope.getName(),blockScope.fatherScope.getName())); // TODO hadnle fathers
 		
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {

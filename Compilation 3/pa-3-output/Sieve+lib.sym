@@ -1,0 +1,102 @@
+
+Global Symbol Table
+    Class:  Library
+    Class:  Sieve
+
+Class Symbol Table: Library
+    Static method:  println : string -> void
+    Static method:  print : string -> void
+    Static method:  printi : int -> void
+    Static method:  printb : boolean -> void
+    Static method:  readi :  -> int
+    Static method:  readln :  -> string
+    Static method:  eof :  -> boolean
+    Static method:  stoi : string, int -> int
+    Static method:  itos : int -> string
+    Static method:  stoa : string -> int[]
+    Static method:  atos : int[] -> string
+    Static method:  random : int -> int
+    Static method:  time :  -> int
+    Static method:  exit : int -> int
+
+Method Symbol Table: println  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: print  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: printi  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: printb  (parent = Library)
+    Parameter:  b : boolean
+
+Method Symbol Table: readi  (parent = Library)
+
+Method Symbol Table: readln  (parent = Library)
+
+Method Symbol Table: eof  (parent = Library)
+
+Method Symbol Table: stoi  (parent = Library)
+    Parameter:  s : string
+    Parameter:  n : int
+
+Method Symbol Table: itos  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: stoa  (parent = Library)
+    Parameter:  s : string
+
+Method Symbol Table: atos  (parent = Library)
+    Parameter:  a : int[]
+
+Method Symbol Table: random  (parent = Library)
+    Parameter:  i : int
+
+Method Symbol Table: time  (parent = Library)
+
+Method Symbol Table: exit  (parent = Library)
+    Parameter:  i : int
+
+Class Symbol Table: Sieve
+    Field:  num : int[]
+    Virtual method:  initArray :  -> void
+    Virtual method:  sieveAll :  -> void
+    Virtual method:  sieve : int -> void
+    Virtual method:  printPrimes :  -> void
+    Static method:  main : string[] -> void
+    Virtual method:  test : string[] -> void
+
+Method Symbol Table: initArray  (parent = Sieve)
+    Local variable:  i : int
+
+Statement Block Symbol Table: @initArray  (parent = initArray)
+
+Method Symbol Table: sieveAll  (parent = Sieve)
+    Local variable:  i : int
+
+Statement Block Symbol Table: @sieveAll  (parent = sieveAll)
+
+Method Symbol Table: sieve  (parent = Sieve)
+    Parameter:  n : int
+    Local variable:  i : int
+
+Statement Block Symbol Table: @sieve  (parent = sieve)
+
+Method Symbol Table: printPrimes  (parent = Sieve)
+    Local variable:  i : int
+
+Statement Block Symbol Table: @printPrimes  (parent = printPrimes)
+
+Statement Block Symbol Table: @printPrimes  (parent = @printPrimes)
+
+Method Symbol Table: main  (parent = Sieve)
+    Parameter:  args : string[]
+
+Method Symbol Table: test  (parent = Sieve)
+    Parameter:  args : string[]
+    Local variable:  n : int
+
+Statement Block Symbol Table: @test  (parent = test)
+
+Statement Block Symbol Table: @test  (parent = test)

@@ -67,7 +67,7 @@ public class Main {
 				
 				
 				System.out.println("Building symbol table");
-				
+				System.out.println();
 				BuildScope scopeBuilder = new BuildScope();
 				GlobalScope globalScope = (GlobalScope) programAst.accept(scopeBuilder);
 				
