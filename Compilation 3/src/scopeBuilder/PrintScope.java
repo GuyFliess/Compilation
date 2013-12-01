@@ -47,7 +47,7 @@ public class PrintScope {
 
 	private void print(ClassScope classScope) {
 	
-		System.out.print(String.format("Class Symbol Table: %s ",classScope.getName())); // TODO hadnle fathers
+		System.out.print(String.format("Class Symbol Table: %s ",classScope.getName())); 
 		if (classScope.HasSuperNode)
 		{
 			System.out.print(String.format("(parent = %s)",classScope.fatherScope.getName()));
@@ -56,7 +56,8 @@ public class PrintScope {
 		
 		Map<String, Type> fields = classScope.getFields();
 		for (String name : fields.keySet()) {
-			System.out.println(String.format("    Field:  %s : %s", name, fields.get(name).getDisplayName() ));
+			 Type type = fields.get(name);			 
+			System.out.println(String.format("    Field:  %s : %s", name, getFullName(type)  ));
 		}
 		
 		//first print every method signature
@@ -80,8 +81,15 @@ public class PrintScope {
 				{
 					print(methodWrapper.getBodyScope());
 				}
-		
-		
+	}
+
+
+	private String getFullName(Type type) {
+		String fullName = type.getDisplayName();
+		 for (int i = 0; i < type.getArrayDimension(); i++) {
+			 fullName += "[]"; 
+		}
+		return fullName;
 	}
 
 	private void printMethod(Map<String, MethodTypeWrapper> methods, String typeOfMethods) {
@@ -93,13 +101,13 @@ public class PrintScope {
 		
 			
 			for (Type type : methodWrapper.getParameters()) { //TODO fix last ','
-				output.append(type.getDisplayName());
+				output.append( getFullName(type));
 				output.append(",");
 				output.append(" ");
 			}
 			output.deleteCharAt(output.lastIndexOf(","));
 			output.append("-> ");
-			output.append(methodWrapper.getReturnType().getDisplayName());
+			output.append(getFullName(methodWrapper.getReturnType()));
 			
 		
 			System.out.println(output.toString());
@@ -109,16 +117,16 @@ public class PrintScope {
 	}
 
 	private void print(MethodScope bodyScope) {		
-		System.out.println(String.format("Method Symbol Table: %s (parent = %s)",bodyScope.getName(),bodyScope.fatherScope.getName())); // TODO hadnle fathers
+		System.out.println(String.format("Method Symbol Table: %s (parent = %s)",bodyScope.getName(),bodyScope.fatherScope.getName())); 
 		
 		//print the symbol table
 		Map<String, Type> parameters = bodyScope.getParameters();
 		for (String name : parameters.keySet()) {
-			System.out.println(String.format("    Parameter:  %s : %s", name, parameters.get(name).getDisplayName()));
+			System.out.println(String.format("    Parameter:  %s : %s", name, getFullName(parameters.get(name))));
 		}
 		Map<String, Type> localVariables = bodyScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {
-			System.out.println(String.format("    Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
+			System.out.println(String.format("    Local variable:  %s : %s", name, getFullName(localVariables.get(name))));
 		}
 		System.out.println();
 		
@@ -136,7 +144,7 @@ public class PrintScope {
 		
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {
-			System.out.println(String.format("    Local variable:  %s : %s", name, localVariables.get(name).getDisplayName()));
+			System.out.println(String.format("    Local variable:  %s : %s", name, getFullName(localVariables.get(name))));
 		}
 		System.out.println();
 		
