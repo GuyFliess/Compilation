@@ -125,7 +125,7 @@ public class Main {
 			System.err.println(e.lineNum + ": semantic error; Use of "
 					+ e.errorMSG + " statement outside of loop not allowed");
 		} catch (MainException e) {
-			// TODO: handle exception
+			System.err.println(e.lineNum+": "+e.errorMSG);
 		}
 		
 		catch (Throwable e) {
