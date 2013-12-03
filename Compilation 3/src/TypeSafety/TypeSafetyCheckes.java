@@ -12,10 +12,10 @@ public class TypeSafetyCheckes {
 			loopCheck.ContBreak(p);
 			mainCheck.CountMain(p);
 		} catch (ContinueBreakException e) {
-			System.err.println(e.lineNum + ": semantic error; Use of "
+			System.err.println(e.lineNum + ": semantic error; semantic error; Use of "
 					+ e.errorMSG + " statement outside of loop not allowed");
 		} catch (MainException e) {
-			System.err.println(e.lineNum + ": " + e.errorMSG);
+			System.err.println(e.lineNum + ": semantic error; " + e.errorMSG);
 		}
 
 	}
