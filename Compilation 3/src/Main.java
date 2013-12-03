@@ -10,7 +10,12 @@ import scopeBuilder.BuildScope;
 import scopeBuilder.PrintScope;
 import ic.ast.Node;
 import ic.ast.PrettyPrint;
+import ic.ast.Visitor;
+import ic.ast.decl.DeclClass;
+import ic.ast.decl.DeclMethod;
+import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.Program;
+import interp.REPL;
 
 public class Main {
 	public static void main(String[] args) {
@@ -54,6 +59,30 @@ public class Main {
 													// flow
 			{
 				// TODO CAll Interp with
+				String class_method = args[1];
+				String class_name = class_method.substring(0, class_method.indexOf("."));
+				String method_name = class_method.substring(class_method.indexOf(".") + 1);
+				
+				REPL interp = new REPL();
+				int index = 0;
+				while (index < p.getClasses().size() && p.getClasses().get(index).getName() != class_name) {
+					index++;
+				}
+				index = 0;
+				DeclClass decl_class = p.getClasses().get(index);
+				while (index < decl_class.getMethods().size() && decl_class.getMethods().get(index).getName() != method_name) {
+					index++;
+				}
+				DeclMethod decl_method = decl_class.getMethods().get(index - 1);
+				index = 2;
+				while (index < args.length) {
+					interp.AddArgument(decl_method.getFormals().get(index - 2).getName(), args[index]);
+					index++;
+				}
+//				try {
+					decl_method.accept(interp);
+//				}
+				
 				System.out.println(String.format("method name %s",
 						args[interpStartLocation])); // just an exmaple to see
 														// how to get the args
