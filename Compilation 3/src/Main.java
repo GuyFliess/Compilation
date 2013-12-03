@@ -5,6 +5,7 @@ import lex.Lexer;
 import lex.Token;
 import pars.Calc;
 import pars.LibCalc;
+import scope.ClassScope;
 import scope.GlobalScope;
 import scopeBuilder.BuildScope;
 import scopeBuilder.PrintScope;
@@ -99,7 +100,10 @@ public class Main {
 				System.out.println();
 				BuildScope scopeBuilder = new BuildScope();
 				GlobalScope globalScope = (GlobalScope) programAst.accept(scopeBuilder);
-				
+				//If we have lib, add it to global scope
+				BuildScope libScopeBuilder = new BuildScope();
+				ClassScope classScope = (ClassScope) libAst.accept(libScopeBuilder);
+				globalScope.AddClassScope(classScope, "Library");
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
 				
