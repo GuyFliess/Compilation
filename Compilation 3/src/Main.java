@@ -1,6 +1,8 @@
 import java.util.LinkedList;
 import java.util.List;
 
+import TypeSafety.ContinueBreakException;
+import TypeSafety.TypeSafetyCheckes;
 import lex.Lexer;
 import lex.Token;
 import pars.Calc;
@@ -77,9 +79,17 @@ public class Main {
 //				printScope.Print(p);
 				
 				System.out.println("type checking");
+				
+				TypeSafetyCheckes checks = new TypeSafetyCheckes();
+				checks.CheckTypeSafety(p);
 			}
 
-		} catch (Throwable e) {
+		} catch (ContinueBreakException e) {
+			System.err.println(e.lineNum+": semantic error; Use of "+e.errorMSG+" statement outside of loop not allowed");
+		}
+		
+		
+		catch (Throwable e) {
 			System.err.println(e);
 			return;
 		}
