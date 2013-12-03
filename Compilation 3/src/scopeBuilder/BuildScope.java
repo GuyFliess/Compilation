@@ -4,6 +4,7 @@ import ic.ast.Node;
 import ic.ast.Visitor;
 import ic.ast.decl.*;
 import ic.ast.expr.BinaryOp;
+import ic.ast.expr.Expression;
 import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
 import ic.ast.expr.NewArray;
@@ -27,7 +28,7 @@ import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
 import scope.*;
 
-public class BuildScope implements Visitor { 
+public class BuildScope implements Visitor {
 	Scope currentScope;
 
 	public GlobalScope build(Node programAst) {
@@ -38,7 +39,7 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
-		GlobalScope globalScope = new GlobalScope(null,"Global");
+		GlobalScope globalScope = new GlobalScope(null, "Global");
 		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;
@@ -51,24 +52,22 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclClass icClass) {
 		ClassScope classScope;
-		if (icClass.hasSuperClass())
-		{
+		if (icClass.hasSuperClass()) {
 			String superClassName = icClass.getSuperClassName();
-			ClassScope superScope = ((GlobalScope) currentScope).GetclassesScopes().get(superClassName);
+			ClassScope superScope = ((GlobalScope) currentScope)
+					.GetclassesScopes().get(superClassName);
 			classScope = new ClassScope(superScope, icClass.getName());
 			classScope.HasSuperNode = true;
-		}
-		else
-		{
-			 classScope = new ClassScope(currentScope, icClass.getName());
+		} else {
+			classScope = new ClassScope(currentScope, icClass.getName());
 		}
 		icClass.SetScope(classScope);
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
-			
+
 			field.accept(this);
-			
-//			classScope.addField(field);
+
+			// classScope.addField(field);
 			classScope.AddVar(field);
 		}
 
@@ -94,19 +93,20 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope, method.getName());
+		MethodScope methodscope = new MethodScope(currentScope,
+				method.getName());
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
 		for (Parameter formal : method.getFormals()) {
-			methodscope.AddParameter(formal);  //TODO change to Addvar
+			methodscope.AddParameter(formal); // TODO change to Addvar
 			formal.accept(this);
 		}
-		
+
 		for (Statement statement : method.getStatements()) {
 			statement.accept(this);
-//			methodscope.AddStatement((StatementBlockScope) statement
-//					.accept(this));
+			// methodscope.AddStatement((StatementBlockScope) statement
+			// .accept(this));
 		}
 
 		return methodscope;
@@ -114,7 +114,8 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclStaticMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope, method.getName());
+		MethodScope methodscope = new MethodScope(currentScope,
+				method.getName());
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -123,8 +124,8 @@ public class BuildScope implements Visitor {
 			formal.accept(this);
 		}
 		for (Statement statement : method.getStatements()) {
-//			methodscope.AddStatement((StatementBlockScope) statement
-					statement.accept(this);
+			// methodscope.AddStatement((StatementBlockScope) statement
+			statement.accept(this);
 		}
 
 		return methodscope;
@@ -132,7 +133,8 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(DeclLibraryMethod method) {
-		MethodScope methodscope = new MethodScope(currentScope, method.getName());
+		MethodScope methodscope = new MethodScope(currentScope,
+				method.getName());
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -154,181 +156,208 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(PrimitiveType type) {
 		type.SetScope(currentScope);
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(ClassType type) {
 		type.SetScope(currentScope);
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
 		assignment.SetScope(currentScope);
-		// TODO Auto-generated method stub
+		assignment.getVariable().accept(this);
+		assignment.getAssignment().accept(this);
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtCall callStatement) {
 		callStatement.SetScope(currentScope);
-		// TODO Auto-generated method stub
+		callStatement.getCall().accept(this);
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtReturn returnStatement) {
 		returnStatement.SetScope(currentScope);
-		// TODO Auto-generated method stub
+		returnStatement.getValue().accept(this);
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
 		ifStatement.SetScope(currentScope);
-		
+
 		ifStatement.getCondition().accept(this);
-		
+
 		currentScope = ifStatement.GetScope();
 		ifStatement.getOperation().accept(this);
 		currentScope = ifStatement.GetScope();
 		if (ifStatement.hasElse())
 			ifStatement.getElseOperation().accept(this);
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
 		whileStatement.SetScope(currentScope);
-		// TODO Auto-generated method stub
+
+		whileStatement.getCondition().accept(this);
+		currentScope = whileStatement.GetScope();
+
+		whileStatement.getOperation().accept(this);
+
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
 		breakStatement.SetScope(currentScope);
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtContinue continueStatement) {
-		// TODO Auto-generated method stub
+		continueStatement.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
-	public Object visit(StmtBlock statementsBlock)
-	{
+	public Object visit(StmtBlock statementsBlock) {
 		StatementBlockScope blockscope;
-		if (currentScope instanceof MethodScope) //TODO a more proper inheritance would help avoid this switch
+		if (currentScope instanceof MethodScope) // TODO a more proper
+													// inheritance would help
+													// avoid this switch
 		{
-			blockscope = new StatementBlockScope(currentScope, String.format("@%s", currentScope.getName()));
-//			((MethodScope) currentScope).AddStatementScope(blockscope); 
-		}
-		else if (currentScope instanceof StatementBlockScope)
-		{
-			blockscope = new StatementBlockScope(currentScope, currentScope.getName());	
-//			((StatementBlockScope) currentScope).AddStatementScope(blockscope);
-		}
-		else
-		{
-			throw new Error("Internal error, current scope should by either stmt block or method scope");
+			blockscope = new StatementBlockScope(currentScope, String.format(
+					"@%s", currentScope.getName()));
+			// ((MethodScope) currentScope).AddStatementScope(blockscope);
+		} else if (currentScope instanceof StatementBlockScope) {
+			blockscope = new StatementBlockScope(currentScope,
+					currentScope.getName());
+			// ((StatementBlockScope)
+			// currentScope).AddStatementScope(blockscope);
+		} else {
+			throw new Error(
+					"Internal error, current scope should by either stmt block or method scope");
 		}
 		((StatementBlockScope) currentScope).AddStatementScope(blockscope);
-			
+
 		statementsBlock.SetScope(blockscope);
-		
-		
-		for (Statement statement : statementsBlock.getStatements())
-		{
+
+		for (Statement statement : statementsBlock.getStatements()) {
 			currentScope = blockscope;
 			statement.accept(this);
 		}
-		
+
 		return blockscope;
 	}
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		
+		localVariable.SetScope(currentScope);
 		currentScope.AddVar(localVariable);
 		return null;
 	}
 
 	@Override
 	public Object visit(RefVariable location) {
-		// TODO Auto-generated method stub
+		location.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(RefField location) {
-		// TODO Auto-generated method stub
+		location.SetScope(currentScope);
+		location.getObject().accept(this);
 		return null;
 	}
 
 	@Override
 	public Object visit(RefArrayElement location) {
-		// TODO Auto-generated method stub
+		location.SetScope(currentScope);
+		location.getArray().accept(this);
+		currentScope = location.GetScope();
+		location.getIndex().accept(this);
+
 		return null;
 	}
 
 	@Override
 	public Object visit(StaticCall call) {
-		// TODO Auto-generated method stub
+		call.SetScope(currentScope);
+		for (Expression argument : call.getArguments()) {
+			currentScope = call.GetScope();
+			argument.accept(this);
+		}
 		return null;
 	}
 
 	@Override
 	public Object visit(VirtualCall call) {
-		// TODO Auto-generated method stub
+		call.SetScope(currentScope);
+		if (call.hasExplicitObject())
+		{
+			call.getObject().accept(this);
+		}
+		for (Expression argument : call.getArguments())
+		{
+			currentScope = call.GetScope();
+			argument.accept(this);
+		}
 		return null;
 	}
 
 	@Override
 	public Object visit(This thisExpression) {
-		// TODO Auto-generated method stub
+		thisExpression.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
-		// TODO Auto-generated method stub
+
+		newClass.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(NewArray newArray) {
-		// TODO Auto-generated method stub
+		newArray.SetScope(currentScope);
+		newArray.getType().SetScope(currentScope);
+		newArray.getSize().SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(Length length) {
-		// TODO Auto-generated method stub
+		length.SetScope(currentScope);
+		length.getArray().accept(this);		
 		return null;
 	}
 
 	@Override
 	public Object visit(Literal literal) {
-		// TODO Auto-generated method stub
+		literal.SetScope(currentScope);
 		return null;
 	}
 
 	@Override
 	public Object visit(UnaryOp unaryOp) {
-		// TODO Auto-generated method stub
+		unaryOp.SetScope(currentScope);
+		unaryOp.getOperand().accept(this);
 		return null;
 	}
 
 	@Override
 	public Object visit(BinaryOp binaryOp) {
-		// TODO Auto-generated method stub
+		binaryOp.SetScope(currentScope);
+		binaryOp.getFirstOperand().accept(this);
+		binaryOp.SetScope(currentScope);
+		binaryOp.getSecondOperand().accept(this);
 		return null;
 	}
 

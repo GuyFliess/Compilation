@@ -3,6 +3,7 @@ package scope;
 import ic.ast.decl.DeclClass;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class GlobalScope extends Scope {
@@ -12,7 +13,7 @@ public class GlobalScope extends Scope {
 	}
 
 
-	private Map<String, ClassScope> classes = new HashMap<>(); // TODO not sure if we
+	private Map<String, ClassScope> classes = new LinkedHashMap<>(); // TODO not sure if we
 														// need the class scopes
 														// or just the class
 														// names, but this seems
@@ -20,7 +21,7 @@ public class GlobalScope extends Scope {
 	
 	
 	public void AddClassScope(ClassScope classScope, DeclClass classDecl) {
-		classes.put(classDecl.getName(), classScope);
+		AddClassScope(classScope,classDecl.getName());
 		
 	}
 
@@ -34,6 +35,12 @@ public class GlobalScope extends Scope {
 	public Map<String, ClassScope> GetclassesScopes()
 	{
 		return classes;
+	}
+
+
+	public void AddClassScope(ClassScope classScope, String string) {
+		classes.put(string, classScope);
+		
 	}
 
 }
