@@ -35,14 +35,14 @@ public class MainCheck {
 
 	private void CheckCorrectMainSign(DeclMethod method) throws MainException {
 		
-		if (DeclStaticMethod.class.isInstance(method)) {
+		if (!DeclStaticMethod.class.isInstance(method)) {
 			throw new MainException("Main method should be a 'static' type", method.getLine());
 		}
 		if (method.getType().getDisplayName()
-				.compareToIgnoreCase("void") == 0) {
+				.compareToIgnoreCase("void") != 0) {
 			throw new MainException("Main method should have 'void' return type", method.getLine());
 		}
-		if (IsStringArr(method)) {
+		if (!IsStringArr(method)) {
 			throw new MainException("Argument for main method should be 'string[] args'", method.getLine());
 		}
 	}
