@@ -124,14 +124,7 @@ public class Main {
 				checks.CheckTypeSafety(p);
 			}
 
-		} catch (ContinueBreakException e) {
-			System.err.println(e.lineNum + ": semantic error; Use of "
-					+ e.errorMSG + " statement outside of loop not allowed");
-		} catch (MainException e) {
-			// TODO: handle exception
-		}
-
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			System.err.println(e);
 			return;
 		}

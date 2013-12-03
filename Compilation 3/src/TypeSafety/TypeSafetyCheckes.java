@@ -2,16 +2,22 @@ package TypeSafety;
 
 import ic.ast.decl.Program;
 
-public class TypeSafetyCheckes{
-	
-	
-	public void CheckTypeSafety(Program p) throws ContinueBreakException, MainException {
+public class TypeSafetyCheckes {
+
+	public void CheckTypeSafety(Program p) {
 		LoopCheck loopCheck = new LoopCheck();
 		MainCheck mainCheck = new MainCheck();
-		
-		loopCheck.ContBreak(p);
-		mainCheck.CountMain(p);
+
+		try {
+			loopCheck.ContBreak(p);
+			mainCheck.CountMain(p);
+		} catch (ContinueBreakException e) {
+			System.err.println(e.lineNum + ": semantic error; Use of "
+					+ e.errorMSG + " statement outside of loop not allowed");
+		} catch (MainException e) {
+			System.err.println(e.lineNum + ": " + e.errorMSG);
+		}
+
 	}
-	
-	
+
 }

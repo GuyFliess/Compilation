@@ -22,7 +22,7 @@ public class MainCheck {
 
 	private void CountMain(DeclClass icClass) throws MainException {
 		for (DeclMethod method : icClass.getMethods()) {
-			if (method.getName() == "main") {
+			if (method.getName().equalsIgnoreCase("main")) {
 				mainNum++;
 				if (mainNum != 1) {
 					throw new MainException("Found more than one main in the file", method.getLine());
