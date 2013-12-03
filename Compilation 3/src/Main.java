@@ -107,13 +107,12 @@ public class Main {
 				GlobalScope globalScope = (GlobalScope) programAst
 						.accept(scopeBuilder);
 				// If we have lib, add it to global scope
-				if (libAst != null)
-				{
-				BuildScope libScopeBuilder = new BuildScope();
-				ClassScope classScope = (ClassScope) libAst
-						.accept(libScopeBuilder);
-				
-				globalScope.AddClassScope(classScope, "Library");
+				if (libAst != null) {
+					BuildScope libScopeBuilder = new BuildScope();
+					ClassScope classScope = (ClassScope) libAst
+							.accept(libScopeBuilder);
+
+					globalScope.AddClassScope(classScope, "Library");
 				}
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
@@ -131,7 +130,7 @@ public class Main {
 		} catch (MainException e) {
 			// TODO: handle exception
 		}
-		
+
 		catch (Throwable e) {
 			System.err.println(e);
 			return;
