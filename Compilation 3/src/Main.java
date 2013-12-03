@@ -107,10 +107,10 @@ public class Main {
 				GlobalScope globalScope = (GlobalScope) programAst
 						.accept(scopeBuilder);
 				// If we have lib, add it to global scope
-				BuildScope libScopeBuilder = new BuildScope();
+			/*	BuildScope libScopeBuilder = new BuildScope();
 				ClassScope classScope = (ClassScope) libAst
 						.accept(libScopeBuilder);
-				globalScope.AddClassScope(classScope, "Library");
+				globalScope.AddClassScope(classScope, "Library");*/
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
 
@@ -121,14 +121,7 @@ public class Main {
 				checks.CheckTypeSafety(p);
 			}
 
-		} catch (ContinueBreakException e) {
-			System.err.println(e.lineNum + ": semantic error; Use of "
-					+ e.errorMSG + " statement outside of loop not allowed");
-		} catch (MainException e) {
-			System.err.println(e.lineNum+": "+e.errorMSG);
-		}
-		
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			System.err.println(e);
 			return;
 		}
