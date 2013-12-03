@@ -3,7 +3,6 @@ package scope;
 import ic.ast.decl.DeclClass;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class GlobalScope extends Scope {
@@ -13,7 +12,7 @@ public class GlobalScope extends Scope {
 	}
 
 
-	private Map<String, ClassScope> classes = new LinkedHashMap<>(); // TODO not sure if we
+	private Map<String, ClassScope> classes = new HashMap<>(); // TODO not sure if we
 														// need the class scopes
 														// or just the class
 														// names, but this seems

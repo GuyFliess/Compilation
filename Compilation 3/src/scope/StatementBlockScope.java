@@ -2,10 +2,8 @@ package scope;
 
 import ic.ast.decl.Type;
 import ic.ast.stmt.LocalVariable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +13,7 @@ public class StatementBlockScope extends Scope {
 		// TODO Auto-generated constructor stub
 	}
 	
-	Map<String, Type> localVariables = new LinkedHashMap<>();
+	Map<String, Type> localVariables = new HashMap<>();
 	
 	List<StatementBlockScope> blockScopes = new ArrayList<>();
 	

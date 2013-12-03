@@ -4,9 +4,9 @@ import ic.ast.decl.Parameter;
 import ic.ast.decl.Type;
 import ic.ast.stmt.LocalVariable;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +16,7 @@ public class MethodScope extends  StatementBlockScope {
 		super(scope, name);
 		// TODO Auto-generated constructor stub
 	}
-	private Map<String, Type> parameters = new LinkedHashMap<>();
+	private Map<String, Type> parameters = new HashMap<>();
 //	private Map<String, Type> localVariables = new HashMap<>();
 	private List<StatementBlockScope> stmtScopes = new ArrayList<>();
 	
