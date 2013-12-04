@@ -31,11 +31,33 @@ import scope.*;
 public class BuildScope implements Visitor {
 	Scope currentScope;
 
-	public GlobalScope build(Node programAst) {
-
-		return null;
-
+	public GlobalScope MakeScopes(Program program, DeclClass library)
+	{
+		GlobalScope globalScope = new GlobalScope(null, "Global");
+		currentScope = globalScope;
+		if (library != null)
+		{
+			library.SetScope(globalScope);
+			ClassScope libScope = (ClassScope) library.accept(this);
+			globalScope.AddClassScope(libScope, library);
+		}
+		program.SetScope(globalScope);
+		for (DeclClass icClass : program.getClasses()) {
+			currentScope = globalScope;
+			globalScope.AddClassScope((ClassScope) icClass.accept(this),
+					icClass);// / TODO add class to classScope
+		}
+		return globalScope;
 	}
+	
+	
+//	public GlobalScope build(Node programAst) {
+//
+//		return null;
+//
+//	}
+	
+	
 
 	@Override
 	public Object visit(Program program) {

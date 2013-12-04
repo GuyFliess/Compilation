@@ -104,16 +104,17 @@ public class Main {
 				System.out.println("Building symbol table");
 				System.out.println();
 				BuildScope scopeBuilder = new BuildScope();
-				GlobalScope globalScope = (GlobalScope) programAst
-						.accept(scopeBuilder);
-				// If we have lib, add it to global scope
-				if (libAst != null) {
-					BuildScope libScopeBuilder = new BuildScope();
-					ClassScope classScope = (ClassScope) libAst
-							.accept(libScopeBuilder);
-
-					globalScope.AddClassScope(classScope, "Library");
-				}
+				GlobalScope globalScope = scopeBuilder.MakeScopes((Program) programAst,(DeclClass) libAst);
+//				GlobalScope globalScope = (GlobalScope) programAst
+//						.accept(scopeBuilder);
+//				// If we have lib, add it to global scope
+//				if (libAst != null) {
+//					BuildScope libScopeBuilder = new BuildScope();
+//					ClassScope classScope = (ClassScope) libAst
+//							.accept(libScopeBuilder);
+//
+//					globalScope.AddClassScope(classScope, "Library");
+//				}
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
 
