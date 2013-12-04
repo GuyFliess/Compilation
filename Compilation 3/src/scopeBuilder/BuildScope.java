@@ -102,6 +102,10 @@ public class BuildScope implements Visitor {
 			if (method instanceof DeclVirtualMethod) {
 				classScope.addMethod((DeclVirtualMethod) method, methodScope);
 			}
+			if (method instanceof DeclLibraryMethod)
+			{
+				classScope.addMethod((DeclLibraryMethod) method, methodScope);
+			}
 		}
 
 		return classScope;
@@ -165,7 +169,7 @@ public class BuildScope implements Visitor {
 			formal.accept(this);
 		}
 
-		return null;
+		return methodscope;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package scope;
 
 
 import ic.ast.decl.DeclField;
+import ic.ast.decl.DeclLibraryMethod;
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Type;
@@ -65,5 +66,9 @@ public class ClassScope extends Scope {
 		return staticMethodScopes;
 	}
 
-
+	// for library method which are just signatures we treat the same as virtual
+	public void addMethod(DeclLibraryMethod method, MethodScope methodScope) {
+		staticMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), methodScope));
+		
+	}
 }
