@@ -98,13 +98,16 @@ public class BuildScope implements Visitor {
 			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);
+				continue;
 			}
 			if (method instanceof DeclVirtualMethod) {
 				classScope.addMethod((DeclVirtualMethod) method, methodScope);
+				continue;
 			}
 			if (method instanceof DeclLibraryMethod)
 			{
 				classScope.addMethod((DeclLibraryMethod) method, methodScope);
+				continue;
 			}
 		}
 
@@ -209,7 +212,10 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(StmtReturn returnStatement) {
 		returnStatement.SetScope(currentScope);
-		returnStatement.getValue().accept(this);
+		if (returnStatement.hasValue())
+		{
+			returnStatement.getValue().accept(this);
+		}
 		return null;
 	}
 
