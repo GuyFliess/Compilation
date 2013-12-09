@@ -33,5 +33,21 @@ public class StatementBlockScope extends Scope {
 		LocalVariable var =(LocalVariable) type;
 		localVariables.put(var.getName(), var.getType());
 	}
+
+	@Override
+	public Type GetVariable(String name) throws ScopeExcecption {
+		
+		Type resultType = localVariables.get(name);
+		if (resultType == null)
+		{
+			
+			if (fatherScope instanceof StatementBlockScope)
+			{
+				resultType = fatherScope.GetVariable(name);
+			}
+		}
+		
+		return resultType;
+	}
 	
 }

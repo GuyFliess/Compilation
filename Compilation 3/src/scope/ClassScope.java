@@ -71,4 +71,9 @@ public class ClassScope extends Scope {
 		staticMethodScopes.put(method.getName(),new MethodTypeWrapper(method.getName(), method.getType(), method.getFormals(), methodScope));
 		
 	}
+
+	@Override
+	public Type GetVariable(String name) throws ScopeExcecption {			
+		throw new ScopeExcecption("Scope type doesn't support variables");
+	}
 }

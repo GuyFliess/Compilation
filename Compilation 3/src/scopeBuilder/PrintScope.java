@@ -23,12 +23,6 @@ import ic.ast.stmt.Statement;
 
 public class PrintScope {
 
-	// private GlobalScope globalscope;
-	//
-	// public PrintScope(GlobalScope globalScope) {
-	// this.globalscope = globalScope;
-	// }
-
 	public void Print(GlobalScope globalScope) {
 		System.out.println("Global Symbol Table");
 		for (String name : globalScope.GetclassesScopes().keySet()) {

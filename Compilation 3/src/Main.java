@@ -23,14 +23,7 @@ import interp.REPL;
 
 public class Main {
 	public static void main(String[] args) {
-		// Node ast = new Program(
-		// new StmtAssign(new RefVar("w"), new Num(1)),
-		// new Func("f", new RefVar[] { new RefVar("x") },
-		// new Mul(new RefVar("x"), new RefVar("x"))),
-		// fib(),
-		// new Call("fib", new Expr[] { new Num(6) })
-		// );
-		// System.out.println(ast);
+
 		Lexer lex = new Lexer();
 		Calc calc = new Calc();
 		PrettyPrint printer = new PrettyPrint();
@@ -105,20 +98,12 @@ public class Main {
 				System.out.println();
 				BuildScope scopeBuilder = new BuildScope();
 				GlobalScope globalScope = scopeBuilder.MakeScopes((Program) programAst,(DeclClass) libAst);
-//				GlobalScope globalScope = (GlobalScope) programAst
-//						.accept(scopeBuilder);
-//				// If we have lib, add it to global scope
-//				if (libAst != null) {
-//					BuildScope libScopeBuilder = new BuildScope();
-//					ClassScope classScope = (ClassScope) libAst
-//							.accept(libScopeBuilder);
-//
-//					globalScope.AddClassScope(classScope, "Library");
-//				}
+
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
 
 				// printScope.Print(p);
+				
 
 				System.out.println("type checking");
 				TypeSafetyCheckes checks = new TypeSafetyCheckes();
@@ -130,27 +115,6 @@ public class Main {
 			return;
 		}
 
-		// REPL interp = new REPL();
-		// try {
-		// ast.accept(interp);
-		// }
-		// catch (RuntimeError e) {
-		// System.err.println("Run-time error: " + e.getMessage());
-		// }
 	}
 
-	// static Node fib()
-	// {
-	// return
-	// new Func("fib", new RefVar[] { new RefVar("i") },
-	// new ExprIf(new Eq(new RefVar("i"), new Num(0)),
-	// new Num(1),
-	// new ExprIf(new Eq(new RefVar("i"), new Num(1)),
-	// new Num(1),
-	// new Add(new Call("fib", new Expr[] {
-	// new Sub(new RefVar("i"), new Num(1)) }),
-	// new Call("fib", new Expr[] {
-	// new Sub(new RefVar("i"),
-	// new Num(2)) })))));
-	// }
 }

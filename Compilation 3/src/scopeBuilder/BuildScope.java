@@ -34,7 +34,7 @@ public class BuildScope implements Visitor {
 	public GlobalScope MakeScopes(Program program, DeclClass library)
 	{
 		GlobalScope globalScope = new GlobalScope(null, "Global");
-		currentScope = globalScope;
+		currentScope = globalScope;		
 		if (library != null)
 		{
 			library.SetScope(globalScope);
@@ -46,7 +46,7 @@ public class BuildScope implements Visitor {
 			currentScope = globalScope;
 			globalScope.AddClassScope((ClassScope) icClass.accept(this),
 					icClass);// / TODO add class to classScope
-		}
+		}		
 		return globalScope;
 	}
 	
@@ -66,7 +66,7 @@ public class BuildScope implements Visitor {
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;
 			globalScope.AddClassScope((ClassScope) icClass.accept(this),
-					icClass);// / TODO add class to classScope
+					icClass);// / classes are added to global scope even if they are nested in their super class 
 		}
 		return globalScope;
 	}
@@ -81,8 +81,9 @@ public class BuildScope implements Visitor {
 			classScope = new ClassScope(superScope, icClass.getName());
 			classScope.HasSuperNode = true;
 		} else {
-			classScope = new ClassScope(currentScope, icClass.getName());
+			classScope = new ClassScope(currentScope, icClass.getName()); // must be class scope
 		}
+		
 		icClass.SetScope(classScope);
 		currentScope = classScope;
 		for (DeclField field : icClass.getFields()) {
@@ -110,7 +111,8 @@ public class BuildScope implements Visitor {
 				continue;
 			}
 		}
-
+//		//TODO at Shachar's suggetion, adding 
+//		g_globalScope.AddClassScope(classScope, classDecl);
 		return classScope;
 	}
 

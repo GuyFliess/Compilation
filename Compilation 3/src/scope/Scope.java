@@ -1,9 +1,6 @@
 package scope;
 
-
-
-
-
+import ic.ast.decl.Type;
 
 public abstract class Scope {
 	
@@ -33,11 +30,6 @@ public abstract class Scope {
 	
 	public abstract void AddVar(Object type);
 	
+	public abstract Type GetVariable(String name) throws ScopeExcecption; 
 	
-//	public List<Scope> childScopes;
-	
-// abstract public void add(Scope scope);
-//// {
-////	childScopes.add(scope);
-// }
 }

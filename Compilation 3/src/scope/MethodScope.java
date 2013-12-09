@@ -18,7 +18,7 @@ public class MethodScope extends  StatementBlockScope {
 	}
 	private Map<String, Type> parameters = new LinkedHashMap<>();
 //	private Map<String, Type> localVariables = new HashMap<>();
-	private List<StatementBlockScope> stmtScopes = new ArrayList<>();
+//	private List<StatementBlockScope> stmtScopes = new ArrayList<>();
 	
 	public Map<String, Type> getParameters() { return parameters;}
 //	public Map<String, Type> getLocalVariables() {return localVariables;}
@@ -44,6 +44,18 @@ public class MethodScope extends  StatementBlockScope {
 		LocalVariable var =(LocalVariable) type;
 		localVariables.put(var.getName(), var.getType());
 //		localVariables.put(type.getDisplayName(), type);
+	}
+	
+	@Override
+	public Type GetVariable(String name) throws ScopeExcecption {
+		
+		Type resultType = parameters.get(name);
+		if (resultType == null)
+		{
+			super.GetVariable(name);
+		}
+		
+		return resultType;
 	}
 	
 }
