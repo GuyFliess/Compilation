@@ -6,13 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import ic.ast.Visitor;
-import ast.ExprBinary.Add;
-import ast.ExprBinary.Div;
-import ast.ExprBinary.Mul;
-import ast.ExprBinary.Pow;
-import ast.ExprBinary.Sub;
-import ast.ExprUnary.Neg;
-import ast.Num;
+
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclField;
