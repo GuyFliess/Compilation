@@ -1,10 +1,10 @@
 package TypeSafety;
 
-import java.awt.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -40,7 +40,7 @@ public class CheckMultipleDefinition {
 	}
 
 	private void CheckParams(DeclMethod method) throws MultipleDefineException {
-		ArrayList<String> typeLst = new ArrayList<String>();
+		List<String> typeLst = new ArrayList<String>();
 
 		for (Parameter parameter : method.getFormals()) {
 			if (typeLst.contains(parameter.getName())) {
@@ -51,26 +51,23 @@ public class CheckMultipleDefinition {
 		}
 
 		for (Statement statement : method.getStatements()) {
-			Map<String, Integer> params = new LinkedHashMap<>();
+			List<LocalVariable> params = new ArrayList<LocalVariable>();
 			params = findStatementParams(statement);
 
-			Iterator t = params.entrySet().iterator();
-			
-			while (t.hasNext()) {
-				Map.Entry e = (Map.Entry) t.next();
-
-				if (typeLst.contains(e.getKey())) {
-					throw new MultipleDefineException((String) e.getKey(),
-							(int) e.getValue());
+			for (int i = 0; i < params.size(); i++) {
+				LocalVariable var = params.get(i);
+				if (typeLst.contains(var.getName())) {
+					throw new MultipleDefineException(var.getName(),
+							var.getLine());
 				}
-				typeLst.add((String) e.getKey());
-				t.remove();
+				typeLst.add(var.getName());
 			}
+
 		}
 
 	}
 
-	private Map<String, Integer> findStatementParams(Statement statement) {
+	private List<LocalVariable> findStatementParams(Statement statement) {
 
 		if (LocalVariable.class.isInstance(statement)) {
 			return findStatementParams((LocalVariable) statement);
@@ -84,41 +81,41 @@ public class CheckMultipleDefinition {
 		if (StmtWhile.class.isInstance(statement)) {
 			return findStatementParams((StmtWhile) statement);
 		}
-		return null;
+		return new ArrayList<LocalVariable>();
 
 	}
 
-	private Map<String, Integer> findStatementParams(StmtBlock statement) {
-		Map<String, Integer> params = new LinkedHashMap<>();
+	private List<LocalVariable> findStatementParams(StmtBlock statement) {
+		List<LocalVariable> params = new ArrayList<LocalVariable>();
 
 		for (Statement stmt : statement.getStatements()) {
-			params.putAll(findStatementParams(stmt));
+			params.addAll(findStatementParams(stmt));
 		}
 
 		return params;
 	}
 
-	private Map<String, Integer> findStatementParams(StmtIf statement) {
-		Map<String, Integer> params = new LinkedHashMap<>();
+	private List<LocalVariable> findStatementParams(StmtIf statement) {
+		List<LocalVariable> params = new ArrayList<LocalVariable>();
 
-		params.putAll(findStatementParams(statement.getOperation()));
-		params.putAll(findStatementParams(statement.getElseOperation()));
-
-		return params;
-	}
-
-	private Map<String, Integer> findStatementParams(StmtWhile statement) {
-		Map<String, Integer> params = new LinkedHashMap<>();
-
-		params.putAll(findStatementParams(statement.getOperation()));
+		params.addAll(findStatementParams(statement.getOperation()));
+		params.addAll(findStatementParams(statement.getElseOperation()));
 
 		return params;
 	}
 
-	private Map<String, Integer> findStatementParams(LocalVariable var) {
-		Map<String, Integer> params = new LinkedHashMap<>();
+	private List<LocalVariable> findStatementParams(StmtWhile statement) {
+		List<LocalVariable> params = new ArrayList<LocalVariable>();
 
-		params.put(var.getName(), var.getLine());
+		params.addAll(findStatementParams(statement.getOperation()));
+
+		return params;
+	}
+
+	private List<LocalVariable> findStatementParams(LocalVariable var) {
+		List<LocalVariable> params = new ArrayList<LocalVariable>();
+
+		params.add(var);
 
 		return params;
 	}

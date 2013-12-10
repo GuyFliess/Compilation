@@ -17,7 +17,7 @@ public class TypeSafetyCheckes {
 		try {
 			loopCheck.ContBreak(p);
 			mainCheck.CountMain(p);
-			//scopeCheck.CheckScopeRules(p);  commented - throwing null 
+			scopeCheck.CheckScopeRules(p);//  commented - throwing null 
 			p.accept(typingRulesChecker);
 			
 			
