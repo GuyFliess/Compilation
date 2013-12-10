@@ -20,6 +20,10 @@ public class TypeSafetyCheckes {
 		} catch (MainException e) {
 			System.err.println(e.lineNum + ": semantic error; " + e.errorMSG);
 		}
+		catch (TypeSafetyException e)
+		{
+			System.err.println(e.lineNum + ": semantic error; " + e.errorMSG);
+		}
 
 	}
 

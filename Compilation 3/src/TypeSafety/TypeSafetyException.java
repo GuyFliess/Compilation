@@ -1,7 +1,7 @@
 package TypeSafety;
 
 
-public class TypeSafetyException extends Exception {
+public class TypeSafetyException extends Error {
 	
 	public String errorMSG;
 	public int lineNum;

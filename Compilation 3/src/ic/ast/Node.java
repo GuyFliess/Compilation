@@ -1,4 +1,5 @@
 package ic.ast;
+import TypeSafety.TypeSafetyException;
 import scope.*;
 
 
@@ -16,8 +17,9 @@ public abstract class Node {
 	 * @param visitor
 	 *            The visitor.
 	 * @return A value propagated by the visitor.
+	 * @throws TypeSafetyException 
 	 */
-	public abstract Object accept(Visitor visitor);
+	public abstract Object accept(Visitor visitor) throws TypeSafetyException;
 
 	/**
 	 * Constructs an AST node corresponding to a line number in the original

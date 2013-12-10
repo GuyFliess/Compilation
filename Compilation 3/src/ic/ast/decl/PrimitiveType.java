@@ -30,6 +30,10 @@ public class PrimitiveType extends Type {
 	public String getDisplayName() {
 		return type.toString();
 	}
+	
+	public DataType getDataType() {
+		return type;
+	}
 
 	/**
 	 * Enumerated type listing the primitive data types.

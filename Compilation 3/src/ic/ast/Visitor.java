@@ -1,5 +1,6 @@
 package ic.ast;
 
+import TypeSafety.TypeSafetyException;
 import ic.ast.decl.DeclField;
 import ic.ast.decl.Parameter;
 import ic.ast.decl.DeclClass;
@@ -94,6 +95,7 @@ public interface Visitor {
 	public Object visit(Literal literal);
 
 	public Object visit(UnaryOp unaryOp);
+	
 	public Object visit(BinaryOp binaryOp);
 
 }
