@@ -73,7 +73,20 @@ public class ClassScope extends Scope {
 	}
 
 	@Override
-	public Type GetVariable(String name) throws ScopeExcecption {			
-		throw new ScopeExcecption("Scope type doesn't support variables");
+	public Type GetVariable(String name)  {			
+		return null;
 	}
+	
+	public boolean isInScopeOf(Scope otherScope) {
+		if (this.equals(otherScope))
+		{
+			return true;
+		}
+		else if ((fatherScope == null) || !(fatherScope instanceof ClassScope))
+		{
+			return false;
+		}
+		else
+		return ((ClassScope) fatherScope).isInScopeOf(otherScope);
+	} 
 }

@@ -47,12 +47,12 @@ public class MethodScope extends  StatementBlockScope {
 	}
 	
 	@Override
-	public Type GetVariable(String name) throws ScopeExcecption {
+	public Type GetVariable(String name)  {
 		
 		Type resultType = parameters.get(name);
 		if (resultType == null)
 		{
-			super.GetVariable(name);
+			resultType = super.GetVariable(name);
 		}
 		
 		return resultType;

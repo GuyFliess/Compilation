@@ -44,8 +44,13 @@ public class GlobalScope extends Scope {
 
 
 	@Override
-	public Type GetVariable(String name) throws ScopeExcecption {
-		throw new ScopeExcecption("Scope type doesn't support variables");
+	public Type GetVariable(String name) {
+		return null;
+		//throw new ScopeExcecption("Scope type doesn't support variables");
 	}
 
+	public ClassScope getClassScope(String name)
+	{
+		return classes.get(name);
+	}
 }

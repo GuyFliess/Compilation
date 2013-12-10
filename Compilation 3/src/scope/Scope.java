@@ -30,6 +30,6 @@ public abstract class Scope {
 	
 	public abstract void AddVar(Object type);
 	
-	public abstract Type GetVariable(String name) throws ScopeExcecption; 
+	public abstract Type GetVariable(String name);
 	
 }

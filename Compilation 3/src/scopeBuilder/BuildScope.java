@@ -1,6 +1,5 @@
 package scopeBuilder;
 
-import ic.ast.Node;
 import ic.ast.Visitor;
 import ic.ast.decl.*;
 import ic.ast.expr.BinaryOp;
@@ -294,6 +293,10 @@ public class BuildScope implements Visitor {
 	public Object visit(LocalVariable localVariable) {
 		localVariable.SetScope(currentScope);
 		currentScope.AddVar(localVariable);
+		if (localVariable.isInitialized())
+		{
+			localVariable.getInitialValue().accept(this);
+		}
 		return null;
 	}
 

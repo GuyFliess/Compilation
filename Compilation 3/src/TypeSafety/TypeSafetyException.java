@@ -1,6 +1,7 @@
 package TypeSafety;
 
 
+@SuppressWarnings("serial")
 public class TypeSafetyException extends Error {
 	
 	public String errorMSG;

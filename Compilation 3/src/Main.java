@@ -107,7 +107,9 @@ public class Main {
 
 				System.out.println("type checking");
 				TypeSafetyCheckes checks = new TypeSafetyCheckes();
-				checks.CheckTypeSafety(p);
+				checks.CheckTypeSafety(p, (DeclClass)libAst , globalScope);
+				
+				System.out.println("All done!");
 			}
 
 		} catch (Throwable e) {

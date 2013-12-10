@@ -35,7 +35,7 @@ public class StatementBlockScope extends Scope {
 	}
 
 	@Override
-	public Type GetVariable(String name) throws ScopeExcecption {
+	public Type GetVariable(String name)  {
 		
 		Type resultType = localVariables.get(name);
 		if (resultType == null)
