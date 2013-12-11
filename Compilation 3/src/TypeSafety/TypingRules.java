@@ -28,6 +28,7 @@ import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
 import ic.ast.expr.NewArray;
 import ic.ast.expr.NewInstance;
+import ic.ast.expr.Ref;
 import ic.ast.expr.RefArrayElement;
 import ic.ast.expr.RefField;
 import ic.ast.expr.RefVariable;
@@ -130,14 +131,20 @@ public class TypingRules implements Visitor {
 	@Override
 	public Object visit(StmtAssignment assignment) {
 		// TODO Auto-generated method stub
-		assignment.getVariable().accept(this);
-		assignment.getAssignment().accept(this);
+		Ref variable = assignment.getVariable();
+		variable.accept(this);
+		Expression assignmentValue = assignment.getAssignment();
+		assignmentValue.accept(this);
+		if (!(isSubTypeOf(assignmentValue.typeAtcheck, variable.typeAtcheck))) 
+			throw new TypingRuleException(String.format("Invalid assignment of type %s to variable of type %s", assignmentValue.typeAtcheck.getDisplayName(),variable.typeAtcheck.getDisplayName()), assignment.getLine());
+		assignment.typeAtcheck = variable.typeAtcheck;
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtCall callStatement) {
 		callStatement.getCall().accept(this);
+
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -146,38 +153,46 @@ public class TypingRules implements Visitor {
 	public Object visit(StmtReturn returnStatement) {
 		if (returnStatement.hasValue()) {
 			returnStatement.getValue().accept(this);
+			
 		}
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(StmtIf ifStatement) {
-		// TODO Auto-generated method stub
+	public Object visit(StmtIf ifStatement) {		
 		ifStatement.getCondition().accept(this);
 		ifStatement.getOperation().accept(this);
 		if (ifStatement.hasElse())
 			ifStatement.getElseOperation().accept(this);
+		if (!isOfType(ifStatement.getCondition().typeAtcheck,DataType.BOOLEAN))
+		{
+			throw new TypingRuleException("Non boolean condition for if statement", ifStatement.getLine());
+		}
+		
 		return null;
 	}
 
 	@Override
-	public Object visit(StmtWhile whileStatement) {
-		// TODO Auto-generated method stub
+	public Object visit(StmtWhile whileStatement) {		
 		whileStatement.getCondition().accept(this);
 		whileStatement.getOperation().accept(this);
+		if (!isOfType(whileStatement.getCondition().typeAtcheck,DataType.BOOLEAN))
+		{
+			throw new TypingRuleException("Non boolean condition for if statement", whileStatement.getLine());
+		}
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtContinue continueStatement) {
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
@@ -193,8 +208,15 @@ public class TypingRules implements Visitor {
 	public Object visit(LocalVariable localVariable) {
 		// TODO Auto-generated method stub
 		if (localVariable.isInitialized()) {
-			localVariable.getInitialValue().accept(this);
+			Expression initialValue = localVariable.getInitialValue();
+			initialValue.accept(this);
+			Type typeAtcheck = initialValue.typeAtcheck;
+			if (!isSubTypeOf(typeAtcheck,localVariable.getType()))
+			{
+				throw new TypingRuleException(String.format("Invalid assignment of type %s to variable of type %s", typeAtcheck.getDisplayName(),localVariable.getType().getDisplayName()), localVariable.getLine());
+			}
 		}
+		//localVariable.typeAtcheck = localVariable.getType(); // can remove
 		return null;
 	}
 
@@ -294,20 +316,28 @@ public class TypingRules implements Visitor {
 			argument.accept(this);
 		ClassScope classScope; // globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodInClass;
-		if (call.hasExplicitObject())
+		if (call.hasExplicitObject() )
 		{
-			Scope scope =  call.getObject().typeAtcheck.GetScope();
+			 Type type =  call.getObject().typeAtcheck;
+			 if (!(type instanceof ClassType))
+			 {
+				 throw new TypingRuleException("non class can't have methods", call.getLine());
+			 }
+			
+			 Scope scope = type.GetScope();
 			if (scope instanceof ClassScope) {
 				 classScope = (ClassScope) scope;	
 			}
-			else throw new TypingRuleException(String.format("%s is not a method", call.getObject()), call.getLine());
+			else throw new TypingRuleException(String.format("%s is not a method", call.getMethod()), call.getLine());
 			methodInClass = classScope.GetMethod(call.getMethod());
+			if (methodInClass == null)  throw new TypingRuleException(String.format("Method %s.%s not found in type table", type.getDisplayName(), call.getMethod()), call.getLine());	
 		}
 		else
 		{
 			methodInClass = call.GetScope().GetMethod(call.getMethod());
-			if (methodInClass == null)  throw new TypingRuleException(String.format("%s not found in symbol table", call.getObject()), call.getLine());
+			if (methodInClass == null)  throw new TypingRuleException(String.format("%s not found in symbol table", call.getObject()), call.getLine());	
 		}
+		
 		List<Expression> calledParams = call.getArguments();
 		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
@@ -326,8 +356,15 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(This thisExpression) {
-		
-		// TODO Auto-generated method stub
+		Scope currentScope = thisExpression.GetScope();
+		while (!(currentScope instanceof ClassScope))
+		{
+			currentScope = currentScope.fatherScope;
+		}		
+		thisExpression.typeAtcheck = new ClassType(0,currentScope.getName());
+		//set the scope of this to be the class scope
+		thisExpression.typeAtcheck.SetScope(currentScope);
+	
 		return null;
 	}
 
@@ -428,7 +465,7 @@ public class TypingRules implements Visitor {
 		binaryOp.getFirstOperand().accept(this);
 		binaryOp.getSecondOperand().accept(this);
 		Type type1 = binaryOp.getFirstOperand().typeAtcheck;
-		Type type2 = binaryOp.getFirstOperand().typeAtcheck;
+		Type type2 = binaryOp.getSecondOperand().typeAtcheck;
 		switch (binaryOp.getOperator()) {
 		case DIVIDE:
 		case MINUS:
@@ -444,26 +481,10 @@ public class TypingRules implements Visitor {
 				throw new TypingRuleException(
 						String.format(
 								"invalid logical binary op (%s) on non-integer expression",
-								binaryOp.getOperator()), binaryOp.getLine()); // 9:
-																				// semantic
-																				// error;
-																				// Invalid
-																				// logical
-																				// binary
-																				// op
-																				// (>)
-																				// on
-																				// non-integer
-																				// expression
+								binaryOp.getOperator()), binaryOp.getLine()); 
 			}
-			// return PrimitiveType.DataType.INT;
-			binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT); // TODO
-																		// what
-																		// to
-																		// return?
-			// type1 is the wrong
-			// location, don't want
-			// to edit ast
+
+			binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT); 
 			break;
 		}
 		case PLUS: {
@@ -568,6 +589,9 @@ public class TypingRules implements Visitor {
 				&& ((PrimitiveType) type2).getDataType().equals(DataType.VOID)) {
 			return true;
 		}
+		if (((type1 instanceof PrimitiveType)  && ((type2 instanceof PrimitiveType)) &&
+				(((PrimitiveType) type1).getDataType().equals(((PrimitiveType) type2).getDataType()))))
+			return true;
 		if ((!(type1 instanceof ClassType)) || (!(type2 instanceof ClassType)))
 			return false;
 		ClassType class1 = (ClassType) type1;
@@ -596,8 +620,21 @@ public class TypingRules implements Visitor {
 				return true;
 			tempScope = tempScope.fatherScope;
 		}
-		// class2 <= class1
-		// TODO continue checks
+
 		return false;
 	}
+	
+	/**
+	 * check for primitive datatype
+	 * @param typeAtcheck
+	 * @param dataType
+	 * @return
+	 */	
+		private boolean isOfType(Type typeAtcheck, DataType dataType) {
+			if (typeAtcheck instanceof PrimitiveType) {
+				PrimitiveType primitive = (PrimitiveType) typeAtcheck;
+				return primitive.getDataType().equals(dataType);
+			}
+			return false;
+		}
 }

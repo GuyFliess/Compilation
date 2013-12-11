@@ -6,7 +6,7 @@ public abstract class Scope {
 	
 	public Scope fatherScope;
 	private String name;
-	public String parent; //TODO Lital, I added a name for the scope itself, so I think we can remove this and go to fatherScope.GetName()
+	//public String parent; //TODO Lital, I added a name for the scope itself, so I think we can remove this and go to fatherScope.GetName()
 		
 	public Scope(Scope fatherScope, String name)
 	{
@@ -14,11 +14,11 @@ public abstract class Scope {
 		
 		if (fatherScope != null) {
 			this.fatherScope = fatherScope; 
-			parent = fatherScope.parent;
+		//	parent = fatherScope.parent;
 		}
 		else {
 			this.fatherScope = null;
-			parent = null;
+		//	parent = null;
 		}
 		
 	}
