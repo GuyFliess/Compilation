@@ -543,7 +543,7 @@ public class Calc extends CalcBase {
 				return constructAst(s[2]); /* run on moreExpr */
 			}
 		case "this":
-			return new This(((Token) s[0].root).line);
+			return new This(((Token) r).line);
 		case "literal":
 			Object value = ((Token) s[0].root).value;
 			Token token = (Token) s[0].root;
