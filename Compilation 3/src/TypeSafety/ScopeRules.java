@@ -17,13 +17,10 @@ public class ScopeRules {
 			
 		} catch (MultipleDefineException e) {
 			System.err.println(e.lineNum+": semantic error; Id "+e.errorMSG+" already defined in current scope");
-			throw new FoundException();
 		} catch (ExtendsException e) {
 			System.err.println(e.lineNum+": semantic error; "+e.errorMSG);
-			throw new FoundException();
 		} catch (ShadowException e) {
 			System.err.println(e.lineNum+": semantic error; "+e.errorMSG);
-			throw new FoundException();
 		}
 		
 	}

@@ -17,7 +17,7 @@ public class TypeSafetyCheckes {
 		try {
 			loopCheck.ContBreak(p);
 			mainCheck.CountMain(p);
-			scopeCheck.CheckScopeRules(p);//  commented - throwing null 
+			scopeCheck.CheckScopeRules(p);
 			p.accept(typingRulesChecker);
 			
 			
@@ -25,12 +25,15 @@ public class TypeSafetyCheckes {
 		} catch (ContinueBreakException e) {
 			System.err.println(e.lineNum + ": semantic error; semantic error; Use of "
 					+ e.errorMSG + " statement outside of loop not allowed");
+			throw new FoundException();
 		} catch (MainException e) {
 			System.err.println(e.lineNum + ": semantic error; " + e.errorMSG);
+			throw new FoundException();
 		}
 		catch (TypeSafetyException e)
 		{
 			System.err.println(e.lineNum + ": semantic error; " + e.errorMSG);
+			throw new FoundException();
 		}
 
 	}
