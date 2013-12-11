@@ -61,28 +61,35 @@ public class Main {
 						class_method.indexOf("."));
 				String method_name = class_method.substring(class_method
 						.indexOf(".") + 1);
-
-				REPL interp = new REPL();
-				int index = 0;
-				while (index < p.getClasses().size()
-						&& p.getClasses().get(index).getName() != class_name) {
-					index++;
+				
+				String[] arguments = new String[args.length - 2];
+				for (int i = 0; i < arguments.length; i++) {
+					arguments[i] = args[i + 2];
 				}
-				index = 0;
-				DeclClass decl_class = p.getClasses().get(index);
-				while (index < decl_class.getMethods().size()
-						&& decl_class.getMethods().get(index).getName() != method_name) {
-					index++;
-				}
-				DeclMethod decl_method = decl_class.getMethods().get(index - 1);
-				index = 2;
-				while (index < args.length) {
-					interp.AddArgument(decl_method.getFormals().get(index - 2)
-							.getName(), args[index]);
-					index++;
-				}
-				// try {
-				decl_method.accept(interp);
+				
+				REPL interp = new REPL(class_name, method_name, arguments);
+				p.accept(interp);
+//				REPL interp = new REPL();
+//				int index = 0;
+//				while (index < p.getClasses().size()
+//						&& p.getClasses().get(index).getName() != class_name) {
+//					index++;
+//				}
+//				index = 0;
+//				DeclClass decl_class = p.getClasses().get(index);
+//				while (index < decl_class.getMethods().size()
+//						&& decl_class.getMethods().get(index).getName() != method_name) {
+//					index++;
+//				}
+//				DeclMethod decl_method = decl_class.getMethods().get(index - 1);
+//				index = 2;
+//				while (index < args.length) {
+//					interp.AddArgument(decl_method.getFormals().get(index - 2)
+//							.getName(), args[index]);
+//					index++;
+//				}
+//				// try {
+//				decl_method.accept(interp);
 				// }
 
 				System.out.println(String.format("method name %s",
