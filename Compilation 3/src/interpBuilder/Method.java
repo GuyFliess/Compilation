@@ -12,6 +12,7 @@ import java.util.HashMap;
 public class Method {
 	String name;
 	private HashMap<String, Variable> variables;
+	int scope;
 
 	public Method(String name) {
 		this.name = name;
@@ -23,15 +24,15 @@ public class Method {
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name) {
+			VariableLocation variable_location, String name, int scope) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name));
+				name, scope));
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, Object value) {
+			VariableLocation variable_location, String name, int scope, Object value) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, value));
+				name, scope, value));
 	}
 
 	public String getName() {
@@ -52,6 +53,14 @@ public class Method {
 		} else {
 			throw new RuntimeError("The variable doesn't exist");
 		}
+	}
+	
+	public int getVariableScope(String variable_name) {
+		return this.variables.get(variable_name).getScope();
+	}
+	
+	public void setVariableScope(String variable_name, int scope) {
+		this.variables.get(variable_name).setScope(scope);
 	}
 
 	public boolean variableExists(String variable_name) {

@@ -44,21 +44,23 @@ public class Variable {
 		}
 	}
 
-	boolean isInitialized = false;
-	VariableLocation location;
-	String name;
+	private boolean isInitialized = false;
+	private VariableLocation location;
+	private String name;
+	private int scope;
 
 	VariableType type;
 
 	Object value = null;
 
-	public Variable(VariableType type, VariableLocation location, String name) {
+	public Variable(VariableType type, VariableLocation location, String name, int scope) {
 		this.type = type;
 		this.location = location;
 		this.name = name;
+		this.scope = scope;
 	}
 
-	public Variable(VariableType type, VariableLocation location, String name,
+	public Variable(VariableType type, VariableLocation location, String name, int scope,
 			Object value) {
 		this.type = type;
 		this.location = location;
@@ -79,6 +81,8 @@ public class Variable {
 
 		case BOOLEAN:
 			this.value = value.toString().equals("true") ? true : false;
+			break;
+		default:
 			break;
 		}
 		setInitialized();
@@ -143,6 +147,14 @@ public class Variable {
 			break;
 		}
 		this.setInitialized();
+	}
+	
+	public int getScope() {
+		return scope;
+	}
+
+	public void setScope(int scope) {
+		this.scope = scope;
 	}
 
 }

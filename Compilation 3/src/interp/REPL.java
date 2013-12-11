@@ -51,6 +51,7 @@ public class REPL implements Visitor {
 	String method_name;
 	String[] arguments;
 	private static int formal_index = 0;
+	private static int scope = 0;
 
 	public REPL() {
 		this.state = new State();
@@ -121,7 +122,7 @@ public class REPL implements Visitor {
 
 	public Object visit(DeclField field) {
 		VariableType field_type = (VariableType) field.getType().accept(this);
-		return new Variable(field_type, VariableLocation.FIELD, field.getName());
+		return new Variable(field_type, VariableLocation.FIELD, field.getName(), 0);
 	}
 
 	public Object visit(DeclVirtualMethod method) {
@@ -130,17 +131,16 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(DeclStaticMethod method) {
-		int index = 0;
 		Object value = null;
-		VariableType variable_type;
-		Method ic_method = new Method(method.getName());
 		for (Parameter formal : method.getFormals()) {
 			formal.accept(this);
 		}
 		for (Statement stmt : method.getStatements()) {
 			value = stmt.accept(this);
 		}
-		System.out.println(value);
+		if (!method.getType().getDisplayName().equals("void")) {
+			System.out.println(value);
+		}
 		return value;
 	}
 
@@ -153,7 +153,7 @@ public class REPL implements Visitor {
 		VariableType variable_type = (VariableType) formal.getType().accept(
 				this);
 		Variable variable = new Variable(variable_type,
-				VariableLocation.PARAMETER, formal.getName(),
+				VariableLocation.PARAMETER, formal.getName(), scope,
 				arguments[formal_index++]);
 		this.state.addVariableToMethod(this.class_name, this.method_name,
 				variable);
@@ -198,19 +198,21 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(StmtIf ifStatement) {
-		if ((boolean) ifStatement.getCondition().accept(this)) {
-			return ifStatement.getOperation().accept(this);
-		}
-		if (ifStatement.hasElse()) {
-			if ((boolean) ifStatement.getElseOperation().accept(this)) {
-				return ifStatement.getElseOperation().accept(this);
+		Variable condition = (Variable) ifStatement.getCondition().accept(this);
+		Boolean result = (Boolean) condition.getValue();
+		if (result) {
+			ifStatement.getOperation().accept(this);
+		} else {
+			if (ifStatement.hasElse()) {
+				ifStatement.getElseOperation().accept(this);
 			}
 		}
 		return null;
 	}
 
 	public Object visit(StmtWhile whileStatement) {
-		Variable condition = (Variable) whileStatement.getCondition().accept(this);
+		Variable condition = (Variable) whileStatement.getCondition().accept(
+				this);
 		Boolean result = (Boolean) condition.getValue();
 		while (result) {
 			whileStatement.getOperation().accept(this);
@@ -258,11 +260,13 @@ public class REPL implements Visitor {
 			break;
 		}
 		if (localVariable.isInitialized()) {
-			Variable value = (Variable) localVariable.getInitialValue().accept(this);
-			variable = new Variable(type, VariableLocation.LOCAL, localVariable.getName(), value.getValue());
-		}
-		else {
-			variable = new Variable(type, VariableLocation.LOCAL, localVariable.getName());
+			Variable value = (Variable) localVariable.getInitialValue().accept(
+					this);
+			variable = new Variable(type, VariableLocation.LOCAL,
+					localVariable.getName(), scope, value.getValue());
+		} else {
+			variable = new Variable(type, VariableLocation.LOCAL,
+					localVariable.getName(), scope);
 		}
 		this.state.addVariableToMethod(class_name, method_name, variable);
 		return null;
@@ -335,10 +339,11 @@ public class REPL implements Visitor {
 			type = VariableType.BOOLEAN;
 			break;
 		default:
-			//TODO: throw exception
+			// TODO: throw exception
 			break;
 		}
-		return new Variable(type, VariableLocation.NONE, "none", literal.getValue());
+		return new Variable(type, VariableLocation.NONE, "none", scope,
+				literal.getValue());
 	}
 
 	public Object visit(UnaryOp unaryOp) {
@@ -360,70 +365,85 @@ public class REPL implements Visitor {
 		Object value = null;
 		first = (Variable) binaryOp.getFirstOperand().accept(this);
 		second = (Variable) binaryOp.getSecondOperand().accept(this);
-		if (first.getType() == VariableType.INT && second.getType() == VariableType.INT) {
+		if (first.getType() == VariableType.INT
+				&& second.getType() == VariableType.INT) {
 			first_value = Integer.parseInt(first.getValue().toString());
 			second_value = Integer.parseInt(second.getValue().toString());
 
 			switch (binaryOp.getOperator()) {
 			case PLUS:
 				value = (Integer) first_value + second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case MINUS:
 				value = (Integer) first_value - second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case MULTIPLY:
 				value = (Integer) first_value * second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case DIVIDE:
 				value = (Integer) first_value / second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case MOD:
 				value = (Integer) first_value % second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case LAND:
 				value = (Integer) first_value & second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case LOR:
 				value = (Integer) first_value | second_value;
-				result = new Variable(VariableType.INT, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", scope, value);
 				break;
 			case LT:
 				value = (Boolean) (first_value < second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			case LTE:
 				value = (Boolean) (first_value <= second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			case GT:
 				value = (Boolean) (first_value > second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			case GTE:
 				value = (Boolean) (first_value >= second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			case EQUAL:
 				value = (Boolean) (first_value == second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			case NEQUAL:
 				value = (Boolean) (first_value != second_value) ? true : false;
-				result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE, "none", value);
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", scope, value);
 				break;
 			}
-		}
-		else if (first.getType() == VariableType.STRING && second.getType() == VariableType.STRING) {
-			value = (String) first.getValue().toString().concat(second.getValue().toString());
-			result = new Variable(VariableType.STRING, VariableLocation.NONE, "none", value);
-		}
-		else {
+		} else if (first.getType() == VariableType.STRING
+				&& second.getType() == VariableType.STRING) {
+			value = (String) first.getValue().toString()
+					.concat(second.getValue().toString());
+			result = new Variable(VariableType.STRING, VariableLocation.NONE,
+					"none", scope, value);
+		} else {
 			// TODO: throw exception
 		}
 		return result;

@@ -474,10 +474,12 @@ public class Calc extends CalcBase {
 			return constructAst(s[0]); /* run on expr1 */
 		case "expr1":
 			if (s.length == 6) {
-				type = (Type) constructAst(s[1]); /* run on type */
-				constructAst(s[2]); /* run on array */
+				Type array_type = (Type) constructAst(s[1]); /* run on type */
+				for (int i = 0; i < dimensions; i++) {
+					array_type.incrementDimension();
+				}
 				expr1 = (Expression) constructAst(s[4]); /* run on expr1 */
-				return new NewArray(type, expr1);
+				return new NewArray(array_type, expr1);
 			}
 			if (s.length == 4) {
 				return new NewInstance(((Token) s[0].root).line, ((Token) s[1].root).value);
