@@ -31,5 +31,7 @@ public abstract class Scope {
 	public abstract void AddVar(Object type);
 	
 	public abstract Type GetVariable(String name);
+
+	public abstract MethodTypeWrapper GetMethod(String method) ;
 	
 }

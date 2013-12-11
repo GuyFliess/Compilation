@@ -1,7 +1,13 @@
 package TypeSafety;
 
+import java.util.Collection;
+import java.util.List;
+
+import javax.swing.JTable.PrintMode;
+
 import scope.ClassScope;
 import scope.GlobalScope;
+import scope.MethodTypeWrapper;
 import scope.Scope;
 import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
@@ -41,10 +47,10 @@ import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
 
 public class TypingRules implements Visitor {
-	
+
 	private GlobalScope globalScope;
 
-	public TypingRules (GlobalScope globalScope) {
+	public TypingRules(GlobalScope globalScope) {
 		this.globalScope = globalScope;
 	}
 
@@ -194,32 +200,88 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(RefVariable location) {
-		// TODO Auto-generated method stub
+
 
 		Scope scope = location.GetScope();
-		return scope.GetVariable(location.getName());
+		Type var = scope.GetVariable(location.getName());
+		if (var  == null)
+		{
+			throw new TypingRuleException(String.format("%s not found in symbol table", location.getName()), location.getLine());
+		}
+		 return location.typeAtcheck =  var;
 	}
 
 	@Override
 	public Object visit(RefField location) {
 		location.getObject().accept(this);
-		// TODO Auto-generated method stub
+		
+		ClassScope classScope =(ClassScope) location.getObject().typeAtcheck.GetScope();
+		if (!classScope.getFields().containsKey(location.getField()))
+		{
+;			throw new TypingRuleException(String.format("field %s is not undefined", location.getField()),location.getLine());
+		}
+		Type result = classScope.getFields().get(location.getField());
+		location.typeAtcheck = result;
 		return null;
 	}
 
 	@Override
 	public Object visit(RefArrayElement location) {
-		// TODO Auto-generated method stub
+
 		location.getArray().accept(this);
 		location.getIndex().accept(this);
+		Type arrType = location.getArray().typeAtcheck;
+		Type resultType;
+		if (!(location.getIndex().typeAtcheck instanceof PrimitiveType ))
+		{
+			throw new TypingRuleException("invalid array operation, type %s is not an integer", location.getLine());
+		}
+
+		PrimitiveType index = (PrimitiveType) location.getIndex().typeAtcheck;
+		if (!(index.getDataType().equals(DataType.INT))
+				|| !(arrType.getArrayDimension() > 0)) // must be an array
+		{
+			throw new TypingRuleException("invalid array operation, type %s is not an array", location.getLine());
+		}
+		if (arrType instanceof PrimitiveType) {
+			resultType = new PrimitiveType(-1,
+					((PrimitiveType) arrType).getDataType());
+		} else if (arrType instanceof ClassType) {
+			resultType = new ClassType(-1, ((ClassType) arrType).getClassName());
+		} else throw new Error("internal error");
+		location.typeAtcheck = resultType;// make new type of type of 								
 		return null;
 	}
 
 	@Override
 	public Object visit(StaticCall call) {
 		for (Expression argument : call.getArguments())
+		{
 			argument.accept(this);
-		// TODO Auto-generated method stub
+		}
+		
+		ClassScope classScope = globalScope.getClassScope(call.getClassName());
+		if (classScope == null)
+		{
+			throw new TypingRuleException(String.format("Class %s doesn't exist", call.getClassName()), call.getLine());
+		}
+		if (!classScope.getStaticMethodScopes().containsKey(call.getMethod()))
+		{
+			throw new TypingRuleException(String.format("Method %s doesn't exist", call.getMethod()),call.getLine());
+		}
+		MethodTypeWrapper methodInClass = classScope.getStaticMethodScopes().get(call.getMethod());
+		List<Expression> calledParams = call.getArguments();
+		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(new Type[methodInClass.getParameters().size()]);
+		if (methodParams.length != calledParams.size())
+		for (int i  = 0 ; i < methodParams.length ;  i++ ) 
+		{
+			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i]))
+			{
+				throw new TypingRuleException("Parameter mismatch", call.getLine());
+			}
+		}
+		
+		call.typeAtcheck = methodInClass.getReturnType();		
 		return null;
 	}
 
@@ -230,82 +292,143 @@ public class TypingRules implements Visitor {
 		}
 		for (Expression argument : call.getArguments())
 			argument.accept(this);
-		// TODO Auto-generated method stub
+		ClassScope classScope; // globalScope.getClassScope(call.getClassName());
+		MethodTypeWrapper methodInClass;
+		if (call.hasExplicitObject())
+		{
+			Scope scope =  call.getObject().typeAtcheck.GetScope();
+			if (scope instanceof ClassScope) {
+				 classScope = (ClassScope) scope;	
+			}
+			else throw new TypingRuleException(String.format("%s is not a method", call.getObject()), call.getLine());
+			methodInClass = classScope.GetMethod(call.getMethod());
+		}
+		else
+		{
+			methodInClass = call.GetScope().GetMethod(call.getMethod());
+			if (methodInClass == null)  throw new TypingRuleException(String.format("%s not found in symbol table", call.getObject()), call.getLine());
+		}
+		List<Expression> calledParams = call.getArguments();
+		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(new Type[methodInClass.getParameters().size()]);
+		if (methodParams.length != calledParams.size())
+		for (int i  = 0 ; i < methodParams.length ;  i++ ) 
+		{
+			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i]))
+			{
+				throw new TypingRuleException("Parameter mismatch", call.getLine());
+			}
+		}
+		
+		call.typeAtcheck = methodInClass.getReturnType();		
+		
 		return null;
 	}
 
 	@Override
 	public Object visit(This thisExpression) {
+		
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
-		// TODO Auto-generated method stub
+		newClass.typeAtcheck = new ClassType(newClass.getLine(),newClass.getName());
 		return null;
 	}
 
 	@Override
 	public Object visit(NewArray newArray) {
-		// TODO Auto-generated method stub
+		
 		newArray.getSize().accept(this);
 		newArray.getType().accept(this);
+		Type e = newArray.getSize().typeAtcheck;
+		if (!(e instanceof PrimitiveType) || !(((PrimitiveType) e).getDataType().equals(DataType.INT))) 
+				{
+					throw new TypingRuleException("invalid Array allocation", newArray.getLine());
+				}
+		
+		Type arrType = newArray.getType();
+		Type resultType;
+		if (arrType instanceof PrimitiveType) {
+			resultType = new PrimitiveType(-1,
+					((PrimitiveType) arrType).getDataType());
+		} else if (arrType instanceof ClassType) {
+			resultType = new ClassType(-1, ((ClassType) arrType).getClassName());
+		} else throw new Error("internal error");
+		resultType.incrementDimension();
+		newArray.typeAtcheck = resultType;
 		return null;
 	}
 
 	@Override
 	public Object visit(Length length) {
-		Type type1 = (Type)  length.getArray().accept(this);
-		if (type1.getArrayDimension() > 0)
-		{
-			return new PrimitiveType(length.getLine(), DataType.INT);
+		Type type1 = (Type) length.getArray().accept(this);
+		if (type1.getArrayDimension() > 0) {
+			length.typeAtcheck = new PrimitiveType(length.getLine(),
+					DataType.INT);
+		} else {
+			throw new TypingRuleException(
+					String.format(
+							"invalid length operation, type %s is not an array",
+							type1), length.getLine());
 		}
-		else
-		{
-			throw new TypingRuleException(String.format("invalid length operation, type %s is not an array",type1), length.getLine());
-		}
+		return null;
 	}
 
 	@Override
 	public Object visit(Literal literal) {
-		return new PrimitiveType(literal.getLine(), literal.getType());
+		literal.typeAtcheck = new PrimitiveType(literal.getLine(),
+				literal.getType());
+		return null;
 	}
 
 	@Override
 	public Object visit(UnaryOp unaryOp) {
-		Type type1 = (Type) unaryOp.getOperand().accept(this);
+		unaryOp.getOperand().accept(this);
+		Type type1 = unaryOp.getOperand().typeAtcheck;
 
 		switch (unaryOp.getOperator()) {
 		case LNEG: {
 			if ((type1 instanceof PrimitiveType)
 					&& ((PrimitiveType) type1).getDataType().equals(
 							DataType.INT)) {
-				return new PrimitiveType(unaryOp.getLine(), DataType.INT);
+				unaryOp.typeAtcheck = new PrimitiveType(unaryOp.getLine(),
+						DataType.INT);
+			} else {
+				throw new TypingRuleException(
+						String.format(
+								"invalid logical unary op (%s) on non-integer expression",
+								type1.getDisplayName()), unaryOp.getLine());
 			}
-			else {
-				throw new TypingRuleException(String.format("invalid logical unary op (%s) on non-integer expression",type1.getDisplayName()), unaryOp.getLine());
-			}
-				
+			break;
+
 		}
 		case UMINUS:
 			if ((type1 instanceof PrimitiveType)
 					&& ((PrimitiveType) type1).getDataType().equals(
 							DataType.INT)) {
-				return new PrimitiveType(unaryOp.getLine(), DataType.BOOLEAN);
+				unaryOp.typeAtcheck = new PrimitiveType(unaryOp.getLine(),
+						DataType.BOOLEAN);
+			} else {
+				throw new TypingRuleException(
+						String.format(
+								"invalid logical unary op (%s) on non-boolean expression",
+								type1.getDisplayName()), unaryOp.getLine());
 			}
-			else {
-				throw new TypingRuleException(String.format("invalid logical unary op (%s) on non-boolean expression",type1.getDisplayName()), unaryOp.getLine());
-			}
+			break;
 		default:
 			throw new Error("internal error, unknown enum type");
-		}		
+		}
+		return null;
 	}
 
 	@Override
 	public Object visit(BinaryOp binaryOp) {
-		Type type1 = (Type) binaryOp.getFirstOperand().accept(this);
-		Type type2 = (Type) binaryOp.getSecondOperand().accept(this);
+		binaryOp.getFirstOperand().accept(this);
+		binaryOp.getSecondOperand().accept(this);
+		Type type1 = binaryOp.getFirstOperand().typeAtcheck;
+		Type type2 = binaryOp.getFirstOperand().typeAtcheck;
 		switch (binaryOp.getOperator()) {
 		case DIVIDE:
 		case MINUS:
@@ -334,10 +457,14 @@ public class TypingRules implements Visitor {
 																				// expression
 			}
 			// return PrimitiveType.DataType.INT;
-			return new PrimitiveType(-1, DataType.INT); // TODO what to return?
-														// type1 is the wrong
-														// location, don't want
-														// to edit ast
+			binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT); // TODO
+																		// what
+																		// to
+																		// return?
+			// type1 is the wrong
+			// location, don't want
+			// to edit ast
+			break;
 		}
 		case PLUS: {
 			if ((type1 instanceof PrimitiveType)
@@ -346,30 +473,21 @@ public class TypingRules implements Visitor {
 							PrimitiveType.DataType.INT)
 					&& ((PrimitiveType) type2).getDataType().equals(
 							PrimitiveType.DataType.INT)) {
-				return new PrimitiveType(-1, DataType.INT);
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT);
 			} else if ((type1 instanceof PrimitiveType)
 					&& (type2 instanceof PrimitiveType)
 					&& ((PrimitiveType) type1).getDataType().equals(
 							PrimitiveType.DataType.STRING)
 					&& ((PrimitiveType) type2).getDataType().equals(
 							PrimitiveType.DataType.STRING)) {
-				return type1;
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT);
 			} else {
 				throw new TypingRuleException(
 						String.format(
 								"invalid logical binary op (%s) on non-integer expression",
-								binaryOp.getOperator()), binaryOp.getLine()); // 9:
-																				// semantic
-																				// error;
-																				// Invalid
-																				// logical
-																				// binary
-																				// op
-																				// (>)
-																				// on
-																				// non-integer
-																				// expression
+								binaryOp.getOperator()), binaryOp.getLine());
 			}
+			break;
 		}
 
 		case GT:
@@ -382,13 +500,14 @@ public class TypingRules implements Visitor {
 							PrimitiveType.DataType.INT)
 					&& ((PrimitiveType) type2).getDataType().equals(
 							PrimitiveType.DataType.INT)) {
-				return new PrimitiveType(-1, DataType.BOOLEAN);
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.BOOLEAN);
 			} else {
 				throw new TypingRuleException(
 						String.format(
 								"invalid logical binary op (%s) on non-integer expression",
 								binaryOp.getOperator()), binaryOp.getLine());
 			}
+			break;
 		}
 		case LAND:
 		case LOR: {
@@ -398,8 +517,9 @@ public class TypingRules implements Visitor {
 							PrimitiveType.DataType.BOOLEAN)
 					|| ((PrimitiveType) type2).getDataType().equals(
 							PrimitiveType.DataType.BOOLEAN)) {
-				return new PrimitiveType(-1, DataType.BOOLEAN);
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.BOOLEAN);
 			}
+			break;
 		}
 		case EQUAL:
 		case NEQUAL: {
@@ -408,67 +528,76 @@ public class TypingRules implements Visitor {
 					&& (type2 instanceof PrimitiveType)
 					&& ((PrimitiveType) type1).getDataType().equals(
 							((PrimitiveType) type1).getDataType())) {
-				return new PrimitiveType(-1, DataType.BOOLEAN);
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.BOOLEAN);
 			}
 			// class case
 			else if ((isSubTypeOf(type1, type2)) || isSubTypeOf(type2, type1)) {
-					// then one inherits from the other, we're good
-					return new PrimitiveType(-1, DataType.BOOLEAN);
-				}				
-			
-			//if one side is null
-			else 
-			{
-			throw new TypingRuleException(String.format(
-					"invalid logical binary op (%s) on ??? expression",
-					binaryOp.getOperator()), binaryOp.getLine());
+				// then one inherits from the other, we're good
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.BOOLEAN);
 			}
 
+			// if one side is null
+			else {
+				throw new TypingRuleException(String.format(
+						"invalid logical binary op (%s) on ??? expression",
+						binaryOp.getOperator()), binaryOp.getLine());
+			}
+			break;
 		}
 		default:
 			throw new Error("internal error, unknown enum type");
 
 		}
+		return null;
 	}
-public  Boolean isSubTypeOf(Type type1, Type type2)
-{
-	if ( (type1 instanceof PrimitiveType) && ((PrimitiveType) type1).getDataType().equals(DataType.VOID))
-	{
-		return true;
-	}
-	if ( (type2 instanceof PrimitiveType) && ((PrimitiveType) type2).getDataType().equals(DataType.VOID))
-	{
-		return true;
-	}
-	if ((!(type1 instanceof ClassType)) || (!(type2 instanceof ClassType)))
-		return false;
-	ClassType class1 = (ClassType) type1;
-	ClassType class2 = (ClassType) type2;
-	if (class1.getClassName().compareTo(class2.getClassName()) == 0)
-	{
-		// A<=A
-		return  true;
-	}
-	 // class1 <= class2
-	ClassScope extendingScope = globalScope.GetclassesScopes().get(class1.getClassName());
-	ClassScope fatherScope = globalScope.GetclassesScopes().get(class2.getClassName());
-	Scope tempScope = extendingScope;
-	while (tempScope instanceof ClassScope)
-	{
-		if (tempScope.equals(fatherScope)) return true;
-		tempScope = tempScope.fatherScope;
-	}
-	 extendingScope = globalScope.GetclassesScopes().get(class2.getClassName());
-	 fatherScope = globalScope.GetclassesScopes().get(class1.getClassName());
-	 tempScope = extendingScope;
-	while (tempScope instanceof ClassScope)
-	{
-		if (tempScope.equals(fatherScope)) return true;
-		tempScope = tempScope.fatherScope;
-	}
-	//class2 <= class1
-	//TODO continue checks
-	return false;
-}
-}
 
+	
+	
+	/**
+	 * is type1 a sub type of type2  type1 < type2
+	 * 
+	 * @param call
+	 *            Method call expression.
+	 */
+	public Boolean isSubTypeOf(Type type1, Type type2) {
+		if ((type1 instanceof PrimitiveType)
+				&& ((PrimitiveType) type1).getDataType().equals(DataType.VOID)) {
+			return true;
+		}
+		if ((type2 instanceof PrimitiveType)
+				&& ((PrimitiveType) type2).getDataType().equals(DataType.VOID)) {
+			return true;
+		}
+		if ((!(type1 instanceof ClassType)) || (!(type2 instanceof ClassType)))
+			return false;
+		ClassType class1 = (ClassType) type1;
+		ClassType class2 = (ClassType) type2;
+		if (class1.getClassName().compareTo(class2.getClassName()) == 0) {
+			// A<=A
+			return true;
+		}
+		// class1 <= class2
+		ClassScope extendingScope = globalScope.GetclassesScopes().get(
+				class1.getClassName());
+		ClassScope fatherScope = globalScope.GetclassesScopes().get(
+				class2.getClassName());
+		Scope tempScope = extendingScope;
+		while (tempScope instanceof ClassScope) {
+			if (tempScope.equals(fatherScope))
+				return true;
+			tempScope = tempScope.fatherScope;
+		}
+		extendingScope = globalScope.GetclassesScopes().get(
+				class2.getClassName());
+		fatherScope = globalScope.GetclassesScopes().get(class1.getClassName());
+		tempScope = extendingScope;
+		while (tempScope instanceof ClassScope) {
+			if (tempScope.equals(fatherScope))
+				return true;
+			tempScope = tempScope.fatherScope;
+		}
+		// class2 <= class1
+		// TODO continue checks
+		return false;
+	}
+}

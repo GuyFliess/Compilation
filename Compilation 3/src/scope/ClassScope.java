@@ -88,5 +88,17 @@ public class ClassScope extends Scope {
 		}
 		else
 		return ((ClassScope) fatherScope).isInScopeOf(otherScope);
+	}
+
+	@Override
+	public MethodTypeWrapper GetMethod(String method) {
+		if (virtualMethodScopes.containsKey(method))
+		{
+			return virtualMethodScopes.get(method);
+		}
+		else
+		{
+			return fatherScope.GetMethod(method);
+		}		
 	} 
 }

@@ -29,11 +29,13 @@ import scope.*;
 
 public class BuildScope implements Visitor {
 	Scope currentScope;
+	GlobalScope f_globalScope;
 
 	public GlobalScope MakeScopes(Program program, DeclClass library)
 	{
 		GlobalScope globalScope = new GlobalScope(null, "Global");
 		currentScope = globalScope;		
+		f_globalScope = globalScope;
 		if (library != null)
 		{
 			library.SetScope(globalScope);
@@ -64,8 +66,8 @@ public class BuildScope implements Visitor {
 		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;
-			globalScope.AddClassScope((ClassScope) icClass.accept(this),
-					icClass);// / classes are added to global scope even if they are nested in their super class 
+	//		globalScope.AddClassScope((ClassScope) icClass.accept(this),
+				//	icClass);// / classes are added to global scope even if they are nested in their super class 
 		}
 		return globalScope;
 	}
@@ -85,6 +87,7 @@ public class BuildScope implements Visitor {
 		
 		icClass.SetScope(classScope);
 		currentScope = classScope;
+		f_globalScope.AddClassScope(classScope, icClass.getName());
 		for (DeclField field : icClass.getFields()) {
 
 			field.accept(this);
@@ -191,7 +194,8 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(ClassType type) {
-		type.SetScope(currentScope);
+		type.SetScope(f_globalScope.GetclassesScopes().get(type.getClassName()));
+//		type.SetScope(currentScope);
 		return null;
 	}
 
@@ -291,8 +295,12 @@ public class BuildScope implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
+		
 		localVariable.SetScope(currentScope);
+		
 		currentScope.AddVar(localVariable);
+		localVariable.getType().accept(this);
+		currentScope = localVariable.GetScope();
 		if (localVariable.isInitialized())
 		{
 			localVariable.getInitialValue().accept(this);

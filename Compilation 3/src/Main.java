@@ -114,6 +114,9 @@ public class Main {
 
 		} catch (Throwable e) {
 			System.err.println(e);
+			for (StackTraceElement trace : e.getStackTrace()) {
+				System.err.println(trace);
+			}
 			return;
 		}
 

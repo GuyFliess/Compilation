@@ -49,5 +49,10 @@ public class StatementBlockScope extends Scope {
 		
 		return resultType;
 	}
+
+	@Override
+	public MethodTypeWrapper GetMethod(String method) {
+		return fatherScope.GetMethod(method);
+	}
 	
 }

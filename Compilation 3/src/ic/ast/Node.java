@@ -1,4 +1,5 @@
 package ic.ast;
+import ic.ast.decl.Type;
 import TypeSafety.TypeSafetyException;
 import scope.*;
 
@@ -10,8 +11,9 @@ public abstract class Node {
 
 	private int line;
 	private Scope scope;
+	public Type typeAtcheck; // for type checking
 
-	/**
+	/** 
 	 * Double dispatch method, to allow a visitor to visit a specific subclass.
 	 * 
 	 * @param visitor

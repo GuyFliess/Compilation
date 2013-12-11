@@ -53,4 +53,10 @@ public class GlobalScope extends Scope {
 	{
 		return classes.get(name);
 	}
+
+
+	@Override
+	public MethodTypeWrapper GetMethod(String method) {
+		return null;
+	}
 }
