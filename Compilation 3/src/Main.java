@@ -2,6 +2,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import TypeSafety.ContinueBreakException;
+import TypeSafety.FoundException;
 import TypeSafety.MainException;
 import TypeSafety.TypeSafetyCheckes;
 import lex.Lexer;
@@ -114,11 +115,12 @@ public class Main {
 				System.out.println("All done!");
 			}
 
+		} catch (FoundException e) {
+			return;
 		} catch (Throwable e) {
 			System.err.println(e);
 			return;
 		}
 
 	}
-
 }
