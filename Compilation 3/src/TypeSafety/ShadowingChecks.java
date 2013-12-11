@@ -1,7 +1,6 @@
 package TypeSafety;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import ic.ast.decl.*;
@@ -13,70 +12,117 @@ import ic.ast.stmt.StmtWhile;
 
 public class ShadowingChecks {
 
-	public void CheckShadowing(Program p) {
+	
+	private List<String> superClassParams = new ArrayList<String>();
+	
+	public void CheckShadowing(Program p) throws ShadowException{
 
 		for (DeclClass icClass : p.getClasses()) {
-			CheckShadowing(icClass);
+			CheckShadowing(icClass,p);
 		}
 
 	}
 
-	private void CheckShadowing(DeclClass icClass) throws ShadowException{
-		List<Type> lst = new ArrayList<Type>();
+	private void CheckShadowing(DeclClass icClass, Program p) throws ShadowException{
+		List<String> lst = new ArrayList<String>();
+		
+		if (icClass.hasSuperClass()) {
+			superClassParams = FindClassParams(p,icClass.getSuperClassName());
+		}
 
 		for (DeclField field : icClass.getFields()) {
-			Type typeLst = SearchString(lst, field.getName());
-			if (typeLst != null) {
-				String type = findType(field.getType());
-				throw new ShadowException(type + " " + field.getName()
-						+ " is shadowing a field with the same name",
-						field.getLine());
+			if (icClass.hasSuperClass()) {
+				if (superClassParams.contains(field.getName())) {
+					throw new ShadowException("Field " + field.getName()
+							+ " is shadowing a field with the same name",
+							field.getLine());
+				} 
 			}
-			lst.add(field.getType());
+			
+			lst.add(field.getName());
 		}
 
 		for (DeclMethod method : icClass.getMethods()) {
-			Type typeLst = SearchString(lst, method.getName());
-			if (typeLst != null) {
-				String type = findType(method.getType());
-				throw new ShadowException(type + " " + method.getName()
+			
+			if (icClass.hasSuperClass()) {
+				if (superClassParams.contains(method.getName())) {
+					throw new ShadowException("Method " + method.getName()
+							+ " is shadowing a field with the same name",
+							method.getLine());
+				} 
+			}
+			
+			if (lst.contains(method.getName())) {
+				throw new ShadowException("Method " + method.getName()
 						+ " is shadowing a field with the same name",
 						method.getLine());
 			}
-			lst.add(method.getType());
+			lst.add(method.getName());
 			CheckShadowing(method);
 		}
 
-		if (icClass.hasSuperClass()) {
-
-		}
+		
 
 	}
 
+	
+
 	private void CheckShadowing(DeclMethod method) throws ShadowException{
-		List<Type> lst = new ArrayList<Type>();
+		List<String> lst = new ArrayList<String>();
 
 		for (Parameter parameter : method.getFormals()) {
-			lst.add(parameter.getType());
+			lst.add(parameter.getName());
 		}
 
-		List<Type> methodParms = new ArrayList<Type>();
+		List<LocalVariable> methodParms = new ArrayList<LocalVariable>();
 		methodParms = FindAllStatementsParams(method);
 
 		for (int i = 0; i < methodParms.size(); i++) {
-			Type typeLst = SearchString(lst, methodParms.get(i).toString());
-			if (typeLst != null) {
-				String type = findType(methodParms.get(i));
-				throw new ShadowException(type + " " + methodParms.get(i).toString()
+			if (lst.contains(methodParms.get(i).getName())) {
+				throw new ShadowException("Local variable " + methodParms.get(i).getName()
 						+ " is shadowing a parameter",
 						 methodParms.get(i).getLine());
 			}
 		}
 
 	}
+	
+	private List<String> FindClassParams(Program p, String superClassName) {
+		List<String> lst = new ArrayList<String>();
+		DeclClass icClass = FindClass(p, superClassName);
+		
+		for (DeclField field : icClass.getFields()) {
+			lst.add(field.getName());
+		}
+		for (DeclMethod method : icClass.getMethods()) {
+			for (Parameter parameter : method.getFormals()) {
+				lst.add(parameter.getName());
+			}
+			List<LocalVariable> methodParms = new ArrayList<LocalVariable>();
+			methodParms = FindAllStatementsParams(method);
+			for (int i = 0; i < methodParms.size(); i++) {
+				lst.add(methodParms.get(i).getName());
+			}
+		}
+		
+		return lst;
+	}
+	
+	
 
-	private List<Type> FindAllStatementsParams(DeclMethod method) {
-		List<Type> lst = new ArrayList<Type>();
+	private DeclClass FindClass(Program p, String superClassName) {
+		
+		for (DeclClass icClass : p.getClasses()) {
+			if (superClassName.compareTo(icClass.getName())==0) {
+				return icClass;
+			}
+		}
+		
+		return null;
+	}
+
+	private List<LocalVariable> FindAllStatementsParams(DeclMethod method) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
 
 		for (Statement statement : method.getStatements()) {
 			lst.addAll(FindAllStatementsParams(statement));
@@ -84,8 +130,8 @@ public class ShadowingChecks {
 		return lst;
 	}
 
-	private List<Type> FindAllStatementsParams(Statement statement) {
-		List<Type> lst = new ArrayList<Type>();
+	private List<LocalVariable> FindAllStatementsParams(Statement statement) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
 
 		if (LocalVariable.class.isInstance(statement)) {
 			LocalVariable var = (LocalVariable) statement;
@@ -104,22 +150,22 @@ public class ShadowingChecks {
 		return lst;
 	}
 
-	private List<Type> FindAllStatementsParams(LocalVariable var) {
-		List<Type> lst = new ArrayList<Type>();
-		lst.add(var.getType());
+	private List<LocalVariable> FindAllStatementsParams(LocalVariable var) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
+		lst.add(var);
 		return lst;
 	}
 
-	private List<Type> FindAllStatementsParams(StmtWhile stmtWhile) {
-		List<Type> lst = new ArrayList<Type>();
+	private List<LocalVariable> FindAllStatementsParams(StmtWhile stmtWhile) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
 
 		lst.addAll(FindAllStatementsParams(stmtWhile.getOperation()));
 
 		return lst;
 	}
 
-	private List<Type> FindAllStatementsParams(StmtIf stmtIf) {
-		List<Type> lst = new ArrayList<Type>();
+	private List<LocalVariable> FindAllStatementsParams(StmtIf stmtIf) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
 
 		lst.addAll(FindAllStatementsParams(stmtIf.getOperation()));
 		lst.addAll(FindAllStatementsParams(stmtIf.getElseOperation()));
@@ -127,8 +173,8 @@ public class ShadowingChecks {
 		return lst;
 	}
 
-	private List<Type> FindAllStatementsParams(StmtBlock block) {
-		List<Type> lst = new ArrayList<Type>();
+	private List<LocalVariable> FindAllStatementsParams(StmtBlock block) {
+		List<LocalVariable> lst = new ArrayList<LocalVariable>();
 
 		for (Statement statement : block.getStatements()) {
 			lst.addAll(FindAllStatementsParams(statement));
@@ -137,28 +183,4 @@ public class ShadowingChecks {
 		return lst;
 	}
 
-	private String findType(Type type) {
-		if (DeclField.class.isInstance(type)) {
-			return "Field";
-		}
-		if (DeclMethod.class.isInstance(type)) {
-			return "Method";
-		}
-		if (LocalVariable.class.isInstance(type)) {
-			return "Local variable";
-		}
-
-		return null;
-	}
-
-	private Type SearchString(List<Type> lst, String str) {
-
-		for (int i = 0; i < lst.size(); i++) {
-			if (lst.get(i).toString().equals(str)) {
-				return lst.get(i);
-			}
-		}
-		return null;
-
-	}
 }

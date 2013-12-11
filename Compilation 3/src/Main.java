@@ -99,8 +99,7 @@ public class Main {
 				BuildScope scopeBuilder = new BuildScope();
 				GlobalScope globalScope = scopeBuilder.MakeScopes((Program) programAst,(DeclClass) libAst);
 
-				PrintScope printScope = new PrintScope();
-		//		printScope.Print(globalScope);
+				
 
 				// printScope.Print(p);
 				
@@ -108,6 +107,9 @@ public class Main {
 				System.out.println("type checking");
 				TypeSafetyCheckes checks = new TypeSafetyCheckes();
 				checks.CheckTypeSafety(p, (DeclClass)libAst , globalScope);
+				
+				PrintScope printScope = new PrintScope();
+				printScope.Print(globalScope);
 				
 				System.out.println("All done!");
 			}
