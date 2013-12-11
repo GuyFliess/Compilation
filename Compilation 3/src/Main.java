@@ -100,7 +100,7 @@ public class Main {
 				GlobalScope globalScope = scopeBuilder.MakeScopes((Program) programAst,(DeclClass) libAst);
 
 				PrintScope printScope = new PrintScope();
-				printScope.Print(globalScope);
+		//		printScope.Print(globalScope);
 
 				// printScope.Print(p);
 				
