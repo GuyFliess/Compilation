@@ -1,5 +1,6 @@
 package interp;
 
+import interpBuilder.Method;
 import interpBuilder.Variable;
 import interpBuilder.interpClass;
 
@@ -17,6 +18,14 @@ public class State {
 	public void addClass(interpClass class_instance) {
 		this.classes.put(class_instance.getName(), class_instance);
 	}
+	
+	public void addFieldToClass(String class_name, Variable field) {
+		this.classes.get(class_name).addField(field);
+	}
+	
+	public void addMethodToClass(String class_name, Method method) {
+		this.classes.get(class_name).addMethod(method);
+	}
 
 	public void addVariableToMethod(String class_name, String method_name,
 			Variable variable) {
@@ -27,6 +36,10 @@ public class State {
 			Variable variable) {
 		return this.classes.get(class_name)
 				.getVariableValue(method_name, variable).toString();
+	}
+	
+	public Variable getVariable(String class_name, String method_name, String variable_name) {
+		return this.classes.get(class_name).getVariable(method_name, variable_name);
 	}
 
 	public void setVariableValue(String class_name, String method_name,
@@ -39,6 +52,10 @@ public class State {
 			String variable_name) {
 		return this.classes.get(class_name).variableExists(method_name,
 				variable_name);
+	}
+	
+	public boolean fieldExists(String class_name, String field_name) {
+		return this.classes.get(class_name).fieldExists(field_name);
 	}
 
 	// Stack<ActivationRecord> a_stack = new Stack<>(); //TODO: remove

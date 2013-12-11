@@ -41,6 +41,10 @@ public class Method {
 	public Object getVariableValue(Variable variable) {
 		return this.variables.get(variable.getName()).getValue();
 	}
+	
+	public Variable getVariable(String variable_name) {
+		return this.variables.get(variable_name);
+	}
 
 	public void setVariableValue(String name, Object value) {
 		if (this.variables.containsKey(name)) {

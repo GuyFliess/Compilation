@@ -4,7 +4,7 @@ import interp.REPL.RuntimeError;
 
 public class Variable {
 	public enum VariableLocation {
-		FIELD("field"), LOCAL("local"), PARAMETER("parameter");
+		FIELD("field"), LOCAL("local"), PARAMETER("parameter"), NONE("none");
 
 		private String variable_location;
 

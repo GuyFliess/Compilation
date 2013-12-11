@@ -40,6 +40,10 @@ public class interpClass {
 	public Object getVariableValue(String method_name, Variable variable) {
 		return this.methods.get(method_name).getVariableValue(variable);
 	}
+	
+	public Variable getVariable(String method_name, String variable_name) {
+		return this.methods.get(method_name).getVariable(variable_name);
+	}
 
 	public void setFields(HashMap<String, Variable> fields) {
 		this.fields = fields;
@@ -56,5 +60,9 @@ public class interpClass {
 
 	public boolean variableExists(String method_name, String variable_name) {
 		return this.methods.get(method_name).variableExists(variable_name);
+	}
+	
+	public boolean fieldExists(String field_name) {
+		return this.fields.containsKey(field_name);
 	}
 }
