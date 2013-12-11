@@ -41,7 +41,7 @@ public class CheckMultipleDefinition {
 
 	private void CheckParams(DeclMethod method) throws MultipleDefineException {
 		List<String> typeLst = new ArrayList<String>();
-
+/*
 		for (Parameter parameter : method.getFormals()) {
 			if (typeLst.contains(parameter.getName())) {
 				throw new MultipleDefineException(parameter.getName(),
@@ -49,7 +49,7 @@ public class CheckMultipleDefinition {
 			}
 			typeLst.add(parameter.getName());
 		}
-
+*/
 		for (Statement statement : method.getStatements()) {
 			List<LocalVariable> params = new ArrayList<LocalVariable>();
 			params = findStatementParams(statement);
