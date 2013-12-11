@@ -54,12 +54,12 @@ public class interpClass {
 	}
 
 	public void setVariableValue(String method_name, String variable_name,
-			Object value) {
-		this.methods.get(method_name).setVariableValue(variable_name, value);
+			Object[] value, int location) {
+		this.methods.get(method_name).setVariableValue(variable_name, value, location);
 	}
 
-	public boolean variableExists(String method_name, String variable_name) {
-		return this.methods.get(method_name).variableExists(variable_name);
+	public boolean variableExists(String method_name, String variable_name, int scope) {
+		return this.methods.get(method_name).variableExists(variable_name, scope);
 	}
 	
 	public boolean fieldExists(String field_name) {

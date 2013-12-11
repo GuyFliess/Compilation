@@ -24,15 +24,15 @@ public class Method {
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope) {
+			VariableLocation variable_location, String name, int scope, int dimensions) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope));
+				name, scope, dimensions));
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope, Object value) {
+			VariableLocation variable_location, String name, int scope, int dimensions, Object[] value) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope, value));
+				name, scope, dimensions, value));
 	}
 
 	public String getName() {
@@ -47,9 +47,9 @@ public class Method {
 		return this.variables.get(variable_name);
 	}
 
-	public void setVariableValue(String name, Object value) {
+	public void setVariableValue(String name, Object[] value, int location) {
 		if (this.variables.containsKey(name)) {
-			this.variables.get(name).setValue(value);
+			this.variables.get(name).setValue(value, location);
 		} else {
 			throw new RuntimeError("The variable doesn't exist");
 		}
@@ -63,7 +63,10 @@ public class Method {
 		this.variables.get(variable_name).setScope(scope);
 	}
 
-	public boolean variableExists(String variable_name) {
-		return this.variables.containsKey(variable_name);
+	public boolean variableExists(String variable_name, int scope) {
+		if (this.variables.containsKey(variable_name)) {
+			return variables.get(variable_name).getScope() <= scope;
+		}
+		return false;
 	}
 }

@@ -43,15 +43,15 @@ public class State {
 	}
 
 	public void setVariableValue(String class_name, String method_name,
-			String variable_name, Object value) {
+			String variable_name, Object[] value, int location) {
 		this.classes.get(class_name).setVariableValue(method_name,
-				variable_name, value);
+				variable_name, value, location);
 	}
 
 	public boolean variableExists(String class_name, String method_name,
-			String variable_name) {
+			String variable_name, int scope) {
 		return this.classes.get(class_name).variableExists(method_name,
-				variable_name);
+				variable_name, scope);
 	}
 	
 	public boolean fieldExists(String class_name, String field_name) {

@@ -52,6 +52,9 @@ public class REPL implements Visitor {
 	String[] arguments;
 	private static int formal_index = 0;
 	private static int scope = 0;
+	private int array_location;
+	Object value;
+	Object[] values;
 
 	public REPL() {
 		this.state = new State();
@@ -89,7 +92,12 @@ public class REPL implements Visitor {
 	public Object visit(Program program) {
 		for (DeclClass decl_class : program.getClasses()) {
 			this.state.addClass(new interpClass(decl_class.getName()));
-			decl_class.accept(this);
+		}
+		for (DeclClass decl_class : program.getClasses()) {
+			if (decl_class.getName().equals(class_name)) {
+				decl_class.accept(this);
+				break;
+			}
 		}
 		return null;
 	}
@@ -97,23 +105,17 @@ public class REPL implements Visitor {
 	public Object visit(DeclClass icClass) {
 		Variable field;
 		Method method;
-		// interpClass ic_class = new interpClass(icClass.getName());
 		for (DeclField decl_field : icClass.getFields()) {
 			field = (Variable) decl_field.accept(this);
-			this.state.addFieldToClass(class_name, field);// new
-															// Variable((VariableType)
-															// decl_field.getType().accept(this),
-															// VariableLocation.FIELD,
-															// decl_field.getName()));
-			// field = (Variable) decl_field.accept(this);
-			// ic_class.addField(field);
+			this.state.addFieldToClass(class_name, field);
+		}
+		for (DeclMethod decl_method : icClass.getMethods()) {
+			method = new Method(decl_method.getName());
+			this.state.addMethodToClass(class_name, method);
 		}
 		for (DeclMethod decl_method : icClass.getMethods()) {
 			if (decl_method.getName().equals(method_name)) {
-				method = new Method(method_name);
-				this.state.addMethodToClass(class_name, method);
 				decl_method.accept(this);
-				// this.state..addMethod(method);
 				break;
 			}
 		}
@@ -122,7 +124,8 @@ public class REPL implements Visitor {
 
 	public Object visit(DeclField field) {
 		VariableType field_type = (VariableType) field.getType().accept(this);
-		return new Variable(field_type, VariableLocation.FIELD, field.getName(), 0);
+		return new Variable(field_type, VariableLocation.FIELD,
+				field.getName(), scope, field.getType().getArrayDimension());
 	}
 
 	public Object visit(DeclVirtualMethod method) {
@@ -131,17 +134,42 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(DeclStaticMethod method) {
-		Object value = null;
+		// Object value = null;
+		// Object[] values = null;
 		for (Parameter formal : method.getFormals()) {
 			formal.accept(this);
 		}
+		scope++;
 		for (Statement stmt : method.getStatements()) {
-			value = stmt.accept(this);
+			// if (!method.getType().getDisplayName().equals("void") &&
+			// method.getType().getArrayDimension() == 0) {
+			stmt.accept(this);
+			// }
+			// else if (!method.getType().getDisplayName().equals("void") &&
+			// method.getType().getArrayDimension() > 0) {
+			// values = (Object[]) stmt.accept(this);
+			// }
 		}
-		if (!method.getType().getDisplayName().equals("void")) {
+		scope--;
+		if (this.value != null) {
 			System.out.println(value);
 		}
-		return value;
+		else if (this.values != null) {
+			for (int i = 0; i < values.length; i++) {
+				System.out.println(values[i]);
+			}
+		}
+		// if (!method.getType().getDisplayName().equals("void") &&
+		// method.getType().getArrayDimension() == 0) {
+		// System.out.println(value);
+		// }
+		// else if (!method.getType().getDisplayName().equals("void") &&
+		// method.getType().getArrayDimension() > 0) {
+		// for (int i = 0; i < values.length; i++) {
+		// System.out.println(values[i]);
+		// }
+		// }
+		return null;
 	}
 
 	public Object visit(DeclLibraryMethod method) {
@@ -152,9 +180,10 @@ public class REPL implements Visitor {
 	public Object visit(Parameter formal) {
 		VariableType variable_type = (VariableType) formal.getType().accept(
 				this);
+		Object[] value = new Object[1];
+		value[0] = this.arguments[formal_index++];
 		Variable variable = new Variable(variable_type,
-				VariableLocation.PARAMETER, formal.getName(), scope,
-				arguments[formal_index++]);
+				VariableLocation.PARAMETER, formal.getName(), scope, 0, value);
 		this.state.addVariableToMethod(this.class_name, this.method_name,
 				variable);
 		return null;
@@ -179,8 +208,19 @@ public class REPL implements Visitor {
 	public Object visit(StmtAssignment assignment) {
 		Variable variable = (Variable) assignment.getVariable().accept(this);
 		Variable value = (Variable) assignment.getAssignment().accept(this);
-		this.state.setVariableValue(class_name, method_name,
-				variable.getName(), value.getValue());
+		if (variable.getDimension() == 0) {
+			this.state.setVariableValue(class_name, method_name,
+					variable.getName(), value.getValue(), 0);
+		} else {
+			if (value.getValue().length > 1) {
+				this.state.setVariableValue(class_name, method_name,
+						variable.getName(), value.getValue(), -1);
+			} else {
+				// int location = 0; // TODO: change
+				this.state.setVariableValue(class_name, method_name,
+						variable.getName(), value.getValue(), array_location);
+			}
+		}
 		return null;
 	}
 
@@ -192,14 +232,19 @@ public class REPL implements Visitor {
 	public Object visit(StmtReturn returnStatement) {
 		if (returnStatement.hasValue()) {
 			Variable value = (Variable) returnStatement.getValue().accept(this);
-			return value.getValue();
+			if (value.getDimension() == 0) {
+				this.value = value.getValue()[0];
+			}
+			else {
+				this.values = value.getValue();
+			}
 		}
 		return null;
 	}
 
 	public Object visit(StmtIf ifStatement) {
 		Variable condition = (Variable) ifStatement.getCondition().accept(this);
-		Boolean result = (Boolean) condition.getValue();
+		Boolean result = (Boolean) condition.getValue()[0];
 		if (result) {
 			ifStatement.getOperation().accept(this);
 		} else {
@@ -213,11 +258,11 @@ public class REPL implements Visitor {
 	public Object visit(StmtWhile whileStatement) {
 		Variable condition = (Variable) whileStatement.getCondition().accept(
 				this);
-		Boolean result = (Boolean) condition.getValue();
+		Boolean result = (Boolean) condition.getValue()[0];
 		while (result) {
 			whileStatement.getOperation().accept(this);
 			condition = (Variable) whileStatement.getCondition().accept(this);
-			result = (Boolean) condition.getValue();
+			result = (Boolean) condition.getValue()[0];
 		}
 		return null;
 	}
@@ -235,10 +280,12 @@ public class REPL implements Visitor {
 	public Object visit(StmtBlock statementsBlock) {
 		Object value = null;
 		Statement stmt;
+		scope++;
 		for (int i = 0; i < statementsBlock.getStatements().size(); i++) {
 			stmt = statementsBlock.getStatements().get(i);
 			value = stmt.accept(this);
 		}
+		scope--;
 		return value;
 	}
 
@@ -262,18 +309,27 @@ public class REPL implements Visitor {
 		if (localVariable.isInitialized()) {
 			Variable value = (Variable) localVariable.getInitialValue().accept(
 					this);
-			variable = new Variable(type, VariableLocation.LOCAL,
-					localVariable.getName(), scope, value.getValue());
+			if (value.getDimension() > 0) {
+				variable = new Variable(type, VariableLocation.LOCAL,
+						localVariable.getName(), scope, value.getDimension());
+				variable.setInitialized();
+			} else {
+				variable = new Variable(type, VariableLocation.LOCAL,
+						localVariable.getName(), scope, 0, value.getValue());
+			}
+			// variable.setValue(value.getValue(), 0); //TODO: change location
 		} else {
 			variable = new Variable(type, VariableLocation.LOCAL,
-					localVariable.getName(), scope);
+					localVariable.getName(), scope, localVariable.getType()
+							.getArrayDimension());
 		}
 		this.state.addVariableToMethod(class_name, method_name, variable);
 		return null;
 	}
 
 	public Object visit(RefVariable location) {
-		if (state.variableExists(class_name, method_name, location.getName())) {
+		if (state.variableExists(class_name, method_name, location.getName(),
+				scope)) {
 			return state.getVariable(class_name, method_name,
 					location.getName());
 		}
@@ -291,7 +347,15 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(RefArrayElement location) {
-		// TODO Auto-generated method stub
+		Variable variable = (Variable) location.getArray().accept(this);
+		Variable array_index = (Variable) location.getIndex().accept(this);
+		if (state.variableExists(class_name, method_name, variable.getName(),
+				scope)) {
+			this.array_location = (int) array_index.getValue()[0];
+			return state.getVariable(class_name, method_name,
+					variable.getName());
+		}
+		// TODO: throw exception if field doesn't exist
 		return null;
 	}
 
@@ -317,8 +381,24 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(NewArray newArray) {
-		// TODO Auto-generated method stub
-		return null;
+		VariableType type;
+		switch (newArray.getType().getDisplayName()) {
+		case "int":
+			type = VariableType.INT;
+			break;
+		case "string":
+			type = VariableType.STRING;
+			break;
+		case "boolean":
+			type = VariableType.BOOLEAN;
+			break;
+		default:
+			type = VariableType.CLASS;
+			break;
+		}
+		Variable size = (Variable) newArray.getSize().accept(this);
+		return new Variable(type, VariableLocation.NONE, "none", scope,
+				Integer.parseInt(size.getValue()[0].toString()));
 	}
 
 	public Object visit(Length length) {
@@ -342,8 +422,10 @@ public class REPL implements Visitor {
 			// TODO: throw exception
 			break;
 		}
-		return new Variable(type, VariableLocation.NONE, "none", scope,
-				literal.getValue());
+		Object[] value = new Object[1];
+		value[0] = literal.getValue();
+		return new Variable(type, VariableLocation.NONE, "none", scope, 0,
+				value);
 	}
 
 	public Object visit(UnaryOp unaryOp) {
@@ -362,87 +444,93 @@ public class REPL implements Visitor {
 	public Object visit(BinaryOp binaryOp) {
 		Variable first, second, result = null;
 		int first_value = 0, second_value = 0;
-		Object value = null;
+		Object[] value = new Object[1];
 		first = (Variable) binaryOp.getFirstOperand().accept(this);
 		second = (Variable) binaryOp.getSecondOperand().accept(this);
 		if (first.getType() == VariableType.INT
 				&& second.getType() == VariableType.INT) {
-			first_value = Integer.parseInt(first.getValue().toString());
-			second_value = Integer.parseInt(second.getValue().toString());
+			first_value = Integer.parseInt(first.getValue()[0].toString());
+			second_value = Integer.parseInt(second.getValue()[0].toString());
 
 			switch (binaryOp.getOperator()) {
 			case PLUS:
-				value = (Integer) first_value + second_value;
+				value[0] = (Integer) first_value + second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case MINUS:
-				value = (Integer) first_value - second_value;
+				value[0] = (Integer) first_value - second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case MULTIPLY:
-				value = (Integer) first_value * second_value;
+				value[0] = (Integer) first_value * second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case DIVIDE:
-				value = (Integer) first_value / second_value;
+				value[0] = (Integer) first_value / second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case MOD:
-				value = (Integer) first_value % second_value;
+				value[0] = (Integer) first_value % second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case LAND:
-				value = (Integer) first_value & second_value;
+				value[0] = (Integer) first_value & second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case LOR:
-				value = (Integer) first_value | second_value;
+				value[0] = (Integer) first_value | second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
-						"none", scope, value);
+						"none", scope, 0, value);
 				break;
 			case LT:
-				value = (Boolean) (first_value < second_value) ? true : false;
+				value[0] = (Boolean) (first_value < second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			case LTE:
-				value = (Boolean) (first_value <= second_value) ? true : false;
+				value[0] = (Boolean) (first_value <= second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			case GT:
-				value = (Boolean) (first_value > second_value) ? true : false;
+				value[0] = (Boolean) (first_value > second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			case GTE:
-				value = (Boolean) (first_value >= second_value) ? true : false;
+				value[0] = (Boolean) (first_value >= second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			case EQUAL:
-				value = (Boolean) (first_value == second_value) ? true : false;
+				value[0] = (Boolean) (first_value == second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			case NEQUAL:
-				value = (Boolean) (first_value != second_value) ? true : false;
+				value[0] = (Boolean) (first_value != second_value) ? true
+						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", scope, value);
+						VariableLocation.NONE, "none", scope, 0, value);
 				break;
 			}
 		} else if (first.getType() == VariableType.STRING
 				&& second.getType() == VariableType.STRING) {
-			value = (String) first.getValue().toString()
-					.concat(second.getValue().toString());
+			value[0] = (String) first.getValue()[0].toString().concat(
+					second.getValue()[0].toString());
 			result = new Variable(VariableType.STRING, VariableLocation.NONE,
-					"none", scope, value);
+					"none", scope, 0, value);
 		} else {
 			// TODO: throw exception
 		}

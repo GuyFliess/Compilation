@@ -72,7 +72,7 @@ public class Calc extends CalcBase {
 			+ "nextMethod -> method fieldORmethod* \n"
 			+ "method -> static methodDecl | methodDecl \n"
 			+ "methodDecl -> methodType ID ( formals* ) { stmt* } \n"
-			+ "methodType -> type | voidType \n"
+			+ "methodType -> type array | voidType \n"
 			+ "voidType -> void \n"
 			+ "formals* -> formal | , formal |  \n"
 			+ "formal -> type array ID formals* \n"
@@ -107,7 +107,7 @@ public class Calc extends CalcBase {
 			+ "expr4 -> expr4 + expr3 | expr4 - expr3 | expr3 \n"
 			+ "expr3 -> expr3 * expr2 | expr3 / expr2 | expr3 % expr2 | expr2 \n"
 			+ "expr2 -> ! expr2 | - expr2 | expr1 \n"
-			+ "expr1 -> new type array [ expr1 ] | new CLASS_ID ( ) | expr0 \n"
+			+ "expr1 -> new type array [ expr ] | new CLASS_ID ( ) | expr0 \n"
 			+ "expr0 -> ( expr ) | expr0 . length | location | call | this | literal \n"
 			+ "location -> ID | expr0 . ID | expr0 [ expr ] \n" + "call -> staticCall | virtualCall \n"
 			+ "staticCall -> CLASS_ID . ID ( expr* ) \n" + "virtualCall -> expr1 . ID ( expr* ) | ID ( expr* ) \n"
@@ -196,7 +196,14 @@ public class Calc extends CalcBase {
 			constructAst(s[6]); /* run on stmt* */
 			return null;
 		case "methodType":
-			return constructAst(s[0]); /* run on type / voidType */
+			if (s.length == 1) {
+			return constructAst(s[0]); /* voidType */
+			}
+			else if (s.length == 2) {
+				type = (Type) constructAst(s[0]); /* run on type */
+				constructAst(s[1]); /* run on array */
+				return type;
+			}
 		case "voidType":
 			return new PrimitiveType(((Token) s[0].root).line, DataType.VOID);
 		case "formals*":
