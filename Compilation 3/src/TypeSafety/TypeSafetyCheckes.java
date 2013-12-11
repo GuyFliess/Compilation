@@ -23,7 +23,7 @@ public class TypeSafetyCheckes {
 			
 			
 		} catch (ContinueBreakException e) {
-			System.err.println(e.lineNum + ": semantic error; semantic error; Use of "
+			System.err.println(e.lineNum + ": semantic error; Use of "
 					+ e.errorMSG + " statement outside of loop not allowed");
 			throw new FoundException();
 		} catch (MainException e) {
