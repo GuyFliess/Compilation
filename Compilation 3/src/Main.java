@@ -37,12 +37,12 @@ public class Main {
 				lex.process(args[1].substring(2), tokensForLib);
 				LibCalc calcLib = new LibCalc();
 				libAst = calcLib.process(tokensForLib);
-				System.out.println(libAst.accept(printer));
+				//System.out.println(libAst.accept(printer));
 			}
 			Node programAst = calc.process(programTokens); // process program
 			Program p = (Program) programAst;
 
-			System.out.println(programAst.accept(printer));
+			//System.out.println(programAst.accept(printer));
 			int interpStartLocation = 1;
 			if (args.length > 1) {
 				interpStartLocation = 1;
@@ -72,8 +72,8 @@ public class Main {
 			} else // SymbolTable and typecheck
 			{
 
-				System.out.println("Building symbol table");
-				System.out.println();
+				//System.out.println("Building symbol table");
+				//System.out.println();
 				BuildScope scopeBuilder = new BuildScope();
 				GlobalScope globalScope = scopeBuilder.MakeScopes((Program) programAst,(DeclClass) libAst);
 
@@ -82,14 +82,14 @@ public class Main {
 				// printScope.Print(p);
 				
 
-				System.out.println("type checking");
+			//	System.out.println("type checking");
 				TypeSafetyCheckes checks = new TypeSafetyCheckes();
 				checks.CheckTypeSafety(p, (DeclClass)libAst , globalScope);
 				
 				PrintScope printScope = new PrintScope();
 				printScope.Print(globalScope);
 				
-				System.out.println("All done!");
+				//System.out.println("All done!");
 			}
 
 		} catch (FoundException e) {

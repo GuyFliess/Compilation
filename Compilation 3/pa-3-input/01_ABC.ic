@@ -1,4 +1,4 @@
-class A {
+class A {    /* This is just like 01_ABC+lib.ic but without the library call */
   string str;
   int i;
 
@@ -23,7 +23,7 @@ class A {
     while (i < max){
         arr[i] = val;
         i = i + 1;
-        Library.printi(i);
+        // Library.printi(i);
         if (a == null)
           break;
     }
