@@ -7,16 +7,54 @@ import interpBuilder.interpClass;
 import java.util.HashMap;
 
 public class State {
-	// private HashMap<String, Variable> variables;
+	
+	String class_name;
+	String method_name;
+	String[] arguments;
+	int formal_index = 0;
+	int scope = 0;
+	int array_location;
+	Object value;
+	Object[] values;
 	private HashMap<String, interpClass> classes;
+	boolean break_stmt;
 
-	public State() {
+	public State(String class_name, String method_name, String[] arguments) {
+		
+		this.class_name = class_name;
+		this.method_name = method_name;
+		this.arguments = arguments;
+		this.formal_index = 0;
+		this.scope = 0;
+		this.array_location = 0;
+		this.break_stmt = false;
+		this.value = null;
+		this.values = null;
 		this.classes = new HashMap<>();
-		// this.variables = new HashMap<>();
+	}
+	
+	public String getClass_name() {
+		return class_name;
+	}
+
+	public void setClass_name(String class_name) {
+		this.class_name = class_name;
+	}
+
+	public String getMethod_name() {
+		return method_name;
+	}
+
+	public void setMethod_name(String method_name) {
+		this.method_name = method_name;
 	}
 
 	public void addClass(interpClass class_instance) {
 		this.classes.put(class_instance.getName(), class_instance);
+	}
+	
+	public interpClass getClass(String class_name) {
+		return this.classes.get(class_name);
 	}
 	
 	public void addFieldToClass(String class_name, Variable field) {

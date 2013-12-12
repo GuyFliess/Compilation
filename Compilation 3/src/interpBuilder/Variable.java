@@ -48,27 +48,37 @@ public class Variable {
 	private VariableLocation location;
 	private String name;
 	private int scope;
-	private int dimensions;
+	private boolean array;
+	private int length;
 	private VariableType type;
 	private Object[] value = null;
+	private String class_name;
 
 	public Variable(VariableType type, VariableLocation location, String name,
-			int scope, int dimensions) {
+			int scope, boolean array, int length) {
 		this.type = type;
 		this.location = location;
 		this.name = name;
 		this.scope = scope;
-		this.dimensions = dimensions;
-		this.value = new Object[dimensions];
+		this.array = array;
+		this.length = length;
+		this.class_name = "";
+		if (array) {
+			this.value = new Object[length];
+		}
+		else {
+			this.value = new Object[1];
+			this.length = 1;
+		}
 	}
 
 	public Variable(VariableType type, VariableLocation location, String name,
-			int scope, int dimensions, Object[] value) {
-		this(type, location, name, scope, dimensions);
+			int scope, boolean array, int length, Object[] value) {
+		this(type, location, name, scope, array, length);
 		switch (type) {
 		case INT:
 			try {
-				this.value = new Integer[this.dimensions + 1];
+				this.value = new Integer[this.length];
 				for (int i = 0; i < this.value.length; i++) {
 					this.value[i] = Integer.parseInt(value[i].toString());
 				}
@@ -79,13 +89,13 @@ public class Variable {
 						value.toString());
 			}
 		case STRING:
-			this.value = new String[this.dimensions + 1];
+			this.value = new String[this.length];
 			for (int i = 0; i < this.value.length; i++) {
 				this.value[i] = value[i].toString();
 			}
 			break;
 		case BOOLEAN:
-			this.value = new Boolean[this.dimensions + 1];
+			this.value = new Boolean[this.length];
 			for (int i = 0; i < this.value.length; i++) {
 				this.value[i] = value[i].toString().equals("true") ? true
 						: false;
@@ -96,14 +106,30 @@ public class Variable {
 		}
 		setInitialized();
 	}
-
-	public void setDimension(int dimensions) {
-		this.dimensions = dimensions;
-		this.value = new Object[dimensions];
+	
+	public void setClass(String class_name) {
+		if (this.type == VariableType.CLASS) {
+			this.class_name = class_name;
+		}
+	}
+	
+	public String getClassName() {
+		return this.class_name;
 	}
 
-	public int getDimension() {
-		return this.dimensions;
+	public void setVariableToArray(int length) {
+		this.array = true;
+		this.length = length;
+		this.isInitialized = true;
+		this.value = new Object[length];
+	}
+
+	public int getLength() {
+		return this.length;
+	}
+	
+	public boolean isArray() {
+		return this.array;
 	}
 
 	public VariableLocation getLocation() {
@@ -154,8 +180,8 @@ public class Variable {
 						this.value[i] = Integer.parseInt(value[i].toString());
 					}
 				} else {
-					this.value[location] = Integer.parseInt(value[0]
-							.toString());
+					this.value[location] = Integer
+							.parseInt(value[0].toString());
 				}
 				break;
 			} catch (RuntimeError error) {
@@ -189,66 +215,66 @@ public class Variable {
 		this.setInitialized();
 	}
 
-//	public void setValue(Object[] value) {
-//		if (this.dimensions == 0) {
-//			throw new RuntimeError("Error: variable " + this.name
-//					+ " is not an array");
-//		}
-//		switch (type) {
-//		case INT:
-//			try {
-//				for (int i = 0; i < values.length; i++) {
-//					this.values[i] = Integer.parseInt(value[i].toString());
-//				}
-//				break;
-//			} catch (RuntimeError error) {
-//				System.err.printf(
-//						"Error: variable is of type int, while value is %s",
-//						value.toString());
-//			}
-//		case STRING:
-//			for (int i = 0; i < values.length; i++) {
-//				this.values[i] = value[i].toString();
-//			}
-//			break;
-//		case BOOLEAN:
-//			for (int i = 0; i < values.length; i++) {
-//				this.values[i] = value[i].toString().equals("true") ? true
-//						: false;
-//			}
-//			break;
-//		default:
-//			break;
-//		}
-//		this.setInitialized();
-//	}
-//
-//	public void setValue(Object value) {
-//		if (this.dimensions != 0) {
-//			throw new RuntimeError("Error: variable " + this.name
-//					+ " is an array");
-//		}
-//		switch (type) {
-//		case INT:
-//			try {
-//				this.value = Integer.parseInt(value.toString());
-//				break;
-//			} catch (RuntimeError error) {
-//				System.err.printf(
-//						"Error: variable is of type int, while value is %s",
-//						value.toString());
-//			}
-//		case STRING:
-//			this.value = value.toString();
-//			break;
-//		case BOOLEAN:
-//			this.value = value.toString().equals("true") ? true : false;
-//			break;
-//		default:
-//			break;
-//		}
-//		this.setInitialized();
-//	}
+	// public void setValue(Object[] value) {
+	// if (this.dimensions == 0) {
+	// throw new RuntimeError("Error: variable " + this.name
+	// + " is not an array");
+	// }
+	// switch (type) {
+	// case INT:
+	// try {
+	// for (int i = 0; i < values.length; i++) {
+	// this.values[i] = Integer.parseInt(value[i].toString());
+	// }
+	// break;
+	// } catch (RuntimeError error) {
+	// System.err.printf(
+	// "Error: variable is of type int, while value is %s",
+	// value.toString());
+	// }
+	// case STRING:
+	// for (int i = 0; i < values.length; i++) {
+	// this.values[i] = value[i].toString();
+	// }
+	// break;
+	// case BOOLEAN:
+	// for (int i = 0; i < values.length; i++) {
+	// this.values[i] = value[i].toString().equals("true") ? true
+	// : false;
+	// }
+	// break;
+	// default:
+	// break;
+	// }
+	// this.setInitialized();
+	// }
+	//
+	// public void setValue(Object value) {
+	// if (this.dimensions != 0) {
+	// throw new RuntimeError("Error: variable " + this.name
+	// + " is an array");
+	// }
+	// switch (type) {
+	// case INT:
+	// try {
+	// this.value = Integer.parseInt(value.toString());
+	// break;
+	// } catch (RuntimeError error) {
+	// System.err.printf(
+	// "Error: variable is of type int, while value is %s",
+	// value.toString());
+	// }
+	// case STRING:
+	// this.value = value.toString();
+	// break;
+	// case BOOLEAN:
+	// this.value = value.toString().equals("true") ? true : false;
+	// break;
+	// default:
+	// break;
+	// }
+	// this.setInitialized();
+	// }
 
 	public int getScope() {
 		return scope;

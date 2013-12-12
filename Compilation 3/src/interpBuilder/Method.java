@@ -24,15 +24,15 @@ public class Method {
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope, int dimensions) {
+			VariableLocation variable_location, String name, int scope, boolean array, int length) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope, dimensions));
+				name, scope, array, length));
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope, int dimensions, Object[] value) {
+			VariableLocation variable_location, String name, int scope, boolean array, int length, Object[] value) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope, dimensions, value));
+				name, scope, array, length, value));
 	}
 
 	public String getName() {
