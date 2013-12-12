@@ -28,10 +28,12 @@ public abstract class Scope {
 		return name;
 	}
 	
-	public abstract void AddVar(Object type);
+	public abstract void AddVar(Type type, String name);
 	
 	public abstract Type GetVariable(String name);
 
 	public abstract MethodTypeWrapper GetMethod(String method) ;
-	
+
+	public abstract MethodTypeWrapper GetMethodWithoutName() ;
+
 }

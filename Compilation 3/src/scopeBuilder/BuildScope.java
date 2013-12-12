@@ -1,5 +1,6 @@
 package scopeBuilder;
 
+import TypeSafety.TypingRuleException;
 import ic.ast.Visitor;
 import ic.ast.decl.*;
 import ic.ast.expr.BinaryOp;
@@ -77,6 +78,11 @@ public class BuildScope implements Visitor {
 		ClassScope classScope;
 		if (icClass.hasSuperClass()) {
 			String superClassName = icClass.getSuperClassName();
+			if (!((GlobalScope) currentScope)
+					.GetclassesScopes().containsKey(superClassName))
+			{
+				throw new TypingRuleException("Super class undefined", icClass.getLine());
+			}
 			ClassScope superScope = ((GlobalScope) currentScope)
 					.GetclassesScopes().get(superClassName);
 			classScope = new ClassScope(superScope, icClass.getName());
@@ -93,7 +99,7 @@ public class BuildScope implements Visitor {
 			field.accept(this);
 
 			// classScope.addField(field);
-			classScope.AddVar(field);
+			classScope.AddVar(field.getType(),field.getName());
 		}
 
 		for (DeclMethod method : icClass.getMethods()) {
@@ -113,7 +119,7 @@ public class BuildScope implements Visitor {
 				continue;
 			}
 		}
-//		//TODO at Shachar's suggetion, adding 
+
 //		g_globalScope.AddClassScope(classScope, classDecl);
 		return classScope;
 	}
@@ -265,9 +271,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(StmtBlock statementsBlock) {
 		StatementBlockScope blockscope;
-		if (currentScope instanceof MethodScope) // TODO a more proper
-													// inheritance would help
-													// avoid this switch
+		if (currentScope instanceof MethodScope) //
 		{
 			blockscope = new StatementBlockScope(currentScope, String.format(
 					"@%s", currentScope.getName()));
@@ -298,7 +302,7 @@ public class BuildScope implements Visitor {
 		
 		localVariable.SetScope(currentScope);
 		
-		currentScope.AddVar(localVariable);
+		//currentScope.AddVar(localVariable); moved to typing rules to handle use before declrations
 		localVariable.getType().accept(this);
 		currentScope = localVariable.GetScope();
 		if (localVariable.isInitialized())

@@ -45,10 +45,8 @@ public class ClassScope extends Scope {
 	}
 
 	@Override
-	public void AddVar(Object type) {
-		DeclField field = (DeclField) type;
-		fields.put(field.getName(), field.getType());
-		// TODO Auto-generated method stub
+	public void AddVar(Type type, String name) {	
+		fields.put(name,type);
 	}
 	
 	public Map<String, Type> getFields()
@@ -100,5 +98,27 @@ public class ClassScope extends Scope {
 		{
 			return fatherScope.GetMethod(method);
 		}		
-	} 
+	}
+
+	@Override
+	public MethodTypeWrapper GetMethodWithoutName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public MethodTypeWrapper GetMethodStaticOrVirtual(String name) {
+		if (virtualMethodScopes.containsKey(name))
+		{
+			return virtualMethodScopes.get(name);
+		}
+		else
+		{
+			if (staticMethodScopes.containsKey(name))
+			{
+				return staticMethodScopes.get(name);
+			}
+		}
+		return null;
+	}
+	
 }

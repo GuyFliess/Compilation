@@ -39,12 +39,12 @@ public class MethodScope extends  StatementBlockScope {
 //		
 //	}
 
-	@Override
-	public void AddVar(Object type) {
-		LocalVariable var =(LocalVariable) type;
-		localVariables.put(var.getName(), var.getType());
-//		localVariables.put(type.getDisplayName(), type);
-	}
+//	@Override
+//	public void AddVar(Object type) {
+//		LocalVariable var =(LocalVariable) type;
+//		localVariables.put(var.getName(), var.getType());
+////		localVariables.put(type.getDisplayName(), type);
+//	}
 	
 	@Override
 	public Type GetVariable(String name)  {
@@ -58,4 +58,8 @@ public class MethodScope extends  StatementBlockScope {
 		return resultType;
 	}
 	
+	@Override
+	public MethodTypeWrapper GetMethodWithoutName() {
+		return ((ClassScope) fatherScope).GetMethodStaticOrVirtual(getName());		
+	}
 }

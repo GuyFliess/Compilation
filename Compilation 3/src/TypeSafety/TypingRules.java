@@ -1,9 +1,8 @@
 package TypeSafety;
 
-import java.util.Collection;
+
 import java.util.List;
 
-import javax.swing.JTable.PrintMode;
 
 import scope.ClassScope;
 import scope.GlobalScope;
@@ -68,8 +67,7 @@ public class TypingRules implements Visitor {
 		for (DeclField field : icClass.getFields())
 			field.accept(this);
 		for (DeclMethod method : icClass.getMethods())
-			method.accept(this);
-		// TODO Auto-generated method stub
+			method.accept(this);	
 		return null;
 	}
 
@@ -135,8 +133,12 @@ public class TypingRules implements Visitor {
 		variable.accept(this);
 		Expression assignmentValue = assignment.getAssignment();
 		assignmentValue.accept(this);
-		if (!(isSubTypeOf(assignmentValue.typeAtcheck, variable.typeAtcheck))) 
-			throw new TypingRuleException(String.format("Invalid assignment of type %s to variable of type %s", assignmentValue.typeAtcheck.getDisplayName(),variable.typeAtcheck.getDisplayName()), assignment.getLine());
+		if (!(isSubTypeOf(assignmentValue.typeAtcheck, variable.typeAtcheck)))
+			throw new TypingRuleException(String.format(
+					"Invalid assignment of type %s to variable of type %s",
+					assignmentValue.typeAtcheck.getDisplayName(),
+					variable.typeAtcheck.getDisplayName()),
+					assignment.getLine());
 		assignment.typeAtcheck = variable.typeAtcheck;
 		return null;
 	}
@@ -151,35 +153,60 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(StmtReturn returnStatement) {
+		Type returnType;
 		if (returnStatement.hasValue()) {
 			returnStatement.getValue().accept(this);
-			
+			returnType = returnStatement.getValue().typeAtcheck;
+		} else {
+			// void
+			returnType = null;
 		}
+		MethodTypeWrapper method = returnStatement.GetScope()
+				.GetMethodWithoutName();
+		Type wantedReturntype = method.getReturnType();
+		if (wantedReturntype instanceof PrimitiveType) {
+			PrimitiveType primitiveType = (PrimitiveType) wantedReturntype;
+			if ((primitiveType.getDataType().equals(DataType.VOID))
+					&& (returnType != null)) {
+				// this is ugly, if the method is void we want
+				throw new TypingRuleException(
+						"tring to return value in void method",
+						returnStatement.getLine());
+			}
+		}
+		if (!(isSubTypeOf(returnType, method.getReturnType()))) {
+			throw new TypingRuleException("Return value",
+					returnStatement.getLine());
+		}
+
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(StmtIf ifStatement) {		
+	public Object visit(StmtIf ifStatement) {
 		ifStatement.getCondition().accept(this);
 		ifStatement.getOperation().accept(this);
 		if (ifStatement.hasElse())
 			ifStatement.getElseOperation().accept(this);
-		if (!isOfType(ifStatement.getCondition().typeAtcheck,DataType.BOOLEAN))
-		{
-			throw new TypingRuleException("Non boolean condition for if statement", ifStatement.getLine());
+		if (!isOfType(ifStatement.getCondition().typeAtcheck, DataType.BOOLEAN)) {
+			throw new TypingRuleException(
+					"Non boolean condition for if statement",
+					ifStatement.getLine());
 		}
-		
+
 		return null;
 	}
 
 	@Override
-	public Object visit(StmtWhile whileStatement) {		
+	public Object visit(StmtWhile whileStatement) {
 		whileStatement.getCondition().accept(this);
 		whileStatement.getOperation().accept(this);
-		if (!isOfType(whileStatement.getCondition().typeAtcheck,DataType.BOOLEAN))
-		{
-			throw new TypingRuleException("Non boolean condition for if statement", whileStatement.getLine());
+		if (!isOfType(whileStatement.getCondition().typeAtcheck,
+				DataType.BOOLEAN)) {
+			throw new TypingRuleException(
+					"Non boolean condition for if statement",
+					whileStatement.getLine());
 		}
 		return null;
 	}
@@ -198,7 +225,7 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(StmtBlock statementsBlock) {
-		// TODO Auto-generated method stub
+
 		for (Statement statement : statementsBlock.getStatements())
 			statement.accept(this);
 		return null;
@@ -206,41 +233,50 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		// TODO Auto-generated method stub
+
 		if (localVariable.isInitialized()) {
 			Expression initialValue = localVariable.getInitialValue();
 			initialValue.accept(this);
 			Type typeAtcheck = initialValue.typeAtcheck;
-			if (!isSubTypeOf(typeAtcheck,localVariable.getType()))
-			{
-				throw new TypingRuleException(String.format("Invalid assignment of type %s to variable of type %s", typeAtcheck.getDisplayName(),localVariable.getType().getDisplayName()), localVariable.getLine());
+			if (!isSubTypeOf(typeAtcheck, localVariable.getType())) {
+				throw new TypingRuleException(String.format(
+						"Invalid assignment of type %s to variable of type %s",
+						typeAtcheck.getDisplayName(), localVariable.getType()
+								.getDisplayName()), localVariable.getLine());
 			}
+			localVariable.GetScope().AddVar(localVariable.getType(),
+					localVariable.getName());
 		}
-		//localVariable.typeAtcheck = localVariable.getType(); // can remove
+		localVariable.GetScope().AddVar(localVariable.getType(),
+				localVariable.getName());
+		// localVariable.typeAtcheck = localVariable.getType(); // can remove
 		return null;
 	}
 
 	@Override
 	public Object visit(RefVariable location) {
 
-
 		Scope scope = location.GetScope();
 		Type var = scope.GetVariable(location.getName());
-		if (var  == null)
-		{
-			throw new TypingRuleException(String.format("%s not found in symbol table", location.getName()), location.getLine());
+		if (var == null) {
+			throw new TypingRuleException(String.format(
+					"%s not found in symbol table", location.getName()),
+					location.getLine());
 		}
-		 return location.typeAtcheck =  var;
+		return location.typeAtcheck = var;
 	}
 
 	@Override
 	public Object visit(RefField location) {
 		location.getObject().accept(this);
-		
-		ClassScope classScope =(ClassScope) location.getObject().typeAtcheck.GetScope();
-		if (!classScope.getFields().containsKey(location.getField()))
-		{
-;			throw new TypingRuleException(String.format("field %s is not undefined", location.getField()),location.getLine());
+
+		ClassScope classScope = (ClassScope) location.getObject().typeAtcheck
+				.GetScope();
+		if (!classScope.getFields().containsKey(location.getField())) {
+			;
+			throw new TypingRuleException(String.format(
+					"field %s is not undefined", location.getField()),
+					location.getLine());
 		}
 		Type result = classScope.getFields().get(location.getField());
 		location.typeAtcheck = result;
@@ -254,56 +290,63 @@ public class TypingRules implements Visitor {
 		location.getIndex().accept(this);
 		Type arrType = location.getArray().typeAtcheck;
 		Type resultType;
-		if (!(location.getIndex().typeAtcheck instanceof PrimitiveType ))
-		{
-			throw new TypingRuleException("invalid array operation, type %s is not an integer", location.getLine());
+		if (!(location.getIndex().typeAtcheck instanceof PrimitiveType)) {
+			throw new TypingRuleException(
+					"invalid array operation, type %s is not an integer",
+					location.getLine());
 		}
 
 		PrimitiveType index = (PrimitiveType) location.getIndex().typeAtcheck;
 		if (!(index.getDataType().equals(DataType.INT))
 				|| !(arrType.getArrayDimension() > 0)) // must be an array
 		{
-			throw new TypingRuleException("invalid array operation, type %s is not an array", location.getLine());
+			throw new TypingRuleException(
+					"invalid array operation, type %s is not an array",
+					location.getLine());
 		}
 		if (arrType instanceof PrimitiveType) {
 			resultType = new PrimitiveType(-1,
 					((PrimitiveType) arrType).getDataType());
 		} else if (arrType instanceof ClassType) {
 			resultType = new ClassType(-1, ((ClassType) arrType).getClassName());
-		} else throw new Error("internal error");
-		location.typeAtcheck = resultType;// make new type of type of 								
+		} else
+			throw new Error("internal error");
+		location.typeAtcheck = resultType;// make new type of type of
 		return null;
 	}
 
 	@Override
 	public Object visit(StaticCall call) {
-		for (Expression argument : call.getArguments())
-		{
+		for (Expression argument : call.getArguments()) {
 			argument.accept(this);
 		}
-		
+
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
-		if (classScope == null)
-		{
-			throw new TypingRuleException(String.format("Class %s doesn't exist", call.getClassName()), call.getLine());
+		if (classScope == null) {
+			throw new TypingRuleException(String.format(
+					"Class %s doesn't exist", call.getClassName()),
+					call.getLine());
 		}
-		if (!classScope.getStaticMethodScopes().containsKey(call.getMethod()))
-		{
-			throw new TypingRuleException(String.format("Method %s doesn't exist", call.getMethod()),call.getLine());
+		if (!classScope.getStaticMethodScopes().containsKey(call.getMethod())) {
+			throw new TypingRuleException(String.format(
+					"Method %s doesn't exist", call.getMethod()),
+					call.getLine());
 		}
-		MethodTypeWrapper methodInClass = classScope.getStaticMethodScopes().get(call.getMethod());
+		MethodTypeWrapper methodInClass = classScope.getStaticMethodScopes()
+				.get(call.getMethod());
 		List<Expression> calledParams = call.getArguments();
-		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(new Type[methodInClass.getParameters().size()]);
+		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
+				new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
-		for (int i  = 0 ; i < methodParams.length ;  i++ ) 
-		{
-			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i]))
-			{
-				throw new TypingRuleException("Parameter mismatch", call.getLine());
+			for (int i = 0; i < methodParams.length; i++) {
+				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
+						methodParams[i])) {
+					throw new TypingRuleException("Parameter mismatch",
+							call.getLine());
+				}
 			}
-		}
-		
-		call.typeAtcheck = methodInClass.getReturnType();		
+
+		call.typeAtcheck = methodInClass.getReturnType();
 		return null;
 	}
 
@@ -316,75 +359,82 @@ public class TypingRules implements Visitor {
 			argument.accept(this);
 		ClassScope classScope; // globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodInClass;
-		if (call.hasExplicitObject() )
-		{
-			 Type type =  call.getObject().typeAtcheck;
-			 if (!(type instanceof ClassType))
-			 {
-				 throw new TypingRuleException("non class can't have methods", call.getLine());
-			 }
-			
-			 Scope scope = type.GetScope();
+		if (call.hasExplicitObject()) {
+			Type type = call.getObject().typeAtcheck;
+			if (!(type instanceof ClassType)) {
+				throw new TypingRuleException("non class can't have methods",
+						call.getLine());
+			}
+
+			Scope scope = type.GetScope();
 			if (scope instanceof ClassScope) {
-				 classScope = (ClassScope) scope;	
-			}
-			else throw new TypingRuleException(String.format("%s is not a method", call.getMethod()), call.getLine());
+				classScope = (ClassScope) scope;
+			} else
+				throw new TypingRuleException(String.format(
+						"%s is not a method", call.getMethod()), call.getLine());
 			methodInClass = classScope.GetMethod(call.getMethod());
-			if (methodInClass == null)  throw new TypingRuleException(String.format("Method %s.%s not found in type table", type.getDisplayName(), call.getMethod()), call.getLine());	
-		}
-		else
-		{
+			if (methodInClass == null)
+				throw new TypingRuleException(String.format(
+						"Method %s.%s not found in type table",
+						type.getDisplayName(), call.getMethod()),
+						call.getLine());
+		} else {
 			methodInClass = call.GetScope().GetMethod(call.getMethod());
-			if (methodInClass == null)  throw new TypingRuleException(String.format("%s not found in symbol table", call.getObject()), call.getLine());	
+			if (methodInClass == null)
+				throw new TypingRuleException(String.format(
+						"%s not found in symbol table", call.getObject()),
+						call.getLine());
 		}
-		
+
 		List<Expression> calledParams = call.getArguments();
-		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(new Type[methodInClass.getParameters().size()]);
+		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
+				new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
-		for (int i  = 0 ; i < methodParams.length ;  i++ ) 
-		{
-			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i]))
-			{
-				throw new TypingRuleException("Parameter mismatch", call.getLine());
+			for (int i = 0; i < methodParams.length; i++) {
+				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
+						methodParams[i])) {
+					throw new TypingRuleException("Parameter mismatch",
+							call.getLine());
+				}
 			}
-		}
-		
-		call.typeAtcheck = methodInClass.getReturnType();		
-		
+
+		call.typeAtcheck = methodInClass.getReturnType();
+
 		return null;
 	}
 
 	@Override
 	public Object visit(This thisExpression) {
 		Scope currentScope = thisExpression.GetScope();
-		while (!(currentScope instanceof ClassScope))
-		{
+		while (!(currentScope instanceof ClassScope)) {
 			currentScope = currentScope.fatherScope;
-		}		
-		thisExpression.typeAtcheck = new ClassType(0,currentScope.getName());
-		//set the scope of this to be the class scope
+		}
+		thisExpression.typeAtcheck = new ClassType(0, currentScope.getName());
+		// set the scope of this to be the class scope
 		thisExpression.typeAtcheck.SetScope(currentScope);
-	
+
 		return null;
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
-		newClass.typeAtcheck = new ClassType(newClass.getLine(),newClass.getName());
+		newClass.typeAtcheck = new ClassType(newClass.getLine(),
+				newClass.getName());
 		return null;
 	}
 
 	@Override
 	public Object visit(NewArray newArray) {
-		
+
 		newArray.getSize().accept(this);
 		newArray.getType().accept(this);
 		Type e = newArray.getSize().typeAtcheck;
-		if (!(e instanceof PrimitiveType) || !(((PrimitiveType) e).getDataType().equals(DataType.INT))) 
-				{
-					throw new TypingRuleException("invalid Array allocation", newArray.getLine());
-				}
-		
+		if (!(e instanceof PrimitiveType)
+				|| !(((PrimitiveType) e).getDataType().equals(DataType.INT))) {
+			throw new TypingRuleException("invalid Array allocation",
+					newArray.getLine());
+		}
+
 		Type arrType = newArray.getType();
 		Type resultType;
 		if (arrType instanceof PrimitiveType) {
@@ -392,7 +442,8 @@ public class TypingRules implements Visitor {
 					((PrimitiveType) arrType).getDataType());
 		} else if (arrType instanceof ClassType) {
 			resultType = new ClassType(-1, ((ClassType) arrType).getClassName());
-		} else throw new Error("internal error");
+		} else
+			throw new Error("internal error");
 		resultType.incrementDimension();
 		newArray.typeAtcheck = resultType;
 		return null;
@@ -481,10 +532,10 @@ public class TypingRules implements Visitor {
 				throw new TypingRuleException(
 						String.format(
 								"invalid logical binary op (%s) on non-integer expression",
-								binaryOp.getOperator()), binaryOp.getLine()); 
+								binaryOp.getOperator()), binaryOp.getLine());
 			}
 
-			binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT); 
+			binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT);
 			break;
 		}
 		case PLUS: {
@@ -572,10 +623,8 @@ public class TypingRules implements Visitor {
 		return null;
 	}
 
-	
-	
 	/**
-	 * is type1 a sub type of type2  type1 < type2
+	 * is type1 a sub type of type2 type1 < type2
 	 * 
 	 * @param call
 	 *            Method call expression.
@@ -589,8 +638,10 @@ public class TypingRules implements Visitor {
 				&& ((PrimitiveType) type2).getDataType().equals(DataType.VOID)) {
 			return true;
 		}
-		if (((type1 instanceof PrimitiveType)  && ((type2 instanceof PrimitiveType)) &&
-				(((PrimitiveType) type1).getDataType().equals(((PrimitiveType) type2).getDataType()))))
+		if (((type1 instanceof PrimitiveType)
+				&& ((type2 instanceof PrimitiveType)) && (((PrimitiveType) type1)
+					.getDataType()
+				.equals(((PrimitiveType) type2).getDataType()))))
 			return true;
 		if ((!(type1 instanceof ClassType)) || (!(type2 instanceof ClassType)))
 			return false;
@@ -623,18 +674,19 @@ public class TypingRules implements Visitor {
 
 		return false;
 	}
-	
+
 	/**
 	 * check for primitive datatype
+	 * 
 	 * @param typeAtcheck
 	 * @param dataType
 	 * @return
-	 */	
-		private boolean isOfType(Type typeAtcheck, DataType dataType) {
-			if (typeAtcheck instanceof PrimitiveType) {
-				PrimitiveType primitive = (PrimitiveType) typeAtcheck;
-				return primitive.getDataType().equals(dataType);
-			}
-			return false;
+	 */
+	private boolean isOfType(Type typeAtcheck, DataType dataType) {
+		if (typeAtcheck instanceof PrimitiveType) {
+			PrimitiveType primitive = (PrimitiveType) typeAtcheck;
+			return primitive.getDataType().equals(dataType);
 		}
+		return false;
+	}
 }

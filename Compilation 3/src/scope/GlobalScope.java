@@ -23,13 +23,6 @@ public class GlobalScope extends Scope {
 		AddClassScope(classScope,classDecl.getName());
 		
 	}
-
-
-	@Override
-	public void AddVar(Object type) {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	public Map<String, ClassScope> GetclassesScopes()
 	{
@@ -57,6 +50,18 @@ public class GlobalScope extends Scope {
 
 	@Override
 	public MethodTypeWrapper GetMethod(String method) {
+		return null;
+	}
+
+	@Override
+	public void AddVar(Type type, String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public MethodTypeWrapper GetMethodWithoutName() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

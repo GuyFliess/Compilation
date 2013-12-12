@@ -29,9 +29,8 @@ public class StatementBlockScope extends Scope {
 
 	
 	@Override
-	public void AddVar(Object type) {
-		LocalVariable var =(LocalVariable) type;
-		localVariables.put(var.getName(), var.getType());
+	public void AddVar(Type type, String name) {		
+		localVariables.put(name, type);
 	}
 
 	@Override
@@ -53,6 +52,11 @@ public class StatementBlockScope extends Scope {
 	@Override
 	public MethodTypeWrapper GetMethod(String method) {
 		return fatherScope.GetMethod(method);
+	}
+
+	@Override
+	public MethodTypeWrapper GetMethodWithoutName() {
+		return fatherScope.GetMethodWithoutName();
 	}
 	
 }
