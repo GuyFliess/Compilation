@@ -80,10 +80,14 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
+		
 		for (Parameter formal : method.getFormals())
 			formal.accept(this);
 		for (Statement statement : method.getStatements())
 			statement.accept(this);
+		
+//		met
+//		MethodTypeWrapper methodWrraper = new MethodTypeWrapper(method.getName(), returnType, parameters, scope)
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -95,6 +99,7 @@ public class TypingRules implements Visitor {
 			formal.accept(this);
 		for (Statement statement : method.getStatements())
 			statement.accept(this);
+		
 		return null;
 	}
 
@@ -111,6 +116,7 @@ public class TypingRules implements Visitor {
 	public Object visit(Parameter formal) {
 		// TODO Auto-generated method stub
 		formal.getType().accept(this);
+		formal.typeAtcheck = formal.getType();
 		return null;
 	}
 

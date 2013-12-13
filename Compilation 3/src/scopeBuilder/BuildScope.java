@@ -51,15 +51,6 @@ public class BuildScope implements Visitor {
 		}		
 		return globalScope;
 	}
-	
-	
-//	public GlobalScope build(Node programAst) {
-//
-//		return null;
-//
-//	}
-	
-	
 
 	@Override
 	public Object visit(Program program) {
