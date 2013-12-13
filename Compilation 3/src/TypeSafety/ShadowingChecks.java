@@ -62,6 +62,14 @@ public class ShadowingChecks {
 					}
 					
 				}
+				
+				if (superClassParams.contains(method.getName())) {
+					throw new ShadowException(
+							"method '"
+									+ method.getName()
+									+ "' overloads a different field with the same name",
+							method.getLine());
+				}
 			}
 
 			if (lst.contains(method.getName())) {
