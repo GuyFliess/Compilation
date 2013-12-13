@@ -8,20 +8,24 @@ import ic.ast.decl.Program;
 
 public class TypeSafetyCheckes {
 
-	public void CheckTypeSafety(Program p, DeclClass libAst,GlobalScope globalScope) {
+	public void CheckTypeSafety(Program p, DeclClass libAst,
+			GlobalScope globalScope) {
 		LoopCheck loopCheck = new LoopCheck();
 		MainCheck mainCheck = new MainCheck();
 		ScopeRules scopeCheck = new ScopeRules();
 		TypingRules typingRulesChecker = new TypingRules(globalScope);
-		
+		ThisCheck thisCheck = new ThisCheck();
+
 		try {
 			loopCheck.ContBreak(p);
 			mainCheck.CountMain(p);
 			scopeCheck.CheckScopeRules(p);
 			p.accept(typingRulesChecker);
-			
-			
-			
+			thisCheck.CheckThis(p);
+
+		} catch (ThisException e) {
+			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+			throw new FoundException();
 		} catch (ContinueBreakException e) {
 			System.out.println(e.lineNum + ": semantic error; Use of "
 					+ e.errorMSG + " statement outside of loop not allowed");
@@ -29,9 +33,7 @@ public class TypeSafetyCheckes {
 		} catch (MainException e) {
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
 			throw new FoundException();
-		}
-		catch (TypeSafetyException e)
-		{
+		} catch (TypeSafetyException e) {
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
 			throw new FoundException();
 		} catch (FoundException e) {
