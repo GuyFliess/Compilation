@@ -141,6 +141,10 @@ public class ShadowingChecks {
 		List<DeclMethod> lst = new ArrayList<DeclMethod>();
 		DeclClass icClass = FindClass(p, superClassName);
 
+		if (icClass.hasSuperClass()) {
+			lst.addAll(FindClassMethods(p, icClass.getSuperClassName()));
+		}
+		
 		for (DeclMethod method : icClass.getMethods()) {
 			lst.add(method);
 		}
@@ -152,6 +156,10 @@ public class ShadowingChecks {
 		List<String> lst = new ArrayList<String>();
 		DeclClass icClass = FindClass(p, superClassName);
 
+		if (icClass.hasSuperClass()) {
+			lst.addAll(FindClassMethodsNames(p, icClass.getSuperClassName()));
+		}
+		
 		for (DeclMethod method : icClass.getMethods()) {
 			lst.add(method.getName());
 		}
@@ -162,6 +170,10 @@ public class ShadowingChecks {
 	private List<String> FindClassParams(Program p, String superClassName) {
 		List<String> lst = new ArrayList<String>();
 		DeclClass icClass = FindClass(p, superClassName);
+		
+		if (icClass.hasSuperClass()) {
+			lst.addAll(FindClassParams(p, icClass.getSuperClassName()));
+		}
 
 		for (DeclField field : icClass.getFields()) {
 			lst.add(field.getName());
