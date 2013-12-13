@@ -108,6 +108,12 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(DeclStaticMethod method) {
+		if (method.getFormals().size() != state.arguments.length) {
+			throw new RuntimeError("Invalid input: number of parameters for method " + 
+					state.class_name + "." + state.method_name +
+					" is " + method.getFormals().size() +
+					" while the number of parameters given is " + state.arguments.length + ".");
+		}
 		for (Parameter formal : method.getFormals()) {
 			formal.accept(this);
 		}
@@ -134,6 +140,12 @@ public class Interpreter implements Visitor {
 	public Object visit(Parameter formal) {
 		VariableType variable_type = (VariableType) formal.getType().accept(
 				this);
+		if (variable_type != variable_type.INT && variable_type != variable_type.STRING) {
+			throw new RuntimeError("Invalid parameter: parameters cannot be of type " + variable_type.toString() + ".");
+		}
+		if (formal.getType().getArrayDimension() > 0) {
+			throw new RuntimeError("Invalid parameter: parameters cannot arrays.");
+		}
 		Object[] value = new Object[1];
 		value[0] = this.state.arguments[this.state.formal_index++];
 		Variable variable = new Variable(variable_type,
@@ -165,6 +177,15 @@ public class Interpreter implements Visitor {
 	public Object visit(StmtAssignment assignment) {
 		Variable value = (Variable) assignment.getAssignment().accept(this);
 		Variable variable = (Variable) assignment.getVariable().accept(this);
+		if (value.getType() != variable.getType()) {
+			throw new RuntimeError("Invalid assignment statement: the variable is of type " + variable.getType().toString() +
+					" while assignment is of type " + value.getType().toString() + ".");
+		}
+		
+		if (variable.isArray() != value.isArray()) {
+			throw new RuntimeError("Invalid variable: variable dimensions is " + (variable.isArray() ? "1" : "0")
+					+ " while it is initialized to a value whose dimensions is " + (value.isArray() ? "1" : "0") + ".");
+		}
 		if (!variable.isArray()) {
 			this.state.setVariableValue(this.state.class_name,
 					this.state.method_name, variable.getName(),
@@ -221,7 +242,8 @@ public class Interpreter implements Visitor {
 			} catch (Break e) {
 				break;
 			} catch (Continue e) {
-				condition = (Variable) whileStatement.getCondition().accept(this);
+				condition = (Variable) whileStatement.getCondition().accept(
+						this);
 				result = (Boolean) condition.getValue()[0];
 				continue;
 			}
@@ -266,12 +288,22 @@ public class Interpreter implements Visitor {
 			type = VariableType.BOOLEAN;
 			break;
 		default:
-			type = VariableType.CLASS;
-			break;
+			throw new RuntimeError("Invalid type: variables cannot be of type " + localVariable.getType().getDisplayName() + ".");
+		}
+		if (localVariable.getType().getArrayDimension() > 1) {
+			throw new RuntimeError("Invalid variable: array dimensions cannot be " + localVariable.getType().getArrayDimension() + ".");
 		}
 		if (localVariable.isInitialized()) {
 			Variable value = (Variable) localVariable.getInitialValue().accept(
 					this);
+			if (type != value.getType()) {
+				throw new RuntimeError("Invalid initialization of local variable: the variable type is " +
+						type + " while it is initialized to type " + value.getType().toString() + ".");
+			}
+			if (localVariable.getType().getArrayDimension() != (value.isArray() ? 1 : 0)) {
+				throw new RuntimeError("Invalid variable: variable dimensions is " + localVariable.getType().getArrayDimension()
+						+ " while it is initialized to a value whose dimensions is " + (value.isArray() ? "1" : "0") + ".");
+			}
 			if (value.isArray()) {
 				variable = new Variable(type, VariableLocation.LOCAL,
 						localVariable.getName(), this.state.scope, true,
@@ -284,7 +316,7 @@ public class Interpreter implements Visitor {
 			}
 		} else {
 			variable = new Variable(type, VariableLocation.LOCAL,
-					localVariable.getName(), this.state.scope, true, 1);
+					localVariable.getName(), this.state.scope, localVariable.getType().getArrayDimension() > 0, 1);
 		}
 		this.state.addVariableToMethod(this.state.class_name,
 				this.state.method_name, variable);
@@ -337,7 +369,8 @@ public class Interpreter implements Visitor {
 
 	public Object visit(NewInstance newClass) {
 		// TODO: check if it's ok
-		throw new RuntimeError("Interpreter doesn't interpret new class instances.");
+		throw new RuntimeError(
+				"Interpreter doesn't interpret new class instances.");
 		// Variable variable = new Variable(VariableType.CLASS,
 		// VariableLocation.LOCAL, newClass.getName(), this.state.scope,
 		// false, 1);
@@ -372,7 +405,7 @@ public class Interpreter implements Visitor {
 
 	public Object visit(Length length) {
 		// TODO: check if it' ok
-		Variable variable = (Variable) length.accept(this);
+		Variable variable = (Variable) length.getArray().accept(this);
 		Object[] value = new Object[1];
 		value[0] = variable.getLength();
 		return new Variable(VariableType.INT, VariableLocation.NONE, "none",
@@ -392,7 +425,8 @@ public class Interpreter implements Visitor {
 			type = VariableType.BOOLEAN;
 			break;
 		default:
-			throw new RuntimeError("The literal " + literal.getValue() + " is not an int / string / boolean.");
+			throw new RuntimeError("The literal " + literal.getValue()
+					+ " is not an int / string / boolean.");
 		}
 		Object[] value = new Object[1];
 		value[0] = literal.getValue();
@@ -401,18 +435,41 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(UnaryOp unaryOp) {
+		Variable result = null;
 		Variable op = (Variable) unaryOp.getOperand().accept(this);
+		Object[] value = new Object[1];
 		int location = op.isArray() ? this.state.array_location : 0;
 		switch (unaryOp.getOperator()) {
 		case LNEG:
-			boolean bool_value = op.getValue()[location].toString() == "true";
-			return !bool_value;
+			if (op.getType() == VariableType.BOOLEAN) {
+				boolean bool_value = op.getValue()[location].toString() == "true";
+				value[0] = !bool_value;
+				result = new Variable(VariableType.BOOLEAN,
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
+			} else {
+				throw new RuntimeError(
+						"Invalid unary operation: operand is of type "
+								+ op.getType().toString()
+								+ " while the operator is a logical negation (!).");
+			}
+			break;
 		case UMINUS:
-			int int_value = Integer
-					.parseInt(op.getValue()[location].toString());
-			return -int_value;
+			if (op.getType() == VariableType.INT) {
+				int int_value = Integer.parseInt(op.getValue()[location]
+						.toString());
+				value[0] = -int_value;
+				result = new Variable(VariableType.INT, VariableLocation.NONE,
+						"none", this.state.scope, false, 1, value);
+			} else {
+				throw new RuntimeError(
+						"Invalid unary operation: operand is of type "
+								+ op.getType().toString()
+								+ " while the operator is a unary minus (-).");
+			}
+			break;
 		}
-		return null;
+		return result;
 	}
 
 	public Object visit(BinaryOp binaryOp) {
@@ -516,8 +573,11 @@ public class Interpreter implements Visitor {
 			result = new Variable(VariableType.STRING, VariableLocation.NONE,
 					"none", this.state.scope, false, 1, value);
 		} else {
-			throw new RuntimeError("Invalid binary operation: first operand is of type " + first.getType().toString() + 
-					" while the second operand is of type " + second.getType().toString() + ".");
+			throw new RuntimeError(
+					"Invalid binary operation: first operand is of type "
+							+ first.getType().toString()
+							+ " while the second operand is of type "
+							+ second.getType().toString() + ".");
 		}
 		return result;
 
