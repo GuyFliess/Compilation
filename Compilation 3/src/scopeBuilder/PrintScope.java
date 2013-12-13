@@ -141,11 +141,8 @@ public class PrintScope {
 	private void print(StatementBlockScope blockScope) {
 		// TODO Auto-generated method stub
 		System.out.println(String.format(
-				"Statement Block Symbol Table: %s(parent = %s)",
-				blockScope.getName(), blockScope.fatherScope.getName())); // TODO
-																			// hadnle
-																			// fathers
-
+				"Statement Block Symbol Table:  %s(parent = %s)",
+				blockScope.getName(), blockScope.fatherScope.getName())); 
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {
 			System.out.println(String.format("    Local variable:  %s : %s",

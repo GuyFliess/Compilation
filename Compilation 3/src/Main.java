@@ -5,6 +5,7 @@ import TypeSafety.ContinueBreakException;
 import TypeSafety.FoundException;
 import TypeSafety.MainException;
 import TypeSafety.TypeSafetyCheckes;
+import TypeSafety.TypingRuleException;
 import lex.Lexer;
 import lex.Token;
 import pars.Calc;
@@ -93,14 +94,18 @@ public class Main {
 			}
 
 		} catch (FoundException e) {
-			return;
-		} catch (Throwable e) {
+			//return;
+		} catch (TypingRuleException e) {
+			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+			
+		}
+		catch (Throwable e) {
 			System.err.println(e);
 			for (StackTraceElement element : e.getStackTrace()) {
 				System.err.println(element);
 				
 			}
-			return;
+			//return;
 		}
 
 	}

@@ -16,11 +16,11 @@ public class ScopeRules {
 			checkShadow.CheckShadowing(p);
 			
 		} catch (MultipleDefineException e) {
-			System.err.println(e.lineNum+": semantic error; Id "+e.errorMSG+" already defined in current scope");
+			System.out.println(e.lineNum+": semantic error; Id "+e.errorMSG+" already defined in current scope");
 		} catch (ExtendsException e) {
-			System.err.println(e.lineNum+": semantic error; "+e.errorMSG);
+			System.out.println(e.lineNum+": semantic error; "+e.errorMSG);
 		} catch (ShadowException e) {
-			System.err.println(e.lineNum+": semantic error; "+e.errorMSG);
+			System.out.println(e.lineNum+": semantic error; "+e.errorMSG);
 		}
 		
 	}

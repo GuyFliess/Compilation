@@ -81,7 +81,7 @@ public class BuildScope implements Visitor {
 			if (!((GlobalScope) currentScope)
 					.GetclassesScopes().containsKey(superClassName))
 			{
-				throw new TypingRuleException("Super class undefined", icClass.getLine());
+				throw new TypingRuleException(String.format("Class %s cannot extend %s, since it's not yet defined",icClass.getName(),superClassName), icClass.getLine());
 			}
 			ClassScope superScope = ((GlobalScope) currentScope)
 					.GetclassesScopes().get(superClassName);

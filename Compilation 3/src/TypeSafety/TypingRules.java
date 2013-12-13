@@ -170,12 +170,12 @@ public class TypingRules implements Visitor {
 					&& (returnType != null)) {
 				// this is ugly, if the method is void we want
 				throw new TypingRuleException(
-						"tring to return value in void method",
+						"trying to return value in void method",
 						returnStatement.getLine());
 			}
 		}
 		if (!(isSubTypeOf(returnType, method.getReturnType()))) {
-			throw new TypingRuleException("Return value",
+			throw new TypingRuleException(String.format("Return statement is not of type %s",method.getReturnType().getDisplayName()),
 					returnStatement.getLine());
 		}
 
@@ -205,7 +205,7 @@ public class TypingRules implements Visitor {
 		if (!isOfType(whileStatement.getCondition().typeAtcheck,
 				DataType.BOOLEAN)) {
 			throw new TypingRuleException(
-					"Non boolean condition for if statement",
+					"Non boolean condition for while statement",
 					whileStatement.getLine());
 		}
 		return null;
@@ -292,7 +292,7 @@ public class TypingRules implements Visitor {
 		Type resultType;
 		if (!(location.getIndex().typeAtcheck instanceof PrimitiveType)) {
 			throw new TypingRuleException(
-					"invalid array operation, type %s is not an integer",
+					"Invalid array operation, type %s is not an integer",
 					location.getLine());
 		}
 
@@ -301,7 +301,7 @@ public class TypingRules implements Visitor {
 				|| !(arrType.getArrayDimension() > 0)) // must be an array
 		{
 			throw new TypingRuleException(
-					"invalid array operation, type %s is not an array",
+					"Invalid array operation, type %s is not an array",
 					location.getLine());
 		}
 		if (arrType instanceof PrimitiveType) {
@@ -338,10 +338,13 @@ public class TypingRules implements Visitor {
 		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
 				new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
+		{
+			throw new TypingRuleException(String.format("Invalid number of arguments for %s.%s", call.getClassName(),call.getMethod()), call.getLine());
+		}
 			for (int i = 0; i < methodParams.length; i++) {
 				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
 						methodParams[i])) {
-					throw new TypingRuleException("Parameter mismatch",
+					throw new TypingRuleException(String.format("Method %s.%s is not applicable for the arguments given",call.getClassName(),call.getMethod()),
 							call.getLine());
 				}
 			}
@@ -352,6 +355,7 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(VirtualCall call) {
+		String className = "";
 		if (call.hasExplicitObject()) {
 			call.getObject().accept(this);
 		}
@@ -360,12 +364,12 @@ public class TypingRules implements Visitor {
 		ClassScope classScope; // globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodInClass;
 		if (call.hasExplicitObject()) {
-			Type type = call.getObject().typeAtcheck;
+			Type type = call.getObject().typeAtcheck;			
 			if (!(type instanceof ClassType)) {
 				throw new TypingRuleException("non class can't have methods",
 						call.getLine());
 			}
-
+			className = ((ClassType) type).getClassName();
 			Scope scope = type.GetScope();
 			if (scope instanceof ClassScope) {
 				classScope = (ClassScope) scope;
@@ -373,6 +377,7 @@ public class TypingRules implements Visitor {
 				throw new TypingRuleException(String.format(
 						"%s is not a method", call.getMethod()), call.getLine());
 			methodInClass = classScope.GetMethod(call.getMethod());
+			className = "TODO"; //TODO
 			if (methodInClass == null)
 				throw new TypingRuleException(String.format(
 						"Method %s.%s not found in type table",
@@ -390,10 +395,13 @@ public class TypingRules implements Visitor {
 		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
 				new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
+		{
+			throw new TypingRuleException(String.format("Invalid number of arguments for %s.%s",className,call.getMethod()), call.getLine());
+		}
 			for (int i = 0; i < methodParams.length; i++) {
 				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
 						methodParams[i])) {
-					throw new TypingRuleException("Parameter mismatch",
+					throw new TypingRuleException(String.format("Method %s.%s is not applicable for the arguments given",className,call.getMethod()),
 							call.getLine());
 				}
 			}
@@ -431,7 +439,7 @@ public class TypingRules implements Visitor {
 		Type e = newArray.getSize().typeAtcheck;
 		if (!(e instanceof PrimitiveType)
 				|| !(((PrimitiveType) e).getDataType().equals(DataType.INT))) {
-			throw new TypingRuleException("invalid Array allocation",
+			throw new TypingRuleException("Invalid Array allocation",
 					newArray.getLine());
 		}
 

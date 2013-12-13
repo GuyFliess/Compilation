@@ -21,7 +21,7 @@ public abstract class Node {
 	 * @return A value propagated by the visitor.
 	 * @throws TypeSafetyException 
 	 */
-	public abstract Object accept(Visitor visitor) throws TypeSafetyException;
+	public abstract Object accept(Visitor visitor) ;
 
 	/**
 	 * Constructs an AST node corresponding to a line number in the original
