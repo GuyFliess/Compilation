@@ -1,12 +1,13 @@
 package interpBuilder;
 
-import interp.REPL.RuntimeError;
+import interp.Interpreter.RuntimeError;
 //import interp.Variable;
 
 
 import interpBuilder.Variable.VariableLocation;
 import interpBuilder.Variable.VariableType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Method {
@@ -24,15 +25,15 @@ public class Method {
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope, int dimensions) {
+			VariableLocation variable_location, String name, int scope, boolean array, int length) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope, dimensions));
+				name, scope, array, length));
 	}
 
 	public void addVariable(VariableType variable_type,
-			VariableLocation variable_location, String name, int scope, int dimensions, Object[] value) {
+			VariableLocation variable_location, String name, int scope, boolean array, int length, Object[] value) {
 		this.variables.put(name, new Variable(variable_type, variable_location,
-				name, scope, dimensions, value));
+				name, scope, array, length, value));
 	}
 
 	public String getName() {
@@ -68,5 +69,17 @@ public class Method {
 			return variables.get(variable_name).getScope() <= scope;
 		}
 		return false;
+	}
+	
+	public void deleteVariablesFromScope(int scope) {
+		ArrayList<String> variables_to_remove = new ArrayList<>();
+		for (Variable variable: this.variables.values()) {
+			if (variable.getScope() == scope) {
+				variables_to_remove.add(variable.getName());
+			}
+		}
+		for (String variable_name: variables_to_remove) {
+			this.variables.remove(variable_name);
+		}
 	}
 }
