@@ -1,6 +1,6 @@
 package interpBuilder;
 
-import interp.REPL.RuntimeError;
+import interp.Interpreter.RuntimeError;
 
 public class Variable {
 	public enum VariableLocation {

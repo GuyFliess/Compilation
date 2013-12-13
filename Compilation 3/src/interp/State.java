@@ -17,7 +17,6 @@ public class State {
 	Object value;
 	Object[] values;
 	private HashMap<String, interpClass> classes;
-	boolean break_stmt;
 
 	public State(String class_name, String method_name, String[] arguments) {
 		
@@ -27,7 +26,6 @@ public class State {
 		this.formal_index = 0;
 		this.scope = 0;
 		this.array_location = 0;
-		this.break_stmt = false;
 		this.value = null;
 		this.values = null;
 		this.classes = new HashMap<>();
@@ -95,37 +93,8 @@ public class State {
 	public boolean fieldExists(String class_name, String field_name) {
 		return this.classes.get(class_name).fieldExists(field_name);
 	}
-
-	// Stack<ActivationRecord> a_stack = new Stack<>(); //TODO: remove
-	// Map<String, String> ref_variables = new HashMap<>();
-	// Map<String, String> ref_fields = new HashMap<>();
-	// Map<String, String> ref_array_elements = new HashMap<>();
-	// Map<String, String> parameters = new HashMap<>();
-	// Map<String, String> local_variables = new HashMap<>();
-	// // Map<String, Integer> int_variables = new HashMap<>();
-	// // Map<String, Boolean> bool_variables = new HashMap<>();
-	// // Map<String, String> string_variables = new HashMap<>();
-	//
-	// State() { a_stack.push(new ActivationRecord()); }
-	//
-	// /**
-	// * Find a variable by its name (dynamic lookup).
-	// */
-	// Double lookup(String byName)
-	// {
-	// ListIterator<ActivationRecord> iter =
-	// a_stack.listIterator(a_stack.size());
-	// while (iter.hasPrevious()) {
-	// ActivationRecord ar = iter.previous();
-	// if (ar.values.containsKey(byName))
-	// return ar.values.get(byName);
-	// }
-	// throw new RuntimeError("undefined variable '" + byName + "'");
-	// }
-	//
-	// @Override
-	// public String toString()
-	// {
-	// return a_stack.peek().toString();
-	// }
+	
+	public void deleteVariableFromScope() {
+		this.classes.get(class_name).getMethods().get(method_name).deleteVariablesFromScope(this.scope);
+	}
 }

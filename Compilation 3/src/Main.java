@@ -20,7 +20,7 @@ import ic.ast.decl.DeclClass;
 import ic.ast.decl.DeclMethod;
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.Program;
-import interp.REPL;
+import interp.Interpreter;
 
 public class Main {
 	public static void main(String[] args) {
@@ -42,7 +42,7 @@ public class Main {
 			Node programAst = calc.process(programTokens); // process program
 			Program p = (Program) programAst;
 
-			//System.out.println(programAst.accept(printer));
+			System.out.println(programAst.accept(printer));
 			int interpStartLocation = 1;
 			if (args.length > 1) {
 				interpStartLocation = 1;
@@ -66,7 +66,7 @@ public class Main {
 					arguments[i] = args[i + 2];
 				}
 				
-				REPL interp = new REPL(class_name, method_name, arguments);
+				Interpreter interp = new Interpreter(class_name, method_name, arguments);
 				p.accept(interp);
 
 			} else // SymbolTable and typecheck

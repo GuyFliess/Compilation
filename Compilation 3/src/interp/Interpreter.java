@@ -1,10 +1,5 @@
 package interp;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
@@ -45,21 +40,23 @@ import interpBuilder.Variable.VariableType;
 import interpBuilder.interpClass;
 
 @SuppressWarnings("serial")
-public class REPL implements Visitor {
+public class Interpreter implements Visitor {
 	State state;
 
-//	public REPL() {
-//		this.state = new State();
-//	}
-
-	public REPL(String class_name, String method_name, String[] arguments) {
+	public Interpreter(String class_name, String method_name, String[] arguments) {
 		this.state = new State(class_name, method_name, arguments);
 	}
 
 	public static class RuntimeError extends Error {
 		public RuntimeError(String msg) {
-			super(msg);
+			super("RuntimeError: " + msg);
 		}
+	}
+
+	public static class Break extends Error {
+	}
+
+	public static class Continue extends Error {
 	}
 
 	public Object visit(Program program) {
@@ -68,7 +65,11 @@ public class REPL implements Visitor {
 		}
 		for (DeclClass decl_class : program.getClasses()) {
 			if (decl_class.getName().equals(this.state.class_name)) {
-				decl_class.accept(this);
+				try {
+					decl_class.accept(this);
+				} catch (RuntimeError e) {
+					System.err.println(e.getMessage());
+				}
 				break;
 			}
 		}
@@ -98,13 +99,12 @@ public class REPL implements Visitor {
 	public Object visit(DeclField field) {
 		VariableType field_type = (VariableType) field.getType().accept(this);
 		return new Variable(field_type, VariableLocation.FIELD,
-				field.getName(), this.state.scope,
-				field.getType().getArrayDimension() > 0, 1);
+				field.getName(), this.state.scope, field.getType()
+						.getArrayDimension() > 0, 1);
 	}
 
 	public Object visit(DeclVirtualMethod method) {
-		// TODO: check if we have to implement
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret virtual methods.");
 	}
 
 	public Object visit(DeclStaticMethod method) {
@@ -127,8 +127,8 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(DeclLibraryMethod method) {
-		// TODO: check if we have to implement
-		return null;
+		// TODO: check if it's ok
+		throw new RuntimeError("Interpreter doesn't interpret library methods.");
 	}
 
 	public Object visit(Parameter formal) {
@@ -137,10 +137,10 @@ public class REPL implements Visitor {
 		Object[] value = new Object[1];
 		value[0] = this.state.arguments[this.state.formal_index++];
 		Variable variable = new Variable(variable_type,
-				VariableLocation.PARAMETER, formal.getName(), this.state.scope, false, 1,
-				value);
-		this.state.addVariableToMethod(this.state.class_name, this.state.method_name,
-				variable);
+				VariableLocation.PARAMETER, formal.getName(), this.state.scope,
+				false, 1, value);
+		this.state.addVariableToMethod(this.state.class_name,
+				this.state.method_name, variable);
 		return null;
 	}
 
@@ -157,6 +157,8 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(ClassType type) {
+		// TODO: check if it's ok
+		// throw new RuntimeError("Interpreter doesn't interpret class types.");
 		return VariableType.CLASS;
 	}
 
@@ -164,12 +166,14 @@ public class REPL implements Visitor {
 		Variable value = (Variable) assignment.getAssignment().accept(this);
 		Variable variable = (Variable) assignment.getVariable().accept(this);
 		if (!variable.isArray()) {
-			this.state.setVariableValue(this.state.class_name, this.state.method_name,
-					variable.getName(), value.getValue(), 0);
+			this.state.setVariableValue(this.state.class_name,
+					this.state.method_name, variable.getName(),
+					value.getValue(), 0);
 		} else {
 			if (variable.isInitialized()) {
-				this.state.setVariableValue(this.state.class_name, this.state.method_name,
-						variable.getName(), value.getValue(), this.state.array_location);
+				this.state.setVariableValue(this.state.class_name,
+						this.state.method_name, variable.getName(),
+						value.getValue(), this.state.array_location);
 				this.state.array_location = 0;
 			} else {
 				variable.setVariableToArray(value.getLength());
@@ -179,8 +183,7 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(StmtCall callStatement) {
-		// TODO: check if we have to implement
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret call statements.");
 	}
 
 	public Object visit(StmtReturn returnStatement) {
@@ -213,7 +216,15 @@ public class REPL implements Visitor {
 				this);
 		Boolean result = (Boolean) condition.getValue()[0];
 		while (result) {
-			whileStatement.getOperation().accept(this);
+			try {
+				whileStatement.getOperation().accept(this);
+			} catch (Break e) {
+				break;
+			} catch (Continue e) {
+				condition = (Variable) whileStatement.getCondition().accept(this);
+				result = (Boolean) condition.getValue()[0];
+				continue;
+			}
 			condition = (Variable) whileStatement.getCondition().accept(this);
 			result = (Boolean) condition.getValue()[0];
 		}
@@ -221,13 +232,11 @@ public class REPL implements Visitor {
 	}
 
 	public Object visit(StmtBreak breakStatement) {
-		this.state.break_stmt = true;
-		return null;
+		throw new Break();
 	}
 
 	public Object visit(StmtContinue continueStatement) {
-		// TODO: check if it's ok
-		return null;
+		throw new Continue();
 	}
 
 	public Object visit(StmtBlock statementsBlock) {
@@ -237,11 +246,8 @@ public class REPL implements Visitor {
 		for (int i = 0; i < statementsBlock.getStatements().size(); i++) {
 			stmt = statementsBlock.getStatements().get(i);
 			value = stmt.accept(this);
-			if (state.break_stmt) {
-				break;
-			}
 		}
-		state.break_stmt = false;
+		this.state.deleteVariableFromScope();
 		this.state.scope--;
 		return value;
 	}
@@ -268,7 +274,8 @@ public class REPL implements Visitor {
 					this);
 			if (value.isArray()) {
 				variable = new Variable(type, VariableLocation.LOCAL,
-						localVariable.getName(), this.state.scope, true, value.getLength());
+						localVariable.getName(), this.state.scope, true,
+						value.getLength());
 				variable.setInitialized();
 			} else {
 				variable = new Variable(type, VariableLocation.LOCAL,
@@ -279,65 +286,66 @@ public class REPL implements Visitor {
 			variable = new Variable(type, VariableLocation.LOCAL,
 					localVariable.getName(), this.state.scope, true, 1);
 		}
-		this.state.addVariableToMethod(this.state.class_name, this.state.method_name, variable);
+		this.state.addVariableToMethod(this.state.class_name,
+				this.state.method_name, variable);
 		return null;
 	}
 
 	public Object visit(RefVariable location) {
-		if (state.variableExists(this.state.class_name, this.state.method_name, location.getName(),
-				this.state.scope)) {
-			return state.getVariable(this.state.class_name, this.state.method_name,
-					location.getName());
+		if (state.fieldExists(state.class_name, location.getName())) {
+			throw new RuntimeError("Intepreter doesn't interpret fields.");
 		}
-		// TODO: throw exception if variable doesn't exist
-		return null;
+		if (state.variableExists(this.state.class_name, this.state.method_name,
+				location.getName(), this.state.scope)) {
+			return state.getVariable(this.state.class_name,
+					this.state.method_name, location.getName());
+		}
+		throw new RuntimeError("Variable " + location.getName()
+				+ " does not exist.");
 	}
 
 	public Object visit(RefField location) {
-		if (state.fieldExists(this.state.class_name, location.getField())) {
-			return state.getVariable(this.state.class_name, this.state.method_name,
-					location.getField());
-		}
-		// TODO: throw exception if field doesn't exist
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret 'this'.");
 	}
 
 	public Object visit(RefArrayElement location) {
 		Variable variable = (Variable) location.getArray().accept(this);
 		Variable array_index = (Variable) location.getIndex().accept(this);
-		if (state.variableExists(this.state.class_name, this.state.method_name, variable.getName(),
-				this.state.scope)) {
+		if (state.variableExists(this.state.class_name, this.state.method_name,
+				variable.getName(), this.state.scope)) {
 			this.state.array_location = (int) array_index.getValue()[0];
-			return state.getVariable(this.state.class_name, this.state.method_name,
-					variable.getName());
+			return state.getVariable(this.state.class_name,
+					this.state.method_name, variable.getName());
 		}
-		// TODO: throw exception if field doesn't exist
-		return null;
+		throw new RuntimeError("Variable " + variable.getName()
+				+ " does not exist.");
 	}
 
 	public Object visit(StaticCall call) {
-		// TODO: check if we need to implement
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret static calls.");
 	}
 
 	public Object visit(VirtualCall call) {
-		// TODO: check if we have to implement
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret virtual calls.");
 	}
 
 	public Object visit(This thisExpression) {
 		// TODO: check if it's ok
-		return this.state.getClass(this.state.class_name);
+		throw new RuntimeError("Interpreter doesn't interpret 'this'.");
+		// return this.state.getClass(this.state.class_name);
 	}
 
 	public Object visit(NewInstance newClass) {
 		// TODO: check if it's ok
-		Variable variable = new Variable(VariableType.CLASS,
-				VariableLocation.LOCAL, newClass.getName(), this.state.scope, false, 1);
-		variable.setInitialized();
-		variable.setClass(this.state.class_name);
-		this.state.addVariableToMethod(this.state.class_name, this.state.method_name, variable);
-		return null;
+		throw new RuntimeError("Interpreter doesn't interpret new class instances.");
+		// Variable variable = new Variable(VariableType.CLASS,
+		// VariableLocation.LOCAL, newClass.getName(), this.state.scope,
+		// false, 1);
+		// variable.setInitialized();
+		// variable.setClass(this.state.class_name);
+		// this.state.addVariableToMethod(this.state.class_name,
+		// this.state.method_name, variable);
+		// return null;
 	}
 
 	public Object visit(NewArray newArray) {
@@ -357,8 +365,9 @@ public class REPL implements Visitor {
 			break;
 		}
 		Variable size = (Variable) newArray.getSize().accept(this);
-		return new Variable(type, VariableLocation.NONE, "none", this.state.scope, true,
-				Integer.parseInt(size.getValue()[0].toString()));
+		return new Variable(type, VariableLocation.NONE, "none",
+				this.state.scope, true, Integer.parseInt(size.getValue()[0]
+						.toString()));
 	}
 
 	public Object visit(Length length) {
@@ -383,13 +392,12 @@ public class REPL implements Visitor {
 			type = VariableType.BOOLEAN;
 			break;
 		default:
-			// TODO: throw exception
-			break;
+			throw new RuntimeError("The literal " + literal.getValue() + " is not an int / string / boolean.");
 		}
 		Object[] value = new Object[1];
 		value[0] = literal.getValue();
-		return new Variable(type, VariableLocation.NONE, "none", this.state.scope, false,
-				1, value);
+		return new Variable(type, VariableLocation.NONE, "none",
+				this.state.scope, false, 1, value);
 	}
 
 	public Object visit(UnaryOp unaryOp) {
@@ -462,37 +470,43 @@ public class REPL implements Visitor {
 				value[0] = (Boolean) (first_value < second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			case LTE:
 				value[0] = (Boolean) (first_value <= second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			case GT:
 				value[0] = (Boolean) (first_value > second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			case GTE:
 				value[0] = (Boolean) (first_value >= second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			case EQUAL:
 				value[0] = (Boolean) (first_value == second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			case NEQUAL:
 				value[0] = (Boolean) (first_value != second_value) ? true
 						: false;
 				result = new Variable(VariableType.BOOLEAN,
-						VariableLocation.NONE, "none", this.state.scope, false, 1, value);
+						VariableLocation.NONE, "none", this.state.scope, false,
+						1, value);
 				break;
 			}
 		} else if (first.getType() == VariableType.STRING
@@ -502,7 +516,8 @@ public class REPL implements Visitor {
 			result = new Variable(VariableType.STRING, VariableLocation.NONE,
 					"none", this.state.scope, false, 1, value);
 		} else {
-			// TODO: throw exception
+			throw new RuntimeError("Invalid binary operation: first operand is of type " + first.getType().toString() + 
+					" while the second operand is of type " + second.getType().toString() + ".");
 		}
 		return result;
 

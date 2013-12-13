@@ -78,9 +78,10 @@ public class Calc extends CalcBase {
 			+ "formal -> type array ID formals* \n"
 			+ "stmt* -> nextStmt |  \n"
 			+ "nextStmt ->  stmt stmt* | blockStmt stmt* \n"
-			+ "blockStmt -> { stmt* } \n"
+			+ "nextBlockStmt -> stmt blockStmt* | blockStmt blockStmt* \n"
+			+ "blockStmt -> { blockStmt* } \n"
+			+ "blockStmt* -> nextBlockStmt |  \n"
 			+ "stmt -> location = expr ; | stmtCall ; | returnStmt ; | ifStmt* | whileStmt | break ; | continue ; | localVar ; \n"
-			+ "stmtBlock -> stmt stmtBlock |  \n"
 			+ "stmtCall -> call \n"
 			+ "returnStmt -> return | return expr \n"
 			+ "ifStmt* -> ifStmt | ifElseStmt \n"
@@ -227,9 +228,19 @@ public class Calc extends CalcBase {
 			if (s.length == 1) { /* in a case of stmt */
 				return constructAst(s[0]); /* run on nextStmt */
 			}
+		case "blockStmt*":
+			if (s.length == 0) { /* there aren't any more statements */
+				return null;
+			}
+			if (s.length == 1) { /* in a case of stmt */
+				return constructAst(s[0]); /* run on nextBlockStmt */
+			}
 		case "nextStmt":
 			statements.add((Statement) constructAst(s[0])); /* run on stmt / blockStmt */
 			return constructAst(s[1]); /* run on stmt* */
+		case "nextBlockStmt":
+			stmt_list.get(stmt_list.size() - 1).add((Statement) constructAst(s[0])); /* run on stmt */
+			return constructAst(s[1]); /* run on stmt */
 		case "blockStmt":
 			stmt_list.add(new ArrayList<Statement>());
 			constructAst(s[1]); /* run on stmt* */
