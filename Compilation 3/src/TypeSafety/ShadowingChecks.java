@@ -12,24 +12,27 @@ import ic.ast.stmt.StmtWhile;
 
 public class ShadowingChecks {
 
-	
 	private List<String> superClassParams = new ArrayList<String>();
-	private List<String> superClassMethods = new ArrayList<String>();
-	
-	public void CheckShadowing(Program p) throws ShadowException{
+	private List<DeclMethod> superClassMethods = new ArrayList<DeclMethod>();
+	private List<String> superClassMethodsNames = new ArrayList<String>();
+
+	public void CheckShadowing(Program p) throws ShadowException {
 
 		for (DeclClass icClass : p.getClasses()) {
-			CheckShadowing(icClass,p);
+			CheckShadowing(icClass, p);
 		}
 
 	}
 
-	private void CheckShadowing(DeclClass icClass, Program p) throws ShadowException{
+	private void CheckShadowing(DeclClass icClass, Program p)
+			throws ShadowException {
 		List<String> lst = new ArrayList<String>();
-		
+
 		if (icClass.hasSuperClass()) {
-			superClassParams = FindClassParams(p,icClass.getSuperClassName());
-			superClassMethods = FindClassMethods(p,icClass.getSuperClassName());
+			superClassParams = FindClassParams(p, icClass.getSuperClassName());
+			superClassMethods = FindClassMethods(p, icClass.getSuperClassName());
+			superClassMethodsNames = FindClassMethodsNames(p,
+					icClass.getSuperClassName());
 		}
 
 		for (DeclField field : icClass.getFields()) {
@@ -38,22 +41,29 @@ public class ShadowingChecks {
 					throw new ShadowException("Field " + field.getName()
 							+ " is shadowing a field with the same name",
 							field.getLine());
-				} 
+				}
 			}
-			
+
 			lst.add(field.getName());
 		}
 
 		for (DeclMethod method : icClass.getMethods()) {
-			
+
 			if (icClass.hasSuperClass()) {
-				if (superClassMethods.contains(method.getName())) {
-					throw new ShadowException("method '" + method.getName()
-							+ "' overloads a different method with the same name",
-							method.getLine());
-				} 
+				if (superClassMethodsNames.contains(method.getName())) {
+					if (!MethodsMetch(
+							FindDeclMethod(superClassMethods, method.getName()),
+							method)) {
+						throw new ShadowException(
+								"method '"
+										+ method.getName()
+										+ "' overloads a different method with the same name",
+								method.getLine());
+					}
+					
+				}
 			}
-			
+
 			if (lst.contains(method.getName())) {
 				throw new ShadowException("Method " + method.getName()
 						+ " is shadowing a field with the same name",
@@ -63,15 +73,42 @@ public class ShadowingChecks {
 			CheckShadowing(method);
 		}
 
-		
-
 	}
 
-	
+	private boolean MethodsMetch(DeclMethod exMethod, DeclMethod method) {
 
-	
+		List<Parameter> paramEx = exMethod.getFormals();
+		List<Parameter> paramM = method.getFormals();
 
-	private void CheckShadowing(DeclMethod method) throws ShadowException{
+		if (paramEx.size() != paramM.size()) {
+			return false;
+		}
+
+		for (int i = 0; i < paramM.size(); i++) {
+			Parameter param1 = paramEx.get(i);
+			Parameter param2 = paramM.get(i);
+
+			if (!((param1.getName() == param2.getName()) & (param1.getType()
+					.getDisplayName() == param2.getType().getDisplayName()))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private DeclMethod FindDeclMethod(List<DeclMethod> methods, String name) {
+
+		for (int i = 0; i < methods.size(); i++) {
+			if (methods.get(i).getName().equals(name)) {
+				return methods.get(i);
+			}
+		}
+
+		return null;
+	}
+
+	private void CheckShadowing(DeclMethod method) throws ShadowException {
 		List<String> lst = new ArrayList<String>();
 
 		for (Parameter parameter : method.getFormals()) {
@@ -83,30 +120,41 @@ public class ShadowingChecks {
 
 		for (int i = 0; i < methodParms.size(); i++) {
 			if (lst.contains(methodParms.get(i).getName())) {
-				throw new ShadowException("Local variable " + methodParms.get(i).getName()
-						+ " is shadowing a parameter",
-						 methodParms.get(i).getLine());
+				throw new ShadowException("Local variable "
+						+ methodParms.get(i).getName()
+						+ " is shadowing a parameter", methodParms.get(i)
+						.getLine());
 			}
 		}
 
 	}
-	
-	private List<String> FindClassMethods(Program p, String superClassName) {
-		List<String> lst = new ArrayList<String>();
+
+	private List<DeclMethod> FindClassMethods(Program p, String superClassName) {
+		List<DeclMethod> lst = new ArrayList<DeclMethod>();
 		DeclClass icClass = FindClass(p, superClassName);
-		
-		
+
 		for (DeclMethod method : icClass.getMethods()) {
-			lst.add(method.getName());
-		}	
-		
+			lst.add(method);
+		}
+
 		return lst;
 	}
-	
+
+	private List<String> FindClassMethodsNames(Program p, String superClassName) {
+		List<String> lst = new ArrayList<String>();
+		DeclClass icClass = FindClass(p, superClassName);
+
+		for (DeclMethod method : icClass.getMethods()) {
+			lst.add(method.getName());
+		}
+
+		return lst;
+	}
+
 	private List<String> FindClassParams(Program p, String superClassName) {
 		List<String> lst = new ArrayList<String>();
 		DeclClass icClass = FindClass(p, superClassName);
-		
+
 		for (DeclField field : icClass.getFields()) {
 			lst.add(field.getName());
 		}
@@ -120,20 +168,18 @@ public class ShadowingChecks {
 				lst.add(methodParms.get(i).getName());
 			}
 		}
-		
+
 		return lst;
 	}
-	
-	
 
 	private DeclClass FindClass(Program p, String superClassName) {
-		
+
 		for (DeclClass icClass : p.getClasses()) {
-			if (superClassName.compareTo(icClass.getName())==0) {
+			if (superClassName.compareTo(icClass.getName()) == 0) {
 				return icClass;
 			}
 		}
-		
+
 		return null;
 	}
 
