@@ -34,6 +34,8 @@ public class TypeSafetyCheckes {
 		{
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
 			throw new FoundException();
+		} catch (FoundException e) {
+			throw new FoundException();
 		}
 
 	}
