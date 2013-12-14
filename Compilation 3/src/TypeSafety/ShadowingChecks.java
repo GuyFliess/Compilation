@@ -96,8 +96,9 @@ public class ShadowingChecks {
 			Parameter param1 = paramEx.get(i);
 			Parameter param2 = paramM.get(i);
 
-			if (!((param1.getName() == param2.getName()) & (param1.getType()
-					.getDisplayName() == param2.getType().getDisplayName()))) {
+
+			if (!((param1.getName().equals(param2.getName())) & (param1.getType()
+					.getDisplayName().equals(param2.getType().getDisplayName())))) {
 				return false;
 			}
 		}
@@ -178,7 +179,7 @@ public class ShadowingChecks {
 		for (DeclField field : icClass.getFields()) {
 			lst.add(field.getName());
 		}
-		for (DeclMethod method : icClass.getMethods()) {
+		/*for (DeclMethod method : icClass.getMethods()) {
 			for (Parameter parameter : method.getFormals()) {
 				lst.add(parameter.getName());
 			}
@@ -187,7 +188,7 @@ public class ShadowingChecks {
 			for (int i = 0; i < methodParms.size(); i++) {
 				lst.add(methodParms.get(i).getName());
 			}
-		}
+		}*/
 
 		return lst;
 	}
