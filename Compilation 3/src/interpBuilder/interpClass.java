@@ -53,9 +53,8 @@ public class interpClass {
 		this.methods = methods;
 	}
 
-	public void setVariableValue(String method_name, String variable_name,
-			Object[] value, int location) {
-		this.methods.get(method_name).setVariableValue(variable_name, value, location);
+	public void setVariableValue(String method_name, Variable variable, Object value) {
+		this.methods.get(method_name).setVariableValue(variable, value);
 	}
 
 	public boolean variableExists(String method_name, String variable_name, int scope) {

@@ -2,6 +2,7 @@ package interp;
 
 import interpBuilder.Method;
 import interpBuilder.Variable;
+import interpBuilder.Variable.VariableType;
 import interpBuilder.interpClass;
 
 import java.util.HashMap;
@@ -14,6 +15,9 @@ public class State {
 	int formal_index = 0;
 	int scope = 0;
 	int array_location;
+	boolean ref_to_array = false;
+	boolean assignment_stmt = false;
+	boolean new_array = false;
 	Object value;
 	Object[] values;
 	private HashMap<String, interpClass> classes;
@@ -68,10 +72,10 @@ public class State {
 		this.classes.get(class_name).addVariableToMethod(method_name, variable);
 	}
 
-	public String getVariableValue(String class_name, String method_name,
+	public Object getVariableValue(String class_name, String method_name,
 			Variable variable) {
 		return this.classes.get(class_name)
-				.getVariableValue(method_name, variable).toString();
+				.getVariableValue(method_name, variable);
 	}
 	
 	public Variable getVariable(String class_name, String method_name, String variable_name) {
@@ -79,11 +83,10 @@ public class State {
 	}
 
 	public void setVariableValue(String class_name, String method_name,
-			String variable_name, Object[] value, int location) {
-		this.classes.get(class_name).setVariableValue(method_name,
-				variable_name, value, location);
+			Variable variable, Object value) {
+		this.classes.get(class_name).setVariableValue(method_name, variable, value);
 	}
-
+	
 	public boolean variableExists(String class_name, String method_name,
 			String variable_name, int scope) {
 		return this.classes.get(class_name).variableExists(method_name,
@@ -96,5 +99,21 @@ public class State {
 	
 	public void deleteVariableFromScope() {
 		this.classes.get(class_name).getMethods().get(method_name).deleteVariablesFromScope(this.scope);
+	}
+	
+	public void setReturnType(VariableType type) {
+		this.classes.get(class_name).getMethods().get(method_name).setReturnType(type);
+	}
+	
+	public VariableType getReturnType() {
+		return this.classes.get(class_name).getMethods().get(method_name).getReturnType();
+	}
+	
+	public void setReturnTypeDimensions(int dimensions) {
+		this.classes.get(class_name).getMethods().get(method_name).setReturnTypeDimensions(dimensions);
+	}
+	
+	public int getReturnTypeDimensions() {
+		return this.classes.get(class_name).getMethods().get(method_name).getReturnTypeDimensions();
 	}
 }
