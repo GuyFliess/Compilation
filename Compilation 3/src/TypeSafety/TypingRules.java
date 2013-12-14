@@ -486,7 +486,7 @@ public class TypingRules implements Visitor {
 		} else {
 			throw new TypingRuleException(
 					String.format(
-							"invalid length operation, type %s is not an array",
+							"Invalid length operation, type %s is not an array",
 							type1), length.getLine());
 		}
 		return null;

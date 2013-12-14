@@ -94,21 +94,19 @@ public class BuildScope implements Visitor {
 			classScope.AddVar(field.getType(),field.getName());
 		}
 
-		for (DeclMethod method : icClass.getMethods()) {
-			if (method.getName().equalsIgnoreCase("main"))
-			{
-				MethodScope methodScope = (MethodScope) method.accept(this);
-				if (method instanceof DeclStaticMethod) {
-					classScope.addMethod((DeclStaticMethod) method, methodScope);
-					break;
-				}
-			}
-		
-		
-		}
+////		for (DeclMethod method : icClass.getMethods()) {
+////			if (method.getName().equalsIgnoreCase("main"))
+////			{
+////				MethodScope methodScope = (MethodScope) method.accept(this);
+////				if (method instanceof DeclStaticMethod) {
+////					classScope.addMethod((DeclStaticMethod) method, methodScope);
+////					break;
+////				}
+////			}
+////		}
 		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
-			if (method.getName().equalsIgnoreCase("main")) continue;
+//			if (method.getName().equalsIgnoreCase("main")) continue;
 			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);

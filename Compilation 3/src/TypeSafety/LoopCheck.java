@@ -33,7 +33,7 @@ public class LoopCheck {
 			throw new ContinueBreakException("'break'", statement.getLine());
 		}
 		if (StmtContinue.class.isInstance(statement)) {
-			throw new ContinueBreakException("'countinue'", statement.getLine());
+			throw new ContinueBreakException("'continue'", statement.getLine());
 		}
 /*		if (StmtWhile.class.isInstance(statement)) {
 
