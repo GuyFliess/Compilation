@@ -25,6 +25,10 @@ public class TypeSafetyCheckes {
 
 		} catch (ThisException e) {
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+			for (StackTraceElement trace : e.getStackTrace()) //TODO commetn out
+			{
+				System.out.println(trace);
+			}
 			throw new FoundException();
 		} catch (ContinueBreakException e) {
 			System.out.println(e.lineNum + ": semantic error; Use of "
