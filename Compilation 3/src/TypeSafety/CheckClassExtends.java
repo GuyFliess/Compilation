@@ -17,6 +17,8 @@ public class CheckClassExtends {
 			}
 			else if (!classLst.contains(icClass.getSuperClassName())) {
 				throw new ExtendsException("Class "+icClass.getName()+" cannot extend "+icClass.getSuperClassName()+", since it's not yet defined", icClass.getLine());
+			} else {
+				classLst.add(icClass.getName());
 			}
 		}
 	}

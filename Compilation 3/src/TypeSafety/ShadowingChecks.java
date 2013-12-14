@@ -42,6 +42,11 @@ public class ShadowingChecks {
 							+ " is shadowing a field with the same name",
 							field.getLine());
 				}
+				if (superClassMethodsNames.contains(field.getName())) {
+					throw new ShadowException("Field " + field.getName()
+							+ " is shadowing a field with the same name",
+							field.getLine());
+				}
 			}
 
 			lst.add(field.getName());
@@ -65,9 +70,9 @@ public class ShadowingChecks {
 				
 				if (superClassParams.contains(method.getName())) {
 					throw new ShadowException(
-							"method '"
+							"Method "
 									+ method.getName()
-									+ "' overloads a different field with the same name",
+									+ " is shadowing a field with the same name ",
 							method.getLine());
 				}
 			}
