@@ -44,6 +44,7 @@ public class StatementBlockScope extends Scope {
 			{
 				resultType = fatherScope.GetVariable(name);
 			}
+
 		}
 		
 		return resultType;

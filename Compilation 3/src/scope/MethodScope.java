@@ -10,49 +10,57 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import TypeSafety.TypingRuleException;
+
 
 public class MethodScope extends  StatementBlockScope {
-	public MethodScope(Scope scope, String name) {
+	public MethodScope(Scope scope, String name, MethodType methodType) {
 		super(scope, name);
-		// TODO Auto-generated constructor stub
+		this.methodType = methodType;
 	}
 	private Map<String, Type> parameters = new LinkedHashMap<>();
-//	private Map<String, Type> localVariables = new HashMap<>();
-//	private List<StatementBlockScope> stmtScopes = new ArrayList<>();
 	
 	public Map<String, Type> getParameters() { return parameters;}
-//	public Map<String, Type> getLocalVariables() {return localVariables;}
+	
+	public MethodType methodType; 
+	
+	public enum MethodType 
+	{
+		Static,
+		Virtual,
+	}
 	
 	
 	public void AddParameter(Parameter parameter)
 	{
 		parameters.put(parameter.getName(), parameter.getType());
 	}
-	
-//	public void AddLocalVariable(Type type)
-//	{
-//		localVariables.put(type.getDisplayName(), type);
-//	}
 
-//	public void AddStatementScope(StatementBlockScope stmtScope) {
-//		this.stmtScopes.add(stmtScope);
-//		
-//	}
-
-//	@Override
-//	public void AddVar(Object type) {
-//		LocalVariable var =(LocalVariable) type;
-//		localVariables.put(var.getName(), var.getType());
-////		localVariables.put(type.getDisplayName(), type);
-//	}
 	
 	@Override
 	public Type GetVariable(String name)  {
 		
+		//search parameters
 		Type resultType = parameters.get(name);
+		// search local vars
 		if (resultType == null)
 		{
 			resultType = super.GetVariable(name);
+		}
+		//search fields
+		Scope currentScope = fatherScope;
+		while (!(currentScope instanceof ClassScope)) currentScope = fatherScope;
+		ClassScope classScope = (ClassScope) currentScope;
+		if (classScope.getFields().containsKey(name))
+		{
+			if (methodType.equals(MethodType.Static))
+			{
+				throw new TypingRuleException("Use a of field inside a static method is not allowed",-1);
+			}
+			if (methodType.equals(MethodType.Virtual))
+			{
+				resultType = classScope.getFields().get(name);
+			}
 		}
 		
 		return resultType;
@@ -60,6 +68,32 @@ public class MethodScope extends  StatementBlockScope {
 	
 	@Override
 	public MethodTypeWrapper GetMethodWithoutName() {
-		return ((ClassScope) fatherScope).GetMethodStaticOrVirtual(getName());		
+		return GetMethod(getName());
+		//return ((ClassScope) fatherScope).GetMethodStaticOrVirtual(getName());		
+	}
+	
+	@Override
+	public MethodTypeWrapper GetMethod(String method) throws TypingRuleException {
+		MethodTypeWrapper resultMethod;
+		if (!(fatherScope instanceof ClassScope))
+		{
+			throw new Error("Internal error, method scope cann't be nested not in class scope");
+		}
+		ClassScope classScope = (ClassScope) fatherScope;
+//		if (classScope.getStaticMethodScopes().containsKey(method))
+//		{
+//			return classScope.getStaticMethodScopes().get(method);
+//		}
+		resultMethod = classScope.getStaticMethod(method);
+		if (resultMethod != null ) return resultMethod;
+		resultMethod = classScope.getVirtualMethod(method);		
+		if (resultMethod != null) {
+			if (methodType.equals(MethodType.Static))
+			{
+				throw new TypingRuleException("Calling a local virtual method from inside a static method is not allowed", -1);
+			}
+			return resultMethod;
+		}
+		return fatherScope.GetMethod(method);
 	}
 }

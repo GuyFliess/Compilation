@@ -38,7 +38,7 @@ public class TypeSafetyCheckes {
 			throw new FoundException();
 		} catch (FoundException e) {
 			throw new FoundException();
-		}
+		} 
 
 	}
 

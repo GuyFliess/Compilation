@@ -27,6 +27,7 @@ import ic.ast.stmt.StmtIf;
 import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
 import scope.*;
+import scope.MethodScope.MethodType;
 
 public class BuildScope implements Visitor {
 	Scope currentScope;
@@ -94,7 +95,20 @@ public class BuildScope implements Visitor {
 		}
 
 		for (DeclMethod method : icClass.getMethods()) {
+			if (method.getName().equalsIgnoreCase("main"))
+			{
+				MethodScope methodScope = (MethodScope) method.accept(this);
+				if (method instanceof DeclStaticMethod) {
+					classScope.addMethod((DeclStaticMethod) method, methodScope);
+					break;
+				}
+			}
+		
+		
+		}
+		for (DeclMethod method : icClass.getMethods()) {
 			currentScope = classScope;
+			if (method.getName().equalsIgnoreCase("main")) continue;
 			MethodScope methodScope = (MethodScope) method.accept(this);
 			if (method instanceof DeclStaticMethod) {
 				classScope.addMethod((DeclStaticMethod) method, methodScope);
@@ -124,7 +138,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclVirtualMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope,
-				method.getName());
+				method.getName(),MethodType.Virtual);
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -145,7 +159,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclStaticMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope,
-				method.getName());
+				method.getName(),MethodType.Static);
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);
@@ -164,7 +178,7 @@ public class BuildScope implements Visitor {
 	@Override
 	public Object visit(DeclLibraryMethod method) {
 		MethodScope methodscope = new MethodScope(currentScope,
-				method.getName());
+				method.getName(),MethodType.Static);
 		method.SetScope(methodscope);
 		currentScope = methodscope;
 		method.getType().accept(this);

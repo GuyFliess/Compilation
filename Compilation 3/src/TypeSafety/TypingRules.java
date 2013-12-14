@@ -263,7 +263,15 @@ public class TypingRules implements Visitor {
 	public Object visit(RefVariable location) {
 
 		Scope scope = location.GetScope();
-		Type var = scope.GetVariable(location.getName());
+		Type var ;
+		try 
+		{
+			var = scope.GetVariable(location.getName());
+		}
+		catch (TypingRuleException e) 
+		{
+			throw new TypingRuleException(e.errorMSG, location.getLine());
+		}
 		if (var == null) {
 			throw new TypingRuleException(String.format(
 					"%s not found in symbol table", location.getName()),
@@ -327,13 +335,9 @@ public class TypingRules implements Visitor {
 			argument.accept(this);
 		}
 
-		ClassScope classScope = globalScope.getClassScope(call.getClassName());
-		if (classScope == null) {
-			throw new TypingRuleException(String.format(
-					"Class %s doesn't exist", call.getClassName()),
-					call.getLine());
-		}
-		if (!classScope.getStaticMethodScopes().containsKey(call.getMethod())) {
+		ClassScope classScope = globalScope.getClassScope(call.getClassName());		
+		if ((classScope == null) || 
+				(!classScope.getStaticMethodScopes().containsKey(call.getMethod()))) {
 			throw new TypingRuleException(String.format(
 					"Method %s doesn't exist", call.getMethod()),
 					call.getLine());
@@ -383,17 +387,27 @@ public class TypingRules implements Visitor {
 				throw new TypingRuleException(String.format(
 						"%s is not a method", call.getMethod()), call.getLine());
 			methodInClass = classScope.GetMethod(call.getMethod());
-			className = "TODO"; //TODO
+
 			if (methodInClass == null)
 				throw new TypingRuleException(String.format(
 						"Method %s.%s not found in type table",
 						type.getDisplayName(), call.getMethod()),
 						call.getLine());
 		} else {
+			try 
+			{
 			methodInClass = call.GetScope().GetMethod(call.getMethod());
+			}
+			catch (TypingRuleException e)
+			{
+				throw new TypingRuleException(e.errorMSG, call.getLine());
+			}
+			Scope currentScope =  call.GetScope();
+			while (!(currentScope instanceof ClassScope)) currentScope = currentScope.fatherScope;
+			className = currentScope.getName();
 			if (methodInClass == null)
 				throw new TypingRuleException(String.format(
-						"%s not found in symbol table", call.getObject()),
+						"%s not found in symbol table", call.getMethod()),
 						call.getLine());
 		}
 

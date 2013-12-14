@@ -26,7 +26,7 @@ public class PrintScope {
 	public void Print(GlobalScope globalScope) {
 		System.out.println("Global Symbol Table");
 		for (String name : globalScope.GetclassesScopes().keySet()) {
-			System.out.println("    Class: " + name);
+			System.out.println("    Class:  " + name);
 		}
 		System.out.println();
 		for (ClassScope classScope : globalScope.GetclassesScopes().values()) {
@@ -114,7 +114,7 @@ public class PrintScope {
 	private void print(MethodScope bodyScope) {
 		
 		System.out.println(String.format(
-				"Method Symbol Table: %s (parent = %s)", bodyScope.getName(),
+				"Method Symbol Table: %s  (parent = %s)", bodyScope.getName(),
 				bodyScope.fatherScope.getName()));
 
 		// print the symbol table
@@ -141,7 +141,7 @@ public class PrintScope {
 	private void print(StatementBlockScope blockScope) {
 		// TODO Auto-generated method stub
 		System.out.println(String.format(
-				"Statement Block Symbol Table:  %s(parent = %s)",
+				"Statement Block Symbol Table: %s  (parent = %s)",
 				blockScope.getName(), blockScope.fatherScope.getName())); 
 		Map<String, Type> localVariables = blockScope.getLocalVariables();
 		for (String name : localVariables.keySet()) {

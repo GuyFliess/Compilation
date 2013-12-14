@@ -1,5 +1,6 @@
 package scope;
 
+import TypeSafety.TypingRuleException;
 import ic.ast.decl.Type;
 
 public abstract class Scope {
@@ -32,7 +33,7 @@ public abstract class Scope {
 	
 	public abstract Type GetVariable(String name);
 
-	public abstract MethodTypeWrapper GetMethod(String method) ;
+	public abstract MethodTypeWrapper GetMethod(String method) throws TypingRuleException ;
 
 	public abstract MethodTypeWrapper GetMethodWithoutName() ;
 

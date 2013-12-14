@@ -1,7 +1,6 @@
 package scope;
 
 
-import ic.ast.decl.DeclField;
 import ic.ast.decl.DeclLibraryMethod;
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
@@ -90,14 +89,15 @@ public class ClassScope extends Scope {
 
 	@Override
 	public MethodTypeWrapper GetMethod(String method) {
-		if (virtualMethodScopes.containsKey(method))
-		{
-			return virtualMethodScopes.get(method);
-		}
-		else
-		{
-			return fatherScope.GetMethod(method);
-		}		
+//		if (virtualMethodScopes.containsKey(method))
+//		{
+//			return virtualMethodScopes.get(method);
+//		}
+//		else
+//		{
+//			return fatherScope.GetMethod(method);
+//		}
+		return getVirtualMethod(method);
 	}
 
 	@Override
@@ -120,5 +120,34 @@ public class ClassScope extends Scope {
 		}
 		return null;
 	}
-	
+
+	public MethodTypeWrapper getStaticMethod(String method) {
+		if (getStaticMethodScopes().containsKey(method))
+		{
+			return getStaticMethodScopes().get(method);
+		}
+		else 
+		{
+			if ((fatherScope instanceof ClassScope ))
+			{
+				return ((ClassScope) fatherScope).getStaticMethod(method); 
+			}
+		}
+		return null;
+	}
+
+	public MethodTypeWrapper getVirtualMethod(String method) {
+		if (getVirtualMethodScopes().containsKey(method))
+		{
+			return getVirtualMethodScopes().get(method);
+		}
+		else 
+		{
+			if ((fatherScope instanceof ClassScope ))
+			{
+				return ((ClassScope) fatherScope).getVirtualMethod(method); 
+			}
+		}
+		return null;
+	}
 }

@@ -43,7 +43,7 @@ public class Main {
 			Node programAst = calc.process(programTokens); // process program
 			Program p = (Program) programAst;
 
-			System.out.println(programAst.accept(printer));
+			//System.out.println(programAst.accept(printer));
 			int interpStartLocation = 1;
 			if (args.length > 1) {
 				interpStartLocation = 1;
