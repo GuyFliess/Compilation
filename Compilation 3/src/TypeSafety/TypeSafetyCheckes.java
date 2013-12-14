@@ -16,33 +16,33 @@ public class TypeSafetyCheckes {
 		TypingRules typingRulesChecker = new TypingRules(globalScope);
 		ThisCheck thisCheck = new ThisCheck();
 
-		try {
+//		try {
 			loopCheck.ContBreak(p);
 			mainCheck.CountMain(p);
 			scopeCheck.CheckScopeRules(p);
 			p.accept(typingRulesChecker);
 			thisCheck.CheckThis(p);
 
-		} catch (ThisException e) {
-			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
-			for (StackTraceElement trace : e.getStackTrace()) //TODO commetn out
-			{
-				System.out.println(trace);
-			}
-			throw new FoundException();
-		} catch (ContinueBreakException e) {
-			System.out.println(e.lineNum + ": semantic error; Use of "
-					+ e.errorMSG + " statement outside of loop not allowed");
-			throw new FoundException();
-		} catch (MainException e) {
-			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
-			throw new FoundException();
-		} catch (TypeSafetyException e) {
-			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
-			throw new FoundException();
-		} catch (FoundException e) {
-			throw new FoundException();
-		} 
+//		} catch (ThisException e) {
+//			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+//			for (StackTraceElement trace : e.getStackTrace()) //TODO commetn out
+//			{
+//				System.out.println(trace);
+//			}
+//			throw new FoundException();
+//		} catch (ContinueBreakException e) {
+//			System.out.println(e.lineNum + ": semantic error; Use of "
+//					+ e.errorMSG + " statement outside of loop not allowed");
+//			throw new FoundException();
+//		} catch (MainException e) {
+//			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+//			throw new FoundException();
+//		} catch (TypeSafetyException e) {
+//			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+//			throw new FoundException();
+//		} catch (FoundException e) {
+//			throw new FoundException();
+//		} 
 
 	}
 

@@ -97,7 +97,10 @@ public class Main {
 			//return;
 		} catch (TypingRuleException e) {
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
-			
+//			for (StackTraceElement element : e.getStackTrace()) {
+//				System.err.println(element);
+//				
+//			}
 		}
 		catch (Throwable e) {
 			System.err.println(e);
