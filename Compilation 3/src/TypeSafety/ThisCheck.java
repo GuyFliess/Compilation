@@ -83,14 +83,16 @@ public class ThisCheck {
 	}
 
 	private void CheckThisVirtual(List<DeclMethod> list, StmtCall statement) {
-		if (!ExistsCallMethod(list, statement.getCall().getMethod())) {
-			throw new ThisException("Method " + statement.getClass().getName()
-					+ "." + statement.getCall().getMethod()
-					+ " not found in type table", statement.getLine());
+		if (statement.getCall().getClass().getName().equals("this")) {
+			if (!ExistsCallMethod(list, statement.getCall().getMethod())) {
+				throw new ThisException("Method "
+						+ statement.getClass().getName() + "."
+						+ statement.getCall().getMethod()
+						+ " not found in type table", statement.getLine());
+			}
 		}
 
 	}
-
 
 	private boolean ExistsCallMethod(List<DeclMethod> list, String method) {
 		for (int i = 0; i < list.size(); i++) {
@@ -141,7 +143,7 @@ public class ThisCheck {
 	}
 
 	private void CheckThisStatic(StmtCall statement) throws ThisException {
-		if (VirtualCall.class.isInstance(statement.getCall())) {
+		if (VirtualCall.class.isInstance(statement.getCall()) & statement.getCall().getClass().getName().equals("this")) {
 			throw new ThisException(
 					"Use of 'this' expression inside static method is not allowed",
 					statement.getLine());
