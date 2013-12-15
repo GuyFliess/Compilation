@@ -380,7 +380,8 @@ public class TypingRules implements Visitor {
 						call.getLine());
 			}
 			className = ((ClassType) type).getClassName();
-			Scope scope = type.GetScope();
+//			Scope scope = type.GetScope();
+			Scope scope = globalScope.getClassScope(className);
 			if (scope instanceof ClassScope) {
 				classScope = (ClassScope) scope;
 			} else
