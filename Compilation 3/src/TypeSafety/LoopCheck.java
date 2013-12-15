@@ -30,14 +30,11 @@ public class LoopCheck {
 	private void ContBreak(Statement statement) throws ContinueBreakException {
 
 		if (StmtBreak.class.isInstance(statement)) {
-			throw new ContinueBreakException("'break'", statement.getLine());
+			throw new ContinueBreakException("Use of 'break' statement outside of loop not allowed", statement.getLine());
 		}
 		if (StmtContinue.class.isInstance(statement)) {
-			throw new ContinueBreakException("'continue'", statement.getLine());
+			throw new ContinueBreakException("Use of 'continue' statement outside of loop not allowed", statement.getLine());
 		}
-/*		if (StmtWhile.class.isInstance(statement)) {
-
-		}*/
 		if (StmtBlock.class.isInstance(statement)) {
 			StmtBlock block = (StmtBlock) statement;
 			for (Statement stmt : block.getStatements()) {
