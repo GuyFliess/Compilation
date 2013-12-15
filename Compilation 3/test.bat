@@ -1,4 +1,4 @@
-@echo off
+
 cd pa-3-input
 for %%i in (*) do java -cp ..\bin;..\gearley.jar Main %%i >  ..\output\%%i
 cd ..\output

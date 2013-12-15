@@ -1,5 +1,8 @@
 package scopeBuilder;
 
+import java.util.Map;
+
+import TypeSafety.TypeSafetyException;
 import TypeSafety.TypingRuleException;
 import ic.ast.Visitor;
 import ic.ast.decl.*;
@@ -43,7 +46,14 @@ public class BuildScope implements Visitor {
 			library.SetScope(globalScope);
 			ClassScope libScope = (ClassScope) library.accept(this);
 			globalScope.AddClassScope(libScope, library);
+			Map<String, ClassScope> classes= globalScope.GetclassesScopes();
+			if ((classes.size() != 1 ) ||
+					(!classes.containsKey("Library")))
+			{
+				throw new TypeSafetyException("library methods are only defined in the library class, which is named Library", library.getLine());
+			}
 		}
+		
 		program.SetScope(globalScope);
 		for (DeclClass icClass : program.getClasses()) {
 			currentScope = globalScope;

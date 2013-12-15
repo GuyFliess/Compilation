@@ -95,21 +95,20 @@ public class Main {
 			}
 
 		} catch (FoundException e) {
-			System.out.println("test");
+			
 			//return;
 		} catch (TypeSafetyException e) {
 			System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
-			for (StackTraceElement element : e.getStackTrace()) { //TODO comment out
-				System.err.println(element);
-				
-			}
+//			for (StackTraceElement element : e.getStackTrace()) { //TODO comment out
+//				System.err.println(element);				
+//			}
 		}
 		catch (Throwable e) {
 			System.err.println(e);
-//			for (StackTraceElement element : e.getStackTrace()) {
-//				System.err.println(element);
-//				
-//			}
+			for (StackTraceElement element : e.getStackTrace()) {
+				System.err.println(element);
+				
+			}
 			//return;
 		}
 
