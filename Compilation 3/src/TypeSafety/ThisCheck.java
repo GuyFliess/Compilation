@@ -143,10 +143,15 @@ public class ThisCheck {
 	}
 
 	private void CheckThisStatic(StmtCall statement) throws ThisException {
-		if (VirtualCall.class.isInstance(statement.getCall()) & statement.getCall().getClass().getName().equals("this")) {
-			throw new ThisException(
-					"Use of 'this' expression inside static method is not allowed",
-					statement.getLine());
+		
+		if (VirtualCall.class.isInstance(statement.getCall())) {
+			VirtualCall call = (VirtualCall) statement.getCall();
+			String s = call.getObject().toString();
+			if (call.getObject().toString().contains("This")) {
+				throw new ThisException(
+						"Use of 'this' expression inside static method is not allowed",
+						statement.getLine());
+			}
 		}
 
 	}
