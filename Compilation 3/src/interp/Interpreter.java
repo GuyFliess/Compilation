@@ -64,6 +64,11 @@ public class Interpreter implements Visitor {
 		for (DeclClass decl_class : program.getClasses()) {
 			this.state.addClass(new interpClass(decl_class.getName()));
 		}
+		try {
+			checkClassExists();
+		} catch (RuntimeError e) {
+			System.err.println(e.getMessage());
+		}
 		for (DeclClass decl_class : program.getClasses()) {
 			if (decl_class.getName().equals(this.state.class_name)) {
 				try {
@@ -87,6 +92,11 @@ public class Interpreter implements Visitor {
 		for (DeclMethod decl_method : icClass.getMethods()) {
 			method = new Method(decl_method.getName());
 			this.state.addMethodToClass(this.state.class_name, method);
+		}
+		try {
+			checkMethodExists();
+		} catch (RuntimeError e) {
+			System.err.println(e.getMessage());
 		}
 		for (DeclMethod decl_method : icClass.getMethods()) {
 			if (decl_method.getName().equals(this.state.method_name)) {
@@ -144,9 +154,9 @@ public class Interpreter implements Visitor {
 	public Object visit(Parameter formal) {
 		VariableType variable_type = (VariableType) formal.getType().accept(
 				this);
-		checkParameterType(formal, variable_type);
 		Object value;
 		value = this.state.arguments[this.state.formal_index++];
+		checkParameterType(formal, variable_type, value.toString());
 		Variable variable = new Variable(variable_type,
 				VariableLocation.PARAMETER, formal.getName(), this.state.scope,
 				false, 1, value);
@@ -422,6 +432,10 @@ public class Interpreter implements Visitor {
 						"none", this.state.scope, false, 1, value);
 				break;
 			case DIVIDE:
+				if (second_value == 0) {
+					throw new RuntimeError(
+							"Invalid binary operation: division by 0.");
+				}
 				value = (Integer) first_value / second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
 						"none", this.state.scope, false, 1, value);
@@ -531,6 +545,21 @@ public class Interpreter implements Visitor {
 
 	/* Checkers */
 
+	private void checkClassExists() throws RuntimeError {
+		if (!this.state.checkClassExists()) {
+			throw new RuntimeError("Invalid class name: class "
+					+ this.state.class_name + " doesn't exist.");
+		}
+	}
+
+	private void checkMethodExists() throws RuntimeError {
+		if (!this.state.checkMethodExists()) {
+			throw new RuntimeError("Invalid method name: method "
+					+ this.state.method_name + " doesn't exist in class "
+					+ this.state.class_name + ".");
+		}
+	}
+
 	private void checkNewArrayInitialization(Variable variable)
 			throws RuntimeError {
 		if (!this.state.new_array) {
@@ -571,8 +600,8 @@ public class Interpreter implements Visitor {
 		}
 	}
 
-	private void checkParameterType(Parameter formal, VariableType variable_type)
-			throws RuntimeError {
+	private void checkParameterType(Parameter formal,
+			VariableType variable_type, String value) throws RuntimeError {
 		if (variable_type != VariableType.INT
 				&& variable_type != VariableType.STRING) {
 			throw new RuntimeError(
@@ -582,6 +611,14 @@ public class Interpreter implements Visitor {
 		if (formal.getType().getArrayDimension() > 0) {
 			throw new RuntimeError(
 					"Invalid parameter: parameters cannot be arrays.");
+		}
+		if (variable_type == VariableType.INT) {
+			try {
+				Integer.parseInt(value);
+			} catch (NumberFormatException e) {
+				throw new RuntimeError("Invalid input parameter: \"" + value
+						+ "\" cannot be an int.");
+			}
 		}
 	}
 

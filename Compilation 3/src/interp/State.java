@@ -42,6 +42,10 @@ public class State {
 	public void setClass_name(String class_name) {
 		this.class_name = class_name;
 	}
+	
+	public boolean checkClassExists() {
+		return this.classes.containsKey(class_name);
+	}
 
 	public String getMethod_name() {
 		return method_name;
@@ -49,6 +53,10 @@ public class State {
 
 	public void setMethod_name(String method_name) {
 		this.method_name = method_name;
+	}
+	
+	public boolean checkMethodExists() {
+		return this.classes.get(class_name).getMethods().containsKey(method_name);
 	}
 
 	public void addClass(interpClass class_instance) {
