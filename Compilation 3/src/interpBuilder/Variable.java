@@ -20,17 +20,7 @@ public class Variable {
 
 	public enum VariableType {
 
-		BOOLEAN("boolean"), CLASS(""), INT("int"), STRING("string");
-
-		public static VariableType find(String variable_type) {
-			return null;
-			// for (BinaryOp.BinaryOps x : BinaryOp.BinaryOps.values()) {
-			// if (x.toString().equals(op))
-			// return x;
-			// }
-			// throw new Error("internal error; binary operator not found: " +
-			// op);
-		}
+		BOOLEAN("boolean"), CLASS(""), INT("int"), STRING("string"), NULL("null");
 
 		private String variable_type;
 
@@ -51,7 +41,9 @@ public class Variable {
 	private boolean array;
 	private int length;
 	private VariableType type;
-	private Object[] value = null;
+	private Object value;
+	private Variable[] variables;
+	private int index;
 	private String class_name;
 
 	public Variable(VariableType type, VariableLocation location, String name,
@@ -63,71 +55,156 @@ public class Variable {
 		this.array = array;
 		this.length = length;
 		this.class_name = "";
+		this.index = 0;
 		if (array) {
-			this.value = new Object[length];
-		}
-		else {
-			this.value = new Object[1];
-			this.length = 1;
+			this.value = null;
+			this.variables = new Variable[length];
+			for (int i = 0; i < this.variables.length; i++) {
+				this.variables[i] = new Variable(type, location, name, scope, false, 0);
+			}
+		} else {
+			if (location == VariableLocation.FIELD) {
+				switch (type) {
+				case INT:
+					this.value = new Integer(0);
+					break;
+				case BOOLEAN:
+					this.value = new Boolean(false);
+					break;
+				case STRING:
+					this.value = new String("");
+					break;
+				case CLASS:
+					this.value = null;
+					break;
+				default:
+					throw new RuntimeError("Invalid field type.");
+				}
+				this.setInitialized();
+			} else {
+				this.value = null;
+				this.length = 0;
+			}
 		}
 	}
 
 	public Variable(VariableType type, VariableLocation location, String name,
-			int scope, boolean array, int length, Object[] value) {
+			int scope, boolean array, int length, Object value) {
 		this(type, location, name, scope, array, length);
 		switch (type) {
 		case INT:
 			try {
-				this.value = new Integer[this.length];
-				for (int i = 0; i < this.value.length; i++) {
-					this.value[i] = Integer.parseInt(value[i].toString());
-				}
+				this.value = Integer.parseInt(value.toString());
 				break;
 			} catch (RuntimeError error) {
 				System.err.printf(
-						"Error: variable is of type int, while value is %s",
+						"Error: variable is of type int, while value is of type %s",
 						value.toString());
 			}
 		case STRING:
-			this.value = new String[this.length];
-			for (int i = 0; i < this.value.length; i++) {
-				this.value[i] = value[i].toString();
+			try {
+				this.value = value.toString();
+				break;
+			} catch (RuntimeError error) {
+				System.err.printf(
+						"Error: variable is of type string, while value is of type %s",
+						value.toString());
 			}
-			break;
 		case BOOLEAN:
-			this.value = new Boolean[this.length];
-			for (int i = 0; i < this.value.length; i++) {
-				this.value[i] = value[i].toString().equals("true") ? true
-						: false;
+			try {
+				this.value = (Boolean) (value.toString() == "true" ? true : false);
+				break;
+			} catch (RuntimeError error) {
+				System.err.printf(
+						"Error: variable is of type boolean, while value is of type %s",
+						value.toString());
 			}
-			break;
 		default:
 			break;
 		}
 		setInitialized();
 	}
-	
+
 	public void setClass(String class_name) {
 		if (this.type == VariableType.CLASS) {
 			this.class_name = class_name;
 		}
 	}
-	
+
 	public String getClassName() {
 		return this.class_name;
 	}
-
-	public void setVariableToArray(int length) {
+	
+	public void initializeArray(int length) {
 		this.array = true;
 		this.length = length;
-		this.isInitialized = true;
-		this.value = new Object[length];
+		this.setInitialized();
+		Object value = null;
+		switch (type) {
+		case INT:
+			this.variables = new Variable[length];
+			value = new Integer(0);
+			break;
+		case BOOLEAN:
+			this.variables = new Variable[length];
+			value = new Boolean(false);
+			break;
+		case STRING:
+			this.variables = new Variable[length];
+			value = new Boolean(false);
+			break;
+		case CLASS:
+			this.value = new Variable[length];
+			break;
+		default:
+			throw new RuntimeError("Invalid field type.");
+		}
+		for (int i = 0; i < this.variables.length; i++) {
+			this.variables[i] = new Variable(type, location, name, scope, false, 0, value);
+			this.variables[i].index = this.index++;
+		}
+		this.setInitialized();
+	}
+	
+	public void setValue(Object value) {
+		switch (type) {
+		case INT:
+			try {
+				this.value = Integer.parseInt(value.toString());
+				break;
+			} catch (RuntimeError error) {
+				System.err.printf(
+						"Error: variable is of type int, while value is of type %s",
+						value.toString());
+			}
+		case STRING:
+			try {
+				this.value = value.toString();
+				break;
+			} catch (RuntimeError error) {
+				System.err.printf(
+						"Error: variable is of type string, while value is of type %s",
+						value.toString());
+			}
+		case BOOLEAN:
+			try {
+				this.value = (Boolean) (value.toString() == "true" ? true : false);
+				break;
+			} catch (RuntimeError error) {
+				System.err.printf(
+						"Error: variable is of type boolean, while value is of type %s",
+						value.toString());
+			}
+		default:
+			break;
+		}
+		this.setInitialized();
 	}
 
 	public int getLength() {
 		return this.length;
 	}
-	
+
 	public boolean isArray() {
 		return this.array;
 	}
@@ -144,7 +221,7 @@ public class Variable {
 		return type;
 	}
 
-	public Object[] getValue() {
+	public Object getValue() {
 		if (isInitialized()) {
 			return value;
 		}
@@ -171,117 +248,20 @@ public class Variable {
 		this.type = type;
 	}
 
-	public void setValue(Object[] value, int location) {
-		switch (type) {
-		case INT:
-			try {
-				if (location < 0) {
-					for (int i = 0; i < this.value.length; i++) {
-						this.value[i] = Integer.parseInt(value[i].toString());
-					}
-				} else {
-					this.value[location] = Integer
-							.parseInt(value[0].toString());
-				}
-				break;
-			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type int, while value is %s",
-						value.toString());
-			}
-		case STRING:
-			if (location < 0) {
-				for (int i = 0; i < this.value.length; i++) {
-					this.value[i] = value[i].toString();
-				}
-			} else {
-				this.value[location] = value[0].toString();
-			}
-			break;
-		case BOOLEAN:
-			if (location < 0) {
-				for (int i = 0; i < this.value.length; i++) {
-					this.value[i] = value[i].toString().equals("true") ? true
-							: false;
-				}
-			} else {
-				this.value[location] = value[0].toString().equals("true") ? true
-						: false;
-			}
-			break;
-		default:
-			break;
-		}
-		this.setInitialized();
-	}
-
-	// public void setValue(Object[] value) {
-	// if (this.dimensions == 0) {
-	// throw new RuntimeError("Error: variable " + this.name
-	// + " is not an array");
-	// }
-	// switch (type) {
-	// case INT:
-	// try {
-	// for (int i = 0; i < values.length; i++) {
-	// this.values[i] = Integer.parseInt(value[i].toString());
-	// }
-	// break;
-	// } catch (RuntimeError error) {
-	// System.err.printf(
-	// "Error: variable is of type int, while value is %s",
-	// value.toString());
-	// }
-	// case STRING:
-	// for (int i = 0; i < values.length; i++) {
-	// this.values[i] = value[i].toString();
-	// }
-	// break;
-	// case BOOLEAN:
-	// for (int i = 0; i < values.length; i++) {
-	// this.values[i] = value[i].toString().equals("true") ? true
-	// : false;
-	// }
-	// break;
-	// default:
-	// break;
-	// }
-	// this.setInitialized();
-	// }
-	//
-	// public void setValue(Object value) {
-	// if (this.dimensions != 0) {
-	// throw new RuntimeError("Error: variable " + this.name
-	// + " is an array");
-	// }
-	// switch (type) {
-	// case INT:
-	// try {
-	// this.value = Integer.parseInt(value.toString());
-	// break;
-	// } catch (RuntimeError error) {
-	// System.err.printf(
-	// "Error: variable is of type int, while value is %s",
-	// value.toString());
-	// }
-	// case STRING:
-	// this.value = value.toString();
-	// break;
-	// case BOOLEAN:
-	// this.value = value.toString().equals("true") ? true : false;
-	// break;
-	// default:
-	// break;
-	// }
-	// this.setInitialized();
-	// }
-
 	public int getScope() {
 		return scope;
 	}
 
 	public void setScope(int scope) {
 		this.scope = scope;
+	}
+	
+	public Variable[] getVariables() {
+		return this.variables;
+	}
+	
+	public int getIndex() {
+		return index;
 	}
 
 }
