@@ -5,6 +5,6 @@ cd ..\output
 for %%i in (*) do move /y  %%i %%~ni.sym
 cd ..
 cd pa-3-output
-for %%i in (*) do fc %%i ..\output\%%i > ..\logs\%%i
+for %%i in (*) do fc %%i ..\output\%%i 
 cd ..
 echo !!!ALL DONE!!!

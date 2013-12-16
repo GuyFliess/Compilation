@@ -40,6 +40,9 @@ public abstract class DeclMethod extends Node {
 		this.statements = statements;
 	}
 
+	/*
+	 * type returned by method
+	 */
 	public Type getType() {
 		return type;
 	}

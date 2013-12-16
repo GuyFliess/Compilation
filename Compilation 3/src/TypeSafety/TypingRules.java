@@ -80,12 +80,17 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		
+		boolean hasReturn = false;
 		for (Parameter formal : method.getFormals())
 			formal.accept(this);
 		for (Statement statement : method.getStatements())
-			statement.accept(this);
-		
+		{
+			hasReturn |= (boolean) statement.accept(this);
+		}
+		if (!hasReturn && !isOfType(method.getType(),DataType.VOID))
+		{
+			throw new TypeSafetyException(String.format("non void method %s dosen't return value in every control path ",method.getName()), method.getLine());
+		}
 //		met
 //		MethodTypeWrapper methodWrraper = new MethodTypeWrapper(method.getName(), returnType, parameters, scope)
 		// TODO Auto-generated method stub
@@ -94,12 +99,15 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(DeclStaticMethod method) {
-		// TODO Auto-generated method stub
+		boolean hasReturn = false;
 		for (Parameter formal : method.getFormals())
 			formal.accept(this);
 		for (Statement statement : method.getStatements())
-			statement.accept(this);
-		
+			hasReturn |= (boolean)statement.accept(this);
+		if (!hasReturn && !isOfType(method.getType(),DataType.VOID))
+		{
+			throw new TypeSafetyException(String.format("non void method %s dosen't return value in every control path ",method.getName()), method.getLine());
+		}
 		return null;
 	}
 
@@ -117,19 +125,19 @@ public class TypingRules implements Visitor {
 		// TODO Auto-generated method stub
 		formal.getType().accept(this);
 		formal.typeAtcheck = formal.getType();
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(PrimitiveType type) {
 		// TODO Auto-generated method stub
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(ClassType type) {
 		// TODO Auto-generated method stub
-		return null;
+		return false;
 	}
 
 	@Override
@@ -146,15 +154,15 @@ public class TypingRules implements Visitor {
 					variable.typeAtcheck.getDisplayName()),
 					assignment.getLine());
 		assignment.typeAtcheck = variable.typeAtcheck;
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(StmtCall callStatement) {
 		callStatement.getCall().accept(this);
 
-		// TODO Auto-generated method stub
-		return null;
+
+		return false;
 	}
 
 	@Override
@@ -184,57 +192,59 @@ public class TypingRules implements Visitor {
 			throw new TypingRuleException(String.format("Return statement is not of type %s",method.getReturnType().getDisplayName()),
 					returnStatement.getLine());
 		}
-
-		// TODO Auto-generated method stub
-		return null;
+		
+		return true;
 	}
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
+		boolean hasReturn = false;
 		ifStatement.getCondition().accept(this);
-		ifStatement.getOperation().accept(this);
+		boolean thenHasReturn = (boolean) ifStatement.getOperation().accept(this);
 		if (ifStatement.hasElse())
-			ifStatement.getElseOperation().accept(this);
+		{
+			hasReturn =((thenHasReturn) && (boolean)  ifStatement.getElseOperation().accept(this));
+		}
 		if (!isOfType(ifStatement.getCondition().typeAtcheck, DataType.BOOLEAN)) {
 			throw new TypingRuleException(
 					"Non boolean condition for if statement",
 					ifStatement.getLine());
 		}
 
-		return null;
+		return hasReturn;
 	}
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
 		whileStatement.getCondition().accept(this);
-		whileStatement.getOperation().accept(this);
+		boolean hasreturn = (boolean) whileStatement.getOperation().accept(this);
 		if (!isOfType(whileStatement.getCondition().typeAtcheck,
 				DataType.BOOLEAN)) {
 			throw new TypingRuleException(
 					"Non boolean condition for while statement",
 					whileStatement.getLine());
 		}
-		return null;
+		return hasreturn;
 	}
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
 
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(StmtContinue continueStatement) {
 
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(StmtBlock statementsBlock) {
-
+		boolean hasReturn = false;
 		for (Statement statement : statementsBlock.getStatements())
-			statement.accept(this);
-		return null;
+			hasReturn |= (boolean) statement.accept(this);
+		return hasReturn;
 	}
 
 	@Override
@@ -256,7 +266,7 @@ public class TypingRules implements Visitor {
 		localVariable.GetScope().AddVar(localVariable.getType(),
 				localVariable.getName());
 		// localVariable.typeAtcheck = localVariable.getType(); // can remove
-		return null;
+		return false;
 	}
 
 	@Override
@@ -277,7 +287,8 @@ public class TypingRules implements Visitor {
 					"%s not found in symbol table", location.getName()),
 					location.getLine());
 		}
-		return location.typeAtcheck = var;
+		location.typeAtcheck = var;
+		return false;
 	}
 
 	@Override
@@ -294,7 +305,7 @@ public class TypingRules implements Visitor {
 		}
 		Type result = classScope.getFields().get(location.getField());
 		location.typeAtcheck = result;
-		return null;
+		return false;
 	}
 
 	@Override
@@ -326,7 +337,7 @@ public class TypingRules implements Visitor {
 		} else
 			throw new Error("internal error");
 		location.typeAtcheck = resultType;// make new type of type of
-		return null;
+		return false;
 	}
 
 	@Override
@@ -360,7 +371,7 @@ public class TypingRules implements Visitor {
 			}
 
 		call.typeAtcheck = methodInClass.getReturnType();
-		return null;
+		return false;
 	}
 
 	@Override
@@ -429,7 +440,7 @@ public class TypingRules implements Visitor {
 
 		call.typeAtcheck = methodInClass.getReturnType();
 
-		return null;
+		return false;
 	}
 
 	@Override
@@ -442,14 +453,14 @@ public class TypingRules implements Visitor {
 		// set the scope of this to be the class scope
 		thisExpression.typeAtcheck.SetScope(currentScope);
 
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
 		newClass.typeAtcheck = new ClassType(newClass.getLine(),
 				newClass.getName());
-		return null;
+		return false;
 	}
 
 	@Override
@@ -475,12 +486,13 @@ public class TypingRules implements Visitor {
 			throw new Error("internal error");
 		resultType.incrementDimension();
 		newArray.typeAtcheck = resultType;
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(Length length) {
-		Type type1 = (Type) length.getArray().accept(this);
+		length.getArray().accept(this);
+		Type type1 = length.getArray().typeAtcheck;
 		if (type1.getArrayDimension() > 0) {
 			length.typeAtcheck = new PrimitiveType(length.getLine(),
 					DataType.INT);
@@ -490,14 +502,14 @@ public class TypingRules implements Visitor {
 							"Invalid length operation, type %s is not an array",
 							type1), length.getLine());
 		}
-		return null;
+		return false;
 	}
 
 	@Override
 	public Object visit(Literal literal) {
 		literal.typeAtcheck = new PrimitiveType(literal.getLine(),
 				literal.getType());
-		return null;
+		return false;
 	}
 
 	@Override
@@ -537,7 +549,7 @@ public class TypingRules implements Visitor {
 		default:
 			throw new Error("internal error, unknown enum type");
 		}
-		return null;
+		return false;
 	}
 
 	@Override
@@ -649,7 +661,7 @@ public class TypingRules implements Visitor {
 			throw new Error("internal error, unknown enum type");
 
 		}
-		return null;
+		return false;
 	}
 
 	/**
