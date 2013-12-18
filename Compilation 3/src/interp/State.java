@@ -21,6 +21,7 @@ public class State {
 	Object value;
 	Object[] values;
 	private HashMap<String, interpClass> classes;
+	boolean return_stmt = false;
 
 	public State(String class_name, String method_name, String[] arguments) {
 		

@@ -20,7 +20,8 @@ public class Variable {
 
 	public enum VariableType {
 
-		BOOLEAN("boolean"), CLASS(""), INT("int"), STRING("string"), NULL("null");
+		BOOLEAN("boolean"), CLASS(""), INT("int"), STRING("string"), NULL(
+				"null"), VOID("void");
 
 		private String variable_type;
 
@@ -60,7 +61,8 @@ public class Variable {
 			this.value = null;
 			this.variables = new Variable[length];
 			for (int i = 0; i < this.variables.length; i++) {
-				this.variables[i] = new Variable(type, location, name, scope, false, 0);
+				this.variables[i] = new Variable(type, location, name, scope,
+						false, 0);
 			}
 		} else {
 			if (location == VariableLocation.FIELD) {
@@ -97,27 +99,28 @@ public class Variable {
 				this.value = Integer.parseInt(value.toString());
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type int, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type int, while value is of type %s",
+								value.toString());
 			}
 		case STRING:
 			try {
 				this.value = value.toString();
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type string, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type string, while value is of type %s",
+								value.toString());
 			}
 		case BOOLEAN:
 			try {
-				this.value = (Boolean) (value.toString() == "true" ? true : false);
+				this.value = (Boolean) (value.toString() == "true" ? true
+						: false);
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type boolean, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type boolean, while value is of type %s",
+								value.toString());
 			}
 		default:
 			break;
@@ -134,7 +137,7 @@ public class Variable {
 	public String getClassName() {
 		return this.class_name;
 	}
-	
+
 	public void initializeArray(int length) {
 		this.array = true;
 		this.length = length;
@@ -160,12 +163,13 @@ public class Variable {
 			throw new RuntimeError("Invalid field type.");
 		}
 		for (int i = 0; i < this.variables.length; i++) {
-			this.variables[i] = new Variable(type, location, name, scope, false, 0, value);
+			this.variables[i] = new Variable(type, location, name, scope,
+					false, 0, value);
 			this.variables[i].index = this.index++;
 		}
 		this.setInitialized();
 	}
-	
+
 	public void setValue(Object value) {
 		switch (type) {
 		case INT:
@@ -173,27 +177,32 @@ public class Variable {
 				this.value = Integer.parseInt(value.toString());
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type int, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type int, while value is of type %s",
+								value.toString());
 			}
 		case STRING:
 			try {
-				this.value = value.toString();
+				if (value == null) {
+					this.value = null;
+				} else {
+					this.value = value.toString();
+				}
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type string, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type string, while value is of type %s",
+								value.toString());
 			}
 		case BOOLEAN:
 			try {
-				this.value = (Boolean) (value.toString() == "true" ? true : false);
+				this.value = (Boolean) (value.toString() == "true" ? true
+						: false);
 				break;
 			} catch (RuntimeError error) {
-				System.err.printf(
-						"Error: variable is of type boolean, while value is of type %s",
-						value.toString());
+				System.err
+						.printf("Error: variable is of type boolean, while value is of type %s",
+								value.toString());
 			}
 		default:
 			break;
@@ -255,11 +264,11 @@ public class Variable {
 	public void setScope(int scope) {
 		this.scope = scope;
 	}
-	
+
 	public Variable[] getVariables() {
 		return this.variables;
 	}
-	
+
 	public int getIndex() {
 		return index;
 	}

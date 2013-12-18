@@ -115,7 +115,9 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(DeclVirtualMethod method) {
-		throw new RuntimeError("Interpreter doesn't interpret virtual methods.");
+		throw new RuntimeError(
+				"Interpreter doesn't interpret virtual methods, at line "
+						+ method.getLine() + ".");
 	}
 
 	public Object visit(DeclStaticMethod method) {
@@ -131,12 +133,22 @@ public class Interpreter implements Visitor {
 			try {
 				stmt.accept(this);
 			} catch (Break e) {
-				throw new RuntimeError("Invalid use of break statement.");
+				throw new RuntimeError(
+						"Invalid use of break statement, at line "
+								+ stmt.getLine() + ".");
 			} catch (Continue e) {
-				throw new RuntimeError("invalid use of continue statement.");
+				throw new RuntimeError(
+						"invalid use of continue statement, at line "
+								+ stmt.getLine() + ".");
 			}
 		}
 		this.state.scope--;
+		if (this.state.getReturnType() != VariableType.VOID
+				&& !this.state.return_stmt) {
+			throw new RuntimeError("Function " + method.getName()
+					+ " should return a value of type "
+					+ this.state.getReturnType() + ".");
+		}
 		if (this.state.value != null) {
 			System.out.println(this.state.value);
 		} else if (this.state.values != null) {
@@ -156,7 +168,8 @@ public class Interpreter implements Visitor {
 				this);
 		Object value;
 		value = this.state.arguments[this.state.formal_index++];
-		checkParameterType(formal, variable_type, value.toString(), formal.getLine());
+		checkParameterType(formal, variable_type, value.toString(),
+				formal.getLine());
 		Variable variable = new Variable(variable_type,
 				VariableLocation.PARAMETER, formal.getName(), this.state.scope,
 				false, 1, value);
@@ -173,6 +186,8 @@ public class Interpreter implements Visitor {
 			return VariableType.STRING;
 		case "boolean":
 			return VariableType.BOOLEAN;
+		case "void":
+			return VariableType.VOID;
 		}
 		return null;
 	}
@@ -185,14 +200,15 @@ public class Interpreter implements Visitor {
 		Variable value = (Variable) assignment.getAssignment().accept(this);
 		Variable variable = (Variable) assignment.getVariable().accept(this);
 		checkTypesAreEqual(value, variable, assignment.getLine());
-		checkValueIsInitialized(value, assignment.getAssignment().getLine());
 		if (variable.isArray() && !variable.isInitialized()) {
-			checkNewArrayInitialization(variable, assignment.getVariable().getLine());
+			checkNewArrayInitialization(variable, assignment.getVariable()
+					.getLine());
 			this.state.getClass(this.state.class_name).getMethods()
 					.get(this.state.method_name)
 					.initializeArrayVariable(variable, (int) value.getValue());
 			this.state.new_array = false;
 		} else {
+			checkValueIsInitialized(value, assignment.getAssignment().getLine());
 			this.state.setVariableValue(this.state.class_name,
 					this.state.method_name, variable, value.getValue());
 		}
@@ -200,10 +216,13 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(StmtCall callStatement) {
-		throw new RuntimeError("Interpreter doesn't interpret call statements.");
+		throw new RuntimeError(
+				"Interpreter doesn't interpret call statements, at line "
+						+ callStatement.getLine() + ".");
 	}
 
 	public Object visit(StmtReturn returnStatement) {
+		this.state.return_stmt = true;
 		if (returnStatement.hasValue()) {
 			Variable value = (Variable) returnStatement.getValue().accept(this);
 			checkReturnType(value, returnStatement.getLine());
@@ -246,12 +265,14 @@ public class Interpreter implements Visitor {
 			} catch (Continue e) {
 				condition = (Variable) whileStatement.getCondition().accept(
 						this);
-				checkConditionType(condition, whileStatement.getCondition().getLine());
+				checkConditionType(condition, whileStatement.getCondition()
+						.getLine());
 				result = (Boolean) condition.getValue();
 				continue;
 			}
 			condition = (Variable) whileStatement.getCondition().accept(this);
-			checkConditionType(condition, whileStatement.getCondition().getLine());
+			checkConditionType(condition, whileStatement.getCondition()
+					.getLine());
 			result = (Boolean) condition.getValue();
 		}
 		return null;
@@ -277,6 +298,7 @@ public class Interpreter implements Visitor {
 
 	public Object visit(LocalVariable localVariable) {
 		Variable variable = null;
+		checkVariableDoesntExist(localVariable);
 		VariableType type = getType(localVariable.getType());
 		variable = new Variable(type, VariableLocation.LOCAL,
 				localVariable.getName(), this.state.scope, localVariable
@@ -284,7 +306,9 @@ public class Interpreter implements Visitor {
 		if (localVariable.isInitialized()) {
 			Variable value = (Variable) localVariable.getInitialValue().accept(
 					this);
-			checkValueIsInitialized(value, localVariable.getLine());
+			if (!variable.isArray()) {
+				checkValueIsInitialized(value, localVariable.getLine());
+			}
 			if (variable.isArray()) {
 				checkNewArrayInitialization(variable, localVariable.getLine());
 				variable.initializeArray((int) value.getValue());
@@ -307,7 +331,8 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(RefField location) {
-		throw new RuntimeError("Interpreter doesn't interpret 'this'.");
+		throw new RuntimeError("Interpreter doesn't interpret 'this', at line "
+				+ location.getLine() + ".");
 	}
 
 	public Object visit(RefArrayElement location) {
@@ -323,20 +348,26 @@ public class Interpreter implements Visitor {
 	}
 
 	public Object visit(StaticCall call) {
-		throw new RuntimeError("Interpreter doesn't interpret static calls.");
+		throw new RuntimeError(
+				"Interpreter doesn't interpret static calls, at line "
+						+ call.getLine() + ".");
 	}
 
 	public Object visit(VirtualCall call) {
-		throw new RuntimeError("Interpreter doesn't interpret virtual calls.");
+		throw new RuntimeError(
+				"Interpreter doesn't interpret virtual calls, at line "
+						+ call.getLine() + ".");
 	}
 
 	public Object visit(This thisExpression) {
-		throw new RuntimeError("Interpreter doesn't interpret 'this'.");
+		throw new RuntimeError("Interpreter doesn't interpret 'this', at line "
+				+ thisExpression.getLine() + ".");
 	}
 
 	public Object visit(NewInstance newClass) {
 		throw new RuntimeError(
-				"Interpreter doesn't interpret new class instances.");
+				"Interpreter doesn't interpret new class instances, at line "
+						+ newClass.getLine() + ".");
 	}
 
 	public Object visit(NewArray newArray) {
@@ -364,9 +395,13 @@ public class Interpreter implements Visitor {
 		case BOOLEAN:
 			type = VariableType.BOOLEAN;
 			break;
+		case VOID:
+			type = VariableType.VOID;
+			break;
 		default:
 			throw new RuntimeError("The literal " + literal.getValue()
-					+ " is not an int / string / boolean.");
+					+ " is not an int / string / boolean, at line "
+					+ literal.getLine() + ".");
 		}
 		return new Variable(type, VariableLocation.NONE, "none",
 				this.state.scope, false, 1, literal.getValue());
@@ -375,6 +410,7 @@ public class Interpreter implements Visitor {
 	public Object visit(UnaryOp unaryOp) {
 		Variable result = null;
 		Variable op = (Variable) unaryOp.getOperand().accept(this);
+		checkValueIsInitialized(op, unaryOp.getOperand().getLine());
 		switch (unaryOp.getOperator()) {
 		case LNEG:
 			if (op.getType() == VariableType.BOOLEAN) {
@@ -383,10 +419,10 @@ public class Interpreter implements Visitor {
 						VariableLocation.NONE, "none", this.state.scope, false,
 						1, !bool_value);
 			} else {
-				throw new RuntimeError(
-						"Invalid unary operation: operand is of type "
-								+ op.getType().toString()
-								+ " while the operator is a logical negation (!).");
+				throw new RuntimeError("Invalid unary operation, line "
+						+ unaryOp.getLine() + ": operand is of type "
+						+ op.getType().toString()
+						+ " while the operator is a logical negation (!).");
 			}
 			break;
 		case UMINUS:
@@ -395,10 +431,10 @@ public class Interpreter implements Visitor {
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
 						"none", this.state.scope, false, 1, -int_value);
 			} else {
-				throw new RuntimeError(
-						"Invalid unary operation: operand is of type "
-								+ op.getType().toString()
-								+ " while the operator is a unary minus (-).");
+				throw new RuntimeError("Invalid unary operation, line "
+						+ unaryOp.getLine() + ": operand is of type "
+						+ op.getType().toString()
+						+ " while the operator is a unary minus (-).");
 			}
 			break;
 		}
@@ -410,7 +446,9 @@ public class Interpreter implements Visitor {
 		int first_value = 0, second_value = 0;
 		Object value;
 		first = (Variable) binaryOp.getFirstOperand().accept(this);
+		checkValueIsInitialized(first, binaryOp.getFirstOperand().getLine());
 		second = (Variable) binaryOp.getSecondOperand().accept(this);
+		checkValueIsInitialized(second, binaryOp.getSecondOperand().getLine());
 		if (first.getType() == VariableType.INT
 				&& second.getType() == VariableType.INT) {
 			first_value = Integer.parseInt(first.getValue().toString());
@@ -433,8 +471,8 @@ public class Interpreter implements Visitor {
 				break;
 			case DIVIDE:
 				if (second_value == 0) {
-					throw new RuntimeError(
-							"Invalid binary operation: division by 0.");
+					throw new RuntimeError("Invalid binary operation, line "
+							+ binaryOp.getLine() + ": division by 0.");
 				}
 				value = (Integer) first_value / second_value;
 				result = new Variable(VariableType.INT, VariableLocation.NONE,
@@ -510,15 +548,16 @@ public class Interpreter implements Visitor {
 						1, value);
 				break;
 			default:
-				throw new RuntimeError(
-						"Invalid binary operation: both operators are of type string.");
+				throw new RuntimeError("Invalid binary operation, line "
+						+ binaryOp.getLine()
+						+ ": both operators are of type string.");
 			}
 		} else {
-			throw new RuntimeError(
-					"Invalid binary operation: first operand is of type "
-							+ first.getType().toString()
-							+ " while the second operand is of type "
-							+ second.getType().toString() + ".");
+			throw new RuntimeError("Invalid binary operation, line "
+					+ binaryOp.getLine() + ": first operand is of type "
+					+ first.getType().toString()
+					+ " while the second operand is of type "
+					+ second.getType().toString() + ".");
 		}
 		return result;
 	}
@@ -536,7 +575,9 @@ public class Interpreter implements Visitor {
 			type = VariableType.BOOLEAN;
 			break;
 		default:
-			throw new RuntimeError("Invalid type: variables cannot be of type "
+			throw new RuntimeError("Invalid type, line "
+					+ variable_type.getLine()
+					+ ": variables cannot be of type "
 					+ variable_type.getDisplayName() + ".");
 		}
 		checkVariableDimensions(variable_type, variable_type.getLine());
@@ -563,120 +604,145 @@ public class Interpreter implements Visitor {
 	private void checkNewArrayInitialization(Variable variable, int line)
 			throws RuntimeError {
 		if (!this.state.new_array) {
-			throw new RuntimeError(
-					"Invalid array initialization at line " + line + ": array variable "
-							+ variable.getName()
-							+ " is not initialized to a new array.");
+			throw new RuntimeError("Invalid array initialization at line "
+					+ line + ": array variable " + variable.getName()
+					+ " is not initialized to a new array.");
 		}
 	}
 
-	private void checkValueIsInitialized(Variable value, int line) throws RuntimeError {
+	private void checkVariableDoesntExist(LocalVariable localVariable)
+			throws RuntimeError {
+		if (this.state.variableExists(this.state.class_name,
+				this.state.method_name, localVariable.getName(),
+				this.state.scope)) {
+			throw new RuntimeError("Invalid local variable at line "
+					+ localVariable.getLine() + ": variable "
+					+ localVariable.getName()
+					+ " already exists in current scope.");
+		}
+	}
+
+	private void checkValueIsInitialized(Variable value, int line)
+			throws RuntimeError {
 		if (!value.isInitialized()) {
-			throw new RuntimeError(
-					"Invalid assignment statement at line " + line + ": the value is not initialized.");
+			throw new RuntimeError("Invalid use of variable at line " + line
+					+ ": " + value.getName() + " is not initialized.");
 		}
 	}
 
 	private void checkTypesAreEqual(Variable value, Variable variable, int line)
 			throws RuntimeError {
 		if (value.getType() != variable.getType()) {
-			throw new RuntimeError(
-					"Invalid assignment statement at line " + line + ": the variable is of type "
-							+ variable.getType().toString()
-							+ " while assignment is of type "
-							+ value.getType().toString() + ".");
+			throw new RuntimeError("Invalid assignment statement at line "
+					+ line + ": the variable is of type "
+					+ variable.getType().toString()
+					+ " while assignment is of type "
+					+ value.getType().toString() + ".");
 		}
 	}
 
 	private void checkNumberOfParameters(DeclStaticMethod method, int line)
 			throws RuntimeError {
 		if (method.getFormals().size() != state.arguments.length) {
-			throw new RuntimeError(
-					"Invalid input at line " + line + ": number of parameters for method "
-							+ state.class_name + "." + state.method_name
-							+ " is " + method.getFormals().size()
-							+ " while the number of parameters given is "
-							+ state.arguments.length + ".");
+			throw new RuntimeError("Invalid input at line " + line
+					+ ": number of parameters for method " + state.class_name
+					+ "." + state.method_name + " is "
+					+ method.getFormals().size()
+					+ " while the number of parameters given is "
+					+ state.arguments.length + ".");
 		}
 	}
 
 	private void checkParameterType(Parameter formal,
-			VariableType variable_type, String value, int line) throws RuntimeError {
+			VariableType variable_type, String value, int line)
+			throws RuntimeError {
 		if (variable_type != VariableType.INT
 				&& variable_type != VariableType.STRING) {
-			throw new RuntimeError(
-					"Invalid parameter at line " + line + ": parameters cannot be of type "
-							+ variable_type.toString() + ".");
+			throw new RuntimeError("Invalid parameter at line " + line
+					+ ": parameters cannot be of type "
+					+ variable_type.toString() + ".");
 		}
 		if (formal.getType().getArrayDimension() > 0) {
-			throw new RuntimeError(
-					"Invalid parameter at line " + line + ": parameters cannot be arrays.");
+			throw new RuntimeError("Invalid parameter at line " + line
+					+ ": parameters cannot be arrays.");
 		}
 		if (variable_type == VariableType.INT) {
 			try {
 				Integer.parseInt(value);
 			} catch (NumberFormatException e) {
-				throw new RuntimeError("Invalid input parameter at line " + line + ": \"" + value
-						+ "\" cannot be an int.");
+				throw new RuntimeError("Invalid input parameter at line "
+						+ line + ": \"" + value + "\" cannot be an int.");
 			}
 		}
 	}
 
 	private void checkReturnType(Variable value, int line) throws RuntimeError {
 		if (this.state.getReturnType() != value.getType()) {
-			throw new RuntimeError(
-					"Invalid return statement at line " + line + ": the value returned is of type "
-							+ value.getType().toString()
-							+ " while the returned type of the function "
-							+ this.state.class_name + "."
-							+ this.state.method_name + " is "
-							+ this.state.getReturnType() + ".");
+			if ((this.state.getReturnType() == VariableType.STRING || (this.state
+					.getReturnTypeDimensions() > 0))
+					&& value.getType() != VariableType.VOID) {
+				throw new RuntimeError("Invalid return statement at line "
+						+ line + ": the value returned is of type "
+						+ value.getType().toString()
+						+ " while the returned type of the function "
+						+ this.state.class_name + "." + this.state.method_name
+						+ " is " + this.state.getReturnType() + ".");
+			}
 		}
-		if (this.state.getReturnTypeDimensions() != (value.isArray() ? 1 : 0)) {
-			throw new RuntimeError(
-					"Invalid return statement at line " + line + ": the value returned is "
-							+ (value.isArray() ? "" : "not")
-							+ " an array while the returned type of the function is "
-							+ (this.state.getReturnTypeDimensions() > 0 ? ""
-									: "not ") + "an array.");
+		if (value.getType() != VariableType.VOID
+				&& this.state.getReturnTypeDimensions() != (value.isArray() ? 1
+						: 0)) {
+			throw new RuntimeError("Invalid return statement at line " + line
+					+ ": the value returned is "
+					+ (value.isArray() ? "" : "not")
+					+ " an array while the returned type of the function is "
+					+ (this.state.getReturnTypeDimensions() > 0 ? "" : "not ")
+					+ "an array.");
 		}
 	}
 
-	private void checkConditionType(Variable condition, int line) throws RuntimeError {
+	private void checkConditionType(Variable condition, int line)
+			throws RuntimeError {
 		if (condition.getType() != VariableType.BOOLEAN) {
-			throw new RuntimeError("Invalid condition at line " + line + ": not a boolean.");
+			throw new RuntimeError("Invalid condition at line " + line
+					+ ": not a boolean.");
 		}
 	}
 
 	private void checkVariableDimensions(Type variable_type, int line)
 			throws RuntimeError {
 		if (variable_type.getArrayDimension() > 1) {
-			throw new RuntimeError(
-					"Invalid variable at line " + line + ": array dimensions cannot be "
-							+ variable_type.getArrayDimension() + ".");
+			throw new RuntimeError("Invalid variable at line " + line
+					+ ": array dimensions cannot be "
+					+ variable_type.getArrayDimension() + ".");
 		}
 	}
 
 	private void checkThatVariableIsNotAField(RefVariable location, int line)
 			throws RuntimeError {
 		if (state.fieldExists(state.class_name, location.getName())) {
-			throw new RuntimeError("Intepreter doesn't interpret fields, at line " + line + ".");
+			throw new RuntimeError(
+					"Intepreter doesn't interpret fields, at line " + line
+							+ ".");
 		}
 	}
 
-	private void checkVariableExists(String variable_name, int line) throws RuntimeError {
+	private void checkVariableExists(String variable_name, int line)
+			throws RuntimeError {
 		if (!state.variableExists(this.state.class_name,
 				this.state.method_name, variable_name, this.state.scope)) {
 			throw new RuntimeError("Variable " + variable_name
-					+ " does not exist in the current scope, at line " + line + ".");
+					+ " does not exist in the current scope, at line " + line
+					+ ".");
 
 		}
 	}
 
-	private void checkIndex(Variable variable, int index, int line) throws RuntimeError {
+	private void checkIndex(Variable variable, int index, int line)
+			throws RuntimeError {
 		if (index > variable.getLength() - 1) {
-			throw new RuntimeError("Invalid array reference at line " + line + ": variable "
-					+ variable.getName() + "[] is of length "
+			throw new RuntimeError("Invalid array reference at line " + line
+					+ ": variable " + variable.getName() + "[] is of length "
 					+ variable.getLength() + " while trying to access index "
 					+ index + ".");
 		}
@@ -690,17 +756,19 @@ public class Interpreter implements Visitor {
 		}
 	}
 
-	private void checkVariableIsArray(Variable variable, int line) throws RuntimeError {
+	private void checkVariableIsArray(Variable variable, int line)
+			throws RuntimeError {
 		if (!variable.isArray()) {
 			throw new RuntimeError("Variable " + variable.getName()
 					+ " is not an array, at line " + line + ".");
 		}
 	}
 
-	private void checkValidLengthStmt(Variable variable, int line) throws RuntimeError {
+	private void checkValidLengthStmt(Variable variable, int line)
+			throws RuntimeError {
 		if (!variable.isArray()) {
-			throw new RuntimeError(
-					"Invalid call to length at line " + line + ": variable is not an array.");
+			throw new RuntimeError("Invalid call to length at line " + line
+					+ ": variable is not an array.");
 		}
 	}
 

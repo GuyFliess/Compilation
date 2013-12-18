@@ -527,7 +527,7 @@ public class TypingRules implements Visitor {
 			} else {
 				throw new TypingRuleException(
 						String.format(
-								"invalid logical unary op (%s) on non-integer expression",
+								"Invalid logical unary op (%s) on non-integer expression",
 								type1.getDisplayName()), unaryOp.getLine());
 			}
 			break;
@@ -542,7 +542,7 @@ public class TypingRules implements Visitor {
 			} else {
 				throw new TypingRuleException(
 						String.format(
-								"invalid logical unary op (%s) on non-boolean expression",
+								"Invalid logical unary op (%s) on non-boolean expression",
 								type1.getDisplayName()), unaryOp.getLine());
 			}
 			break;
@@ -572,7 +572,7 @@ public class TypingRules implements Visitor {
 							PrimitiveType.DataType.INT)) {
 				throw new TypingRuleException(
 						String.format(
-								"invalid logical binary op (%s) on non-integer expression",
+								"Invalid logical binary op (%s) on non-integer expression",
 								binaryOp.getOperator()), binaryOp.getLine());
 			}
 
@@ -597,7 +597,7 @@ public class TypingRules implements Visitor {
 			} else {
 				throw new TypingRuleException(
 						String.format(
-								"invalid logical binary op (%s) on non-integer expression",
+								"Invalid logical binary op (%s) on non-integer expression",
 								binaryOp.getOperator()), binaryOp.getLine());
 			}
 			break;
@@ -617,7 +617,7 @@ public class TypingRules implements Visitor {
 			} else {
 				throw new TypingRuleException(
 						String.format(
-								"invalid logical binary op (%s) on non-integer expression",
+								"Invalid logical binary op (%s) on non-integer expression",
 								binaryOp.getOperator()), binaryOp.getLine());
 			}
 			break;
@@ -652,7 +652,7 @@ public class TypingRules implements Visitor {
 			// if one side is null
 			else {
 				throw new TypingRuleException(String.format(
-						"invalid logical binary op (%s) on ??? expression",
+						"Invalid logical binary op (%s) on ??? expression",
 						binaryOp.getOperator()), binaryOp.getLine());
 			}
 			break;

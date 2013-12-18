@@ -39,12 +39,12 @@ public class ShadowingChecks {
 			if (icClass.hasSuperClass()) {
 				if (superClassParams.contains(field.getName())) {
 					throw new ShadowException("Field " + field.getName()
-							+ " is shadowing a field with the same name",
+							+ " is shadowing a field with the same name ",
 							field.getLine());
 				}
 				if (superClassMethodsNames.contains(field.getName())) {
 					throw new ShadowException("Field " + field.getName()
-							+ " is shadowing a field with the same name",
+							+ " is shadowing a field with the same name ",
 							field.getLine());
 				}
 			}

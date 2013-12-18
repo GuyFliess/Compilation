@@ -55,7 +55,7 @@ public class MethodScope extends  StatementBlockScope {
 		{
 			if (methodType.equals(MethodType.Static))
 			{
-				throw new TypingRuleException("Use a of field inside a static method is not allowed",-1);
+				throw new TypingRuleException("Use of field inside a static method is not allowed",-1);
 			}
 			if (methodType.equals(MethodType.Virtual))
 			{
