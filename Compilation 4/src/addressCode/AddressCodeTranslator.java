@@ -43,7 +43,7 @@ import interpBuilder.Variable;
 import interpBuilder.Variable.VariableLocation;
 import interpBuilder.Variable.VariableType;
 
-public class AdressCodeTranslator implements Visitor {
+public class AddressCodeTranslator implements Visitor {
 
 	int currentRegister = 10;
 	int currentLabel = 0;
@@ -55,7 +55,7 @@ public class AdressCodeTranslator implements Visitor {
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
-		return null;
+		return instructions;
 	}
 
 	@Override
@@ -314,7 +314,7 @@ public class AdressCodeTranslator implements Visitor {
 		// return the currentRegister(++)
 		int reg = currentRegister++;
 
-		return null;
+		return reg;
 	}
 
 	@Override
