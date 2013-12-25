@@ -45,9 +45,19 @@ import interpBuilder.Variable.VariableType;
 
 public class AddressCodeTranslator implements Visitor {
 
-	int currentRegister = 10;
-	int currentLabel = 0;
-	ArrayList<String> instructions = new ArrayList<>();
+	int currentRegister;
+	int currentLabel;
+	ArrayList<String> instructions;
+	
+	public AddressCodeTranslator(String[] args) {
+		super();
+		this.currentLabel = 0;
+		this.currentRegister = 0;
+		this.instructions = new ArrayList<>();
+		for (int i = 1; i < args.length; i++) {
+			this.instructions.add("= " + args[i] + " $" + this.currentRegister++);
+		}
+	}
 
 	@Override
 	public Object visit(Program program) {
@@ -219,7 +229,7 @@ public class AddressCodeTranslator implements Visitor {
 		// TODO initialize a new register and save that variable in the scope,
 		// make sure to check if localVariable.isInitialized() and load it to
 		// the register
-		int varReg = currentLabel++;
+		int varReg = currentRegister++;
 		localVariable.GetScope().setReg(localVariable.getName(), varReg);
 
 		if (localVariable.isInitialized()) {
@@ -313,6 +323,7 @@ public class AddressCodeTranslator implements Visitor {
 		// TODO: add instruction of loading the literal into a new register and
 		// return the currentRegister(++)
 		int reg = currentRegister++;
+		instructions.add("= " + literal.getValue() + " $" + reg);
 
 		return reg;
 	}

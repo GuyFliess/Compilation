@@ -41,7 +41,7 @@ public class Main {
 			 GlobalScope globalScope = scopeBuilder.MakeScopes(
 			 (Program) programAst, (DeclClass) libAst);
 			Program p = (Program) programAst;
-			AddressCodeTranslator ac = new AddressCodeTranslator();
+			AddressCodeTranslator ac = new AddressCodeTranslator(args);
 			ArrayList<String> instructions = (ArrayList<String>) p.accept(ac);
 			for (String instruction : instructions) {
 				System.out.println(instruction);
