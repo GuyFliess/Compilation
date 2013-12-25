@@ -7,7 +7,9 @@ import ic.ast.Node;
  * 
  */
 public abstract class Expression extends Node {
-
+	
+	String registerName ;
+	
 	/**
 	 * Constructs a new expression node. Used by subclasses.
 	 * 
