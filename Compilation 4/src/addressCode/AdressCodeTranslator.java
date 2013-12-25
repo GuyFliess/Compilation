@@ -87,7 +87,7 @@ public class AdressCodeTranslator implements Visitor {
 		classScope.GetMethod(method.getName()).setLabel(currentLabel);
 		instructions.add(":" + currentLabel);
 		currentLabel++;
-		
+
 		for (Parameter parameter : method.getFormals()) {
 			parameter.accept(this);
 		}
@@ -107,7 +107,8 @@ public class AdressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(Parameter formal) {
 		formal.getType().accept(this);
-		// TODO initialize a register for the formal, update it in the method scope
+		// TODO initialize a register for the formal, update it in the method
+		// scope
 		// there's no need if the 3ac uses pre set registers for parameters
 		return null;
 	}
@@ -126,10 +127,12 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
-		// TODO find the register of the right hand side of the assignment (accept)
-		// and the register of the left hand side (accept) and move register to register
+		// TODO find the register of the right hand side of the assignment
+		// (accept)
+		// and the register of the left hand side (accept) and move register to
+		// register
 		// check what to do in case of RefArrayElement
-		
+
 		int reg1 = (int) assignment.getAssignment().accept(this);
 		assignment.getVariable().accept(this);
 		return null;
@@ -155,14 +158,15 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
-		// TODO find the register in which there's the condition result initialize new 2 labels
+		// TODO find the register in which there's the condition result
+		// initialize new 2 labels
 		int elseLabel = currentLabel++;
 		int endLabel = currentLabel++;
 		int conditionReg = (int) ifStatement.getCondition().accept(this);
-		instructions.add("if! $" + conditionReg + " :" + elseLabel );
-		
+		instructions.add("if! $" + conditionReg + " :" + elseLabel);
+
 		ifStatement.getOperation().accept(this);
-		
+
 		instructions.add("goto :" + endLabel);
 		instructions.add(":" + elseLabel);
 		if (ifStatement.hasElse()) {
@@ -174,10 +178,18 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
-		// TODO find the register in which there's the condition result initialize new 2 labels
+		// TODO find the register in which there's the condition result
+		// initialize new 2 labels
 		int startLabel = currentLabel++;
 		int endLabel = currentLabel++;
-		
+		int conditionReg = (int) whileStatement.getCondition().accept(this);
+		instructions.add(": " + startLabel);
+		instructions.add("if! $" + conditionReg + " :" + endLabel); // if we need to get out of the while - 
+		// condition is false (conditionReg == 0)
+		whileStatement.getOperation().accept(this);
+		instructions.add("goto :" + startLabel);
+		instructions.add(":" + endLabel);
+
 		return null;
 	}
 
@@ -198,30 +210,30 @@ public class AdressCodeTranslator implements Visitor {
 		for (Statement statement : statementsBlock.getStatements()) {
 			statement.accept(this);
 		}
-		//  iterate over the stmts and call accept(this)
+		// iterate over the stmts and call accept(this)
 		return null;
 	}
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		// TODO initialize a new register and save that variable in the scope, 
-		// make sure to check if localVariable.isInitialized() and load it to the register
+		// TODO initialize a new register and save that variable in the scope,
+		// make sure to check if localVariable.isInitialized() and load it to
+		// the register
 		int varReg = currentLabel++;
 		localVariable.GetScope().setReg(localVariable.getName(), varReg);
-		
-		if (localVariable.isInitialized())
-		{
+
+		if (localVariable.isInitialized()) {
 			int regInit = (int) localVariable.getInitialValue().accept(this);
 			instructions.add(String.format("= $%s $%s", regInit, varReg));
 		}
-		
+
 		return null;
 	}
 
 	@Override
 	public Object visit(RefVariable location) {
 		// TODO find the variable in the scope and return its register
-		
+
 		return location.GetScope().getVaraibleReg(location.getName());
 	}
 
@@ -239,22 +251,23 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StaticCall call) {
-		// TODO find the method details: label and parameters registers, and add param & call instructions
+		// TODO find the method details: label and parameters registers, and add
+		// param & call instructions
 		// TODO add instruction of library call to the method
-		
-		MethodTypeWrapper  methodSignature = call.GetScope().GetMethod(call.getMethod());
-		
-		for ( Expression expr : call.getArguments()) {
+
+		MethodTypeWrapper methodSignature = call.GetScope().GetMethod(
+				call.getMethod());
+
+		for (Expression expr : call.getArguments()) {
 			int reg = (int) expr.accept(this);
 			instructions.add("param $" + reg);
 		}
-		if (methodSignature.getReturnType().getDisplayName().equalsIgnoreCase("void"))
-		{
+		if (methodSignature.getReturnType().getDisplayName()
+				.equalsIgnoreCase("void")) {
 			instructions.add("call :" + methodSignature.getLabel());
-		}
-		else
-		{
-			instructions.add("call :" + methodSignature.getLabel() + " $" + currentRegister);
+		} else {
+			instructions.add("call :" + methodSignature.getLabel() + " $"
+					+ currentRegister);
 			return currentRegister++;
 		}
 		return null;
@@ -280,13 +293,15 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(NewArray newArray) {
-		// TODO add a new variable to the scope and in the first slot keep the length (allocate a register)
+		// TODO add a new variable to the scope and in the first slot keep the
+		// length (allocate a register)
 		return null;
 	}
 
 	@Override
 	public Object visit(Length length) {
-		// TODO find the register in the scope in which the array is stored and return the first slot (load)
+		// TODO find the register in the scope in which the array is stored and
+		// return the first slot (load)
 		int arrReg = (int) length.getArray().accept(this);
 		int resultReg = currentRegister++;
 		instructions.add("[] $" + arrReg + " $" + resultReg);
@@ -295,15 +310,27 @@ public class AdressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Literal literal) {
-		// TODO: add instruction of loading the literal into a new register and return the currentRegister(++)
+		// TODO: add instruction of loading the literal into a new register and
+		// return the currentRegister(++)
 		int reg = currentRegister++;
-		
+
 		return null;
 	}
 
 	@Override
 	public Object visit(UnaryOp unaryOp) {
-		// TODO Auto-generated method stub
+		int register = (int) unaryOp.getOperand().accept(this);
+		String current_op = null;
+		switch (unaryOp.getOperator()) {
+		case LNEG:
+			current_op = "!";
+			break;
+		case UMINUS:
+			current_op = "-";
+			break;
+		}
+		instructions.add(current_op + " $" + register + " $"
+				+ currentRegister++);
 		return null;
 	}
 
@@ -311,69 +338,50 @@ public class AdressCodeTranslator implements Visitor {
 	public Object visit(BinaryOp binaryOp) {
 		int register1 = (int) binaryOp.getFirstOperand().accept(this);
 		int register2 = (int) binaryOp.getSecondOperand().accept(this);
-		int result;
-		String current_op;
+		String current_op = null;
 		switch (binaryOp.getOperator()) {
 		case PLUS:
 			current_op = "+";
-			instructions.add("+ $" + register1 + " $" + register2 + " $"
-					+ currentRegister++);
 			break;
 		case MINUS:
-			current_op = "+";
+			current_op = "-";
 			break;
 		case MULTIPLY:
-			current_op = "+";
-			instructions.add("+ $" + register1 + " $" + register2 + " $"
-					+ currentRegister++);
+			current_op = "*";
 			break;
 		case DIVIDE:
-			current_op = "+";
+			current_op = "/";
 			break;
 		case MOD:
-			current_op = "+";
+			current_op = "%";
 			break;
-//		case LAND:
-//			value = (Integer) first_value & second_value;
-//			result = new Variable(VariableType.INT, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case LOR:
-//			value = (Integer) first_value | second_value;
-//			result = new Variable(VariableType.INT, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case LT:
-//			value = (Boolean) (first_value < second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case LTE:
-//			value = (Boolean) (first_value <= second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case GT:
-//			value = (Boolean) (first_value > second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case GTE:
-//			value = (Boolean) (first_value >= second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case EQUAL:
-//			value = (Boolean) (first_value == second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
-//		case NEQUAL:
-//			value = (Boolean) (first_value != second_value) ? true : false;
-//			result = new Variable(VariableType.BOOLEAN, VariableLocation.NONE,
-//					"none", this.state.scope, false, 1, value);
-//			break;
+		case LAND:
+			current_op = "???"; // TODO
+			break;
+		case LOR:
+			current_op = "???"; // TODO
+			break;
+		case LT:
+			current_op = "<";
+			break;
+		case LTE:
+			current_op = "<=";
+			break;
+		case GT:
+			current_op = ">";
+			break;
+		case GTE:
+			current_op = ">=";
+			break;
+		case EQUAL:
+			current_op = "==";
+			break;
+		case NEQUAL:
+			current_op = "!=";
+			break;
 		}
+		instructions.add(current_op + " $" + register1 + " $" + register2
+				+ " $" + currentRegister++);
 		return null;
 	}
 
