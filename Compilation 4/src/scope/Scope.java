@@ -7,7 +7,6 @@ public abstract class Scope {
 	
 	public Scope fatherScope;
 	private String name;
-	//public String parent; //TODO Lital, I added a name for the scope itself, so I think we can remove this and go to fatherScope.GetName()
 		
 	public Scope(Scope fatherScope, String name)
 	{
@@ -36,5 +35,15 @@ public abstract class Scope {
 	public abstract MethodTypeWrapper GetMethod(String method) throws TypingRuleException ;
 
 	public abstract MethodTypeWrapper GetMethodWithoutName() ;
+
+	public void setReg(String name, int reg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Object getVaraibleReg(String name2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
