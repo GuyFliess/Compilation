@@ -66,7 +66,7 @@ public class GlobalScope extends Scope {
 	}
 
 	@Override
-	public void setReg(String name, int reg) {
+	public void setVaraibleReg(String name, int reg) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -59,5 +59,17 @@ public class StatementBlockScope extends Scope {
 	public MethodTypeWrapper GetMethodWithoutName() {
 		return fatherScope.GetMethodWithoutName();
 	}
+
+	@Override
+	public void setVaraibleReg(String name, int reg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getVaraibleReg(String name2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 	
 }

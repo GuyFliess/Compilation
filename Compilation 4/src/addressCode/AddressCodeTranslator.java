@@ -233,7 +233,7 @@ public class AddressCodeTranslator implements Visitor {
 		// make sure to check if localVariable.isInitialized() and load it to
 		// the register
 		int varReg = currentRegister++;
-		localVariable.GetScope().setReg(localVariable.getName(), varReg);
+		localVariable.GetScope().setVaraibleReg(localVariable.getName(), varReg);
 
 		if (localVariable.isInitialized()) {
 			int regInit = (int) localVariable.getInitialValue().accept(this);

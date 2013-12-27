@@ -34,7 +34,7 @@ public abstract class Scope {
 
 	public abstract MethodTypeWrapper GetMethodWithoutName() ;
 
-	public abstract void setReg(String name, int reg) ;
+	public abstract void setVaraibleReg(String name, int reg) ;
 
 	public abstract int getVaraibleReg(String name2);
 
