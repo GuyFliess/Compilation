@@ -52,6 +52,8 @@ public class AddressCodeTranslator implements Visitor {
 	int currentLabel;
 	ArrayList<String> instructions;
 	ArrayList<String> labels;
+	ArrayList<String> whileEndLabels;
+	ArrayList<String> whileStartLabels;
 
 	public AddressCodeTranslator(String[] args) {
 		super();
@@ -63,6 +65,8 @@ public class AddressCodeTranslator implements Visitor {
 					+ this.currentRegister++);
 		}
 		this.labels = new ArrayList<>();
+		this.whileEndLabels = new ArrayList<>();
+		this.whileStartLabels = new ArrayList<>();
 	}
 
 	@Override
@@ -71,6 +75,8 @@ public class AddressCodeTranslator implements Visitor {
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
+		instructions.add("\tparam 0");
+		instructions.add("\tcall :exit");
 		for (String instruction : instructions) {
 			System.out.println(instruction);
 		}
@@ -163,9 +169,9 @@ public class AddressCodeTranslator implements Visitor {
 		// and the register of the left hand side (accept) and move register to
 		// register
 		// check what to do in case of RefArrayElement
-
-		int reg1 = (int) assignment.getAssignment().accept(this);
-		assignment.getVariable().accept(this);
+		String variable = (String) assignment.getVariable().accept(this);
+		String value = (String) assignment.getAssignment().accept(this);
+		instructions.add("\t= " + value + " " + variable);
 		return null;
 	}
 
@@ -191,19 +197,26 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(StmtIf ifStatement) {
 		// TODO find the register in which there's the condition result
 		// initialize new 2 labels
-		int elseLabel = currentLabel++;
-		int endLabel = currentLabel++;
-		String value = (String) ifStatement.getCondition().accept(this);
-		instructions.add("if! " + value + " :" + elseLabel);
-
-		ifStatement.getOperation().accept(this);
-
-		instructions.add("goto :" + endLabel);
-		instructions.add(":" + elseLabel);
+		int elseLabel = 0;// l = currentLabel++;
+		int endLabel;// = currentLabel++;
+		int nextLabel;
+		String condition = (String) ifStatement.getCondition().accept(this);
 		if (ifStatement.hasElse()) {
+			elseLabel = currentLabel++;
+			endLabel = currentLabel++;
+			nextLabel = elseLabel;
+		} else {
+			endLabel = currentLabel++;
+			nextLabel = endLabel;
+		}
+		instructions.add("\tif! " + condition + " :" + nextLabel);
+		ifStatement.getOperation().accept(this);
+		if (ifStatement.hasElse()) {
+			instructions.add("\tgoto :" + endLabel);
+			instructions.add("\t:" + elseLabel);
 			ifStatement.getElseOperation().accept(this);
 		}
-		instructions.add(":" + endLabel);
+		instructions.add("\t:" + endLabel);
 		return null;
 	}
 
@@ -211,32 +224,36 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(StmtWhile whileStatement) {
 		// TODO find the register in which there's the condition result
 		// initialize new 2 labels
-		int startLabel = currentLabel++;
-		int endLabel = currentLabel++;
-		int conditionReg = (int) whileStatement.getCondition().accept(this);
-		instructions.add(": " + startLabel);
-		instructions.add("if! $" + conditionReg + " :" + endLabel); // if we
+		Integer startLabel = currentLabel++;
+		Integer endLabel = currentLabel++;
+		whileEndLabels.add(":" + endLabel.toString());
+		whileStartLabels.add(": " + startLabel.toString());
+		instructions.add("\t:" + startLabel);
+		String condition = (String) whileStatement.getCondition().accept(this);
+		
+		instructions.add("\tif! " + condition + " :" + endLabel); // if we
 																	// need to
 																	// get out
 																	// of the
 																	// while -
 		// condition is false (conditionReg == 0)
 		whileStatement.getOperation().accept(this);
-		instructions.add("goto :" + startLabel);
-		instructions.add(":" + endLabel);
-
+		instructions.add("\tgoto :" + startLabel);
+		instructions.add("\t:" + endLabel);
+		whileEndLabels.remove(whileEndLabels.size() - 1);
+		whileStartLabels.remove(whileStartLabels.size() - 1);
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
-		// TODO add a goto label
+		instructions.add("\tgoto " + whileEndLabels.get(whileEndLabels.size() - 1));
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtContinue continueStatement) {
-		// TODO add a goto label
+		instructions.add("\tgoto " + whileStartLabels.get(whileStartLabels.size() - 1));
 		return null;
 	}
 
@@ -271,7 +288,9 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(RefVariable location) {
 		// TODO find the variable in the scope and return its register
 
-		return "$" + location.GetScope().getVaraibleReg(location.getName()).toString();
+		return "$"
+				+ location.GetScope().getVaraibleReg(location.getName())
+						.toString();
 	}
 
 	@Override
