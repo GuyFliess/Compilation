@@ -41,14 +41,23 @@ public class Main {
 			 GlobalScope globalScope = scopeBuilder.MakeScopes(
 			 (Program) programAst, (DeclClass) libAst);
 			Program p = (Program) programAst;
+			TypeSafetyCheckes checks = new TypeSafetyCheckes();
+			checks.CheckTypeSafety(p, (DeclClass) libAst, globalScope);
 			AddressCodeTranslator ac = new AddressCodeTranslator(args);
 			ArrayList<String> instructions = (ArrayList<String>) p.accept(ac);
 			for (String instruction : instructions) {
 				System.out.println(instruction);
 			}
-		} catch (Throwable e) {
-			return;
-		}
+		}			
+		 catch (TypeSafetyException e) {
+		 System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+		 } catch (Throwable e) {
+			 System.err.println(e);
+			 for (StackTraceElement element : e.getStackTrace()) {
+			 System.err.println(element);
+			 }
+		 }
+		
 
 		// int interpStartLocation = 1;
 		// if (args.length > 1) {
