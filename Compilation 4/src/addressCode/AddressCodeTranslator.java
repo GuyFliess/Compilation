@@ -48,22 +48,19 @@ import interpBuilder.Variable.VariableType;
 public class AddressCodeTranslator implements Visitor {
 
 	int currentRegister;
-	int methodRegister;
 	int currentLabel;
 	ArrayList<String> instructions;
 	ArrayList<String> labels;
 	ArrayList<String> whileEndLabels;
 	ArrayList<String> whileStartLabels;
+	boolean  IsAssignmentStatment = false;
 
-	public AddressCodeTranslator(String[] args) {
+	public AddressCodeTranslator() {
 		super();
 		this.currentLabel = 0;
 		this.currentRegister = 0;
 		this.instructions = new ArrayList<>();
-		for (int i = 1; i < args.length; i++) {
-			this.instructions.add("= " + args[i] + " $"
-					+ this.currentRegister++);
-		}
+	
 		this.labels = new ArrayList<>();
 		this.whileEndLabels = new ArrayList<>();
 		this.whileStartLabels = new ArrayList<>();
@@ -71,7 +68,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
-
+//	TODO	instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
@@ -112,6 +109,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(DeclStaticMethod method) {
+		currentRegister = 0;
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
 		classScope.GetMethod(method.getName()).setLabel(currentLabel);
 		instructions.add(":" + method.getName()/* + currentLabel */); // TODO -
@@ -123,7 +121,6 @@ public class AddressCodeTranslator implements Visitor {
 																		// label
 		// (in a case of 2 functions with the same name
 		// currentLabel++;
-		this.methodRegister = 0;
 		for (Parameter parameter : method.getFormals()) {
 			parameter.accept(this);
 		}
@@ -146,7 +143,7 @@ public class AddressCodeTranslator implements Visitor {
 		// TODO initialize a register for the formal, update it in the method
 		// scope
 		((MethodScope) formal.GetScope()).AddParameterReg(formal.getName(),
-				this.methodRegister++);
+				this.currentRegister++);
 		return null;
 	}
 
@@ -169,9 +166,19 @@ public class AddressCodeTranslator implements Visitor {
 		// and the register of the left hand side (accept) and move register to
 		// register
 		// check what to do in case of RefArrayElement
+		this.IsAssignmentStatment = true;
 		String variable = (String) assignment.getVariable().accept(this);
-		String value = (String) assignment.getAssignment().accept(this);
-		instructions.add("\t= " + value + " " + variable);
+		this.IsAssignmentStatment = false;
+		String value = (String) assignment.getAssignment().accept(this);		
+		if (assignment.getVariable() instanceof RefArrayElement)
+		{
+			instructions.add("\t[]= " + variable + " " + value);
+		}
+		else 
+		{			
+			instructions.add("\t= " + value + " " + variable);
+		}
+		
 		return null;
 	}
 
@@ -301,8 +308,17 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefArrayElement location) {
-		// TODO find the register in the scope and find the address + offset + 1
-		return null;
+		//  find the register in the scope and find the address + offset + 1
+		String arrayAddress = (String) location.getArray().accept(this);
+		String arrayOffset = (String) location.getIndex().accept(this);
+		String resultReg = "$" + currentRegister++;
+		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " " + resultReg);
+		instructions.add("\t+ " + resultReg + " 1 " + resultReg);
+		if (!IsAssignmentStatment)
+		{
+			instructions.add("\t[] " + resultReg + " " + resultReg);
+		}
+		return resultReg;
 	}
 
 	@Override
@@ -315,16 +331,17 @@ public class AddressCodeTranslator implements Visitor {
 				call.getMethod());
 
 		for (Expression expr : call.getArguments()) {
-			int reg = (int) expr.accept(this);
-			instructions.add("param $" + reg);
+			String reg = (String) expr.accept(this);
+			instructions.add("param " + reg);
 		}
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
 			instructions.add("call :" + methodSignature.getLabel());
 		} else {
-			instructions.add("call :" + methodSignature.getLabel() + " $"
-					+ currentRegister);
-			return currentRegister++;
+			String regResult = "$" + currentRegister++;
+			instructions.add("call :" + methodSignature.getLabel() + " "
+					+ regResult);
+			return regResult;
 		}
 		return null;
 	}
@@ -351,7 +368,22 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(NewArray newArray) {
 		// TODO add a new variable to the scope and in the first slot keep the
 		// length (allocate a register)
-		return null;
+		// call alloc length of array + 1  
+		// put length in place 0
+//		# int[] x = new int[3];
+//		= 3 $0
+//		param $0
+//		call :alloc $1
+//		[]= $1 $0
+		String length = (String) newArray.getSize().accept(this);
+		String addressReg = "$" + currentRegister++;
+		instructions.add("\tparam "+ length);
+		
+		instructions.add("\tcall :alloc " + addressReg);
+		instructions.add("\t[]= " + addressReg + " " + length);
+		
+		
+		return addressReg;
 	}
 
 	@Override

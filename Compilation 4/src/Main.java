@@ -43,7 +43,7 @@ public class Main {
 			Program p = (Program) programAst;
 			TypeSafetyCheckes checks = new TypeSafetyCheckes();
 			checks.CheckTypeSafety(p, (DeclClass) libAst, globalScope);
-			AddressCodeTranslator ac = new AddressCodeTranslator(args);
+			AddressCodeTranslator ac = new AddressCodeTranslator();
 			p.accept(ac);
 		}			
 		 catch (TypeSafetyException e) {
