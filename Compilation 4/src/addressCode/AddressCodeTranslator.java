@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import scope.ClassScope;
+import scope.GlobalScope;
 import scope.MethodScope;
 import scope.MethodTypeWrapper;
 import ic.ast.Visitor;
@@ -54,8 +55,9 @@ public class AddressCodeTranslator implements Visitor {
 	ArrayList<String> whileEndLabels;
 	ArrayList<String> whileStartLabels;
 	boolean  IsAssignmentStatment = false;
+	GlobalScope globalScope;
 
-	public AddressCodeTranslator() {
+	public AddressCodeTranslator(GlobalScope globalScope) {
 		super();
 		this.currentLabel = 0;
 		this.currentRegister = 0;
@@ -64,6 +66,7 @@ public class AddressCodeTranslator implements Visitor {
 		this.labels = new ArrayList<>();
 		this.whileEndLabels = new ArrayList<>();
 		this.whileStartLabels = new ArrayList<>();
+		this.globalScope = globalScope;
 	}
 
 	@Override
@@ -111,14 +114,8 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(DeclStaticMethod method) {
 		currentRegister = 0;
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
-		classScope.GetMethod(method.getName()).setLabel(currentLabel);
-		instructions.add(":" + method.getName()/* + currentLabel */); // TODO -
-																		// check
-																		// if we
-																		// need
-																		// to
-																		// add a
-																		// label
+		classScope.GetMethod(method.getName()).setLabel(classScope.getName() + "." + method.getName());
+		instructions.add(":" + method.getName()/* + currentLabel */); 
 		// (in a case of 2 functions with the same name
 		// currentLabel++;
 		for (Parameter parameter : method.getFormals()) {
@@ -133,7 +130,8 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(DeclLibraryMethod method) {
-
+		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
+		classScope.GetMethod(method.getName()).setLabel(method.getName());
 		return null;
 	}
 
@@ -326,20 +324,20 @@ public class AddressCodeTranslator implements Visitor {
 		// TODO find the method details: label and parameters registers, and add
 		// param & call instructions
 		// TODO add instruction of library call to the method
-
-		MethodTypeWrapper methodSignature = call.GetScope().GetMethod(
-				call.getMethod());
+		ClassScope classScope = globalScope.getClassScope(call.getClassName());
+		MethodTypeWrapper methodSignature  = classScope.getStaticMethodScopes()
+				.get(call.getMethod());
 
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
-			instructions.add("param " + reg);
+			instructions.add("\tparam " + reg);
 		}
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
-			instructions.add("call :" + methodSignature.getLabel());
+			instructions.add("\tcall :" + methodSignature.getLabel());
 		} else {
 			String regResult = "$" + currentRegister++;
-			instructions.add("call :" + methodSignature.getLabel() + " "
+			instructions.add("\tcall :" + methodSignature.getLabel() + " "
 					+ regResult);
 			return regResult;
 		}

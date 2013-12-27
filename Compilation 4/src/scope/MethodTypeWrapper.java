@@ -13,7 +13,7 @@ public class MethodTypeWrapper {
 	private Type returnType;
 	private MethodScope bodyScope;
 	
-	private int label;
+	private String label;
 	
 	public MethodTypeWrapper (String name, Type returnType, Collection<Parameter> parameters, MethodScope scope)
 	{
@@ -31,6 +31,6 @@ public class MethodTypeWrapper {
 	public Type getReturnType() {return returnType; }
 	public MethodScope getBodyScope() {return bodyScope; }
 	
-	public int getLabel() { return label;}
-	public void setLabel(int label) {  this.label = label;}
+	public String getLabel() { return label;}
+	public void setLabel(String label) {  this.label = label;}
 }
