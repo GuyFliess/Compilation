@@ -16,6 +16,7 @@ public class StatementBlockScope extends Scope {
 	}
 	
 	Map<String, Type> localVariables = new LinkedHashMap<>();
+	Map<String, Integer> localVariablesRegs = new LinkedHashMap<>();
 	
 	List<StatementBlockScope> blockScopes = new ArrayList<>();
 	
@@ -40,10 +41,10 @@ public class StatementBlockScope extends Scope {
 		if (resultType == null)
 		{
 			
-			if (fatherScope instanceof StatementBlockScope)
-			{
+//			if ((fatherScope instanceof StatementBlockScope) ||
+//			{
 				resultType = fatherScope.GetVariable(name);
-			}
+//			}
 
 		}
 		
@@ -62,14 +63,19 @@ public class StatementBlockScope extends Scope {
 
 	@Override
 	public void setVaraibleReg(String name, int reg) {
-		// TODO Auto-generated method stub
-		
+		//Assuming correctness from typecheck the name must exist
+		localVariablesRegs.put(name, reg);
 	}
 
 	@Override
-	public int getVaraibleReg(String name2) {
-		// TODO Auto-generated method stub
-		return 0;
+	public int getVaraibleReg(String name) {
+		//Assuming correctness from typecheck the name must exist
+		Integer result = localVariablesRegs.get(name);
+		if (result == null)
+		{
+			result = fatherScope.getVaraibleReg(name);
+		}
+		return result;
 	}
 	
 }

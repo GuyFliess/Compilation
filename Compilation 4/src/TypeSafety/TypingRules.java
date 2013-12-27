@@ -538,7 +538,7 @@ public class TypingRules implements Visitor {
 					&& ((PrimitiveType) type1).getDataType().equals(
 							DataType.INT)) {
 				unaryOp.typeAtcheck = new PrimitiveType(unaryOp.getLine(),
-						DataType.BOOLEAN);
+						DataType.INT);
 			} else {
 				throw new TypingRuleException(
 						String.format(

@@ -20,6 +20,8 @@ public class MethodScope extends  StatementBlockScope {
 	}
 	private Map<String, Type> parameters = new LinkedHashMap<>();
 	
+	private Map<String, Integer> parametersRegs = new LinkedHashMap<>();
+	
 	public Map<String, Type> getParameters() { return parameters;}
 	
 	public MethodType methodType; 
@@ -97,9 +99,18 @@ public class MethodScope extends  StatementBlockScope {
 		return fatherScope.GetMethod(method);
 	}
 
+	@Override
+	public int getVaraibleReg(String name) {
+		//Assuming correctness from typecheck the name must exist
+		Integer regResult = parametersRegs.get(name);
+		if (regResult == null )
+		{
+			regResult = super.getVaraibleReg(name);		
+		}			
+		return regResult;
+	}
 
 	public void AddParameterReg(String name, int reg) {
-		// TODO Auto-generated method stub
-		
+		parametersRegs.put(name, reg);
 	}
 }
