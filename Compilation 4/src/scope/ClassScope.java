@@ -148,7 +148,7 @@ public class ClassScope extends Scope {
 	}
 
 	@Override
-	public int getVaraibleReg(String name2) {
+	public Integer getVaraibleReg(String name2) {
 		// TODO Auto-generated method stub
 		return 0;
 	}

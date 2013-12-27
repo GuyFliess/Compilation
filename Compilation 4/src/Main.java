@@ -44,10 +44,7 @@ public class Main {
 			TypeSafetyCheckes checks = new TypeSafetyCheckes();
 			checks.CheckTypeSafety(p, (DeclClass) libAst, globalScope);
 			AddressCodeTranslator ac = new AddressCodeTranslator(args);
-			ArrayList<String> instructions = (ArrayList<String>) p.accept(ac);
-			for (String instruction : instructions) {
-				System.out.println(instruction);
-			}
+			p.accept(ac);
 		}			
 		 catch (TypeSafetyException e) {
 		 System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);

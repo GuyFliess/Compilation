@@ -100,7 +100,7 @@ public class MethodScope extends  StatementBlockScope {
 	}
 
 	@Override
-	public int getVaraibleReg(String name) {
+	public Integer getVaraibleReg(String name) {
 		//Assuming correctness from typecheck the name must exist
 		Integer regResult = parametersRegs.get(name);
 		if (regResult == null )

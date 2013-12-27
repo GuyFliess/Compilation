@@ -68,7 +68,7 @@ public class StatementBlockScope extends Scope {
 	}
 
 	@Override
-	public int getVaraibleReg(String name) {
+	public Integer getVaraibleReg(String name) {
 		//Assuming correctness from typecheck the name must exist
 		Integer result = localVariablesRegs.get(name);
 		if (result == null)

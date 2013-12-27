@@ -51,15 +51,18 @@ public class AddressCodeTranslator implements Visitor {
 	int methodRegister;
 	int currentLabel;
 	ArrayList<String> instructions;
-	
+	ArrayList<String> labels;
+
 	public AddressCodeTranslator(String[] args) {
 		super();
 		this.currentLabel = 0;
 		this.currentRegister = 0;
 		this.instructions = new ArrayList<>();
 		for (int i = 1; i < args.length; i++) {
-			this.instructions.add("= " + args[i] + " $" + this.currentRegister++);
+			this.instructions.add("= " + args[i] + " $"
+					+ this.currentRegister++);
 		}
+		this.labels = new ArrayList<>();
 	}
 
 	@Override
@@ -68,7 +71,14 @@ public class AddressCodeTranslator implements Visitor {
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
-		return instructions;
+		for (String instruction : instructions) {
+			System.out.println(instruction);
+		}
+		System.out.println(".data");
+		for (String label : labels) {
+			System.out.println(label);
+		}
+		return null;
 	}
 
 	@Override
@@ -98,8 +108,15 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(DeclStaticMethod method) {
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
 		classScope.GetMethod(method.getName()).setLabel(currentLabel);
-		instructions.add(":" + currentLabel);
-		currentLabel++;
+		instructions.add(":" + method.getName()/* + currentLabel */); // TODO -
+																		// check
+																		// if we
+																		// need
+																		// to
+																		// add a
+																		// label
+		// (in a case of 2 functions with the same name
+		// currentLabel++;
 		this.methodRegister = 0;
 		for (Parameter parameter : method.getFormals()) {
 			parameter.accept(this);
@@ -122,7 +139,8 @@ public class AddressCodeTranslator implements Visitor {
 		formal.getType().accept(this);
 		// TODO initialize a register for the formal, update it in the method
 		// scope
-		((MethodScope) formal.GetScope()).AddParameterReg(formal.getName(), this.methodRegister++ );
+		((MethodScope) formal.GetScope()).AddParameterReg(formal.getName(),
+				this.methodRegister++);
 		return null;
 	}
 
@@ -175,8 +193,8 @@ public class AddressCodeTranslator implements Visitor {
 		// initialize new 2 labels
 		int elseLabel = currentLabel++;
 		int endLabel = currentLabel++;
-		int conditionReg = (int) ifStatement.getCondition().accept(this);
-		instructions.add("if! $" + conditionReg + " :" + elseLabel);
+		String value = (String) ifStatement.getCondition().accept(this);
+		instructions.add("if! " + value + " :" + elseLabel);
 
 		ifStatement.getOperation().accept(this);
 
@@ -197,7 +215,11 @@ public class AddressCodeTranslator implements Visitor {
 		int endLabel = currentLabel++;
 		int conditionReg = (int) whileStatement.getCondition().accept(this);
 		instructions.add(": " + startLabel);
-		instructions.add("if! $" + conditionReg + " :" + endLabel); // if we need to get out of the while - 
+		instructions.add("if! $" + conditionReg + " :" + endLabel); // if we
+																	// need to
+																	// get out
+																	// of the
+																	// while -
 		// condition is false (conditionReg == 0)
 		whileStatement.getOperation().accept(this);
 		instructions.add("goto :" + startLabel);
@@ -233,11 +255,13 @@ public class AddressCodeTranslator implements Visitor {
 		// make sure to check if localVariable.isInitialized() and load it to
 		// the register
 		int varReg = currentRegister++;
-		localVariable.GetScope().setVaraibleReg(localVariable.getName(), varReg);
+		localVariable.GetScope()
+				.setVaraibleReg(localVariable.getName(), varReg);
 
 		if (localVariable.isInitialized()) {
-			int regInit = (int) localVariable.getInitialValue().accept(this);
-			instructions.add(String.format("= $%s $%s", regInit, varReg));
+			String value = (String) localVariable.getInitialValue()
+					.accept(this);
+			instructions.add(String.format("\t= %s $%s", value, varReg));
 		}
 
 		return null;
@@ -247,7 +271,7 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(RefVariable location) {
 		// TODO find the variable in the scope and return its register
 
-		return location.GetScope().getVaraibleReg(location.getName());
+		return "$" + location.GetScope().getVaraibleReg(location.getName()).toString();
 	}
 
 	@Override
@@ -325,15 +349,28 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(Literal literal) {
 		// TODO: add instruction of loading the literal into a new register and
 		// return the currentRegister(++)
-		int reg = currentRegister++;
-		instructions.add("= " + literal.getValue() + " $" + reg);
-
-		return reg;
+		// int reg = currentRegister++;
+		switch (literal.getType()) {
+		case INT:
+			return literal.getValue().toString();
+		case BOOLEAN:
+			return literal.getValue().toString().equals("true") ? "1" : "0";
+		case STRING:
+			String label_name = ":label" + this.currentLabel++;
+			labels.add(label_name);
+			labels.add("\t"
+					+ String.valueOf(literal.getValue().toString().length()));
+			labels.add("\t\"" + literal.getValue().toString() + "\"");
+			return label_name;
+		default:
+			break;
+		}
+		return null;
 	}
 
 	@Override
 	public Object visit(UnaryOp unaryOp) {
-		int register = (int) unaryOp.getOperand().accept(this);
+		String op = (String) unaryOp.getOperand().accept(this);
 		String current_op = null;
 		switch (unaryOp.getOperator()) {
 		case LNEG:
@@ -343,15 +380,15 @@ public class AddressCodeTranslator implements Visitor {
 			current_op = "-";
 			break;
 		}
-		instructions.add(current_op + " $" + register + " $"
-				+ currentRegister++);
-		return null;
+		Integer reg = currentRegister++;
+		instructions.add("\t" + current_op + " " + op + " $" + reg);
+		return "$" + reg.toString();
 	}
 
 	@Override
 	public Object visit(BinaryOp binaryOp) {
-		int register1 = (int) binaryOp.getFirstOperand().accept(this);
-		int register2 = (int) binaryOp.getSecondOperand().accept(this);
+		String op1 = (String) binaryOp.getFirstOperand().accept(this);
+		String op2 = (String) binaryOp.getSecondOperand().accept(this);
 		String current_op = null;
 		switch (binaryOp.getOperator()) {
 		case PLUS:
@@ -370,10 +407,10 @@ public class AddressCodeTranslator implements Visitor {
 			current_op = "%";
 			break;
 		case LAND:
-			current_op = "???"; // TODO
+			current_op = "???"; // TODO - write in the forum
 			break;
 		case LOR:
-			current_op = "???"; // TODO
+			current_op = "???"; // TODO - write in the forum
 			break;
 		case LT:
 			current_op = "<";
@@ -394,9 +431,10 @@ public class AddressCodeTranslator implements Visitor {
 			current_op = "!=";
 			break;
 		}
-		instructions.add(current_op + " $" + register1 + " $" + register2
-				+ " $" + currentRegister++);
-		return null;
+		Integer reg = currentRegister++;
+		instructions
+				.add("\t" + current_op + " " + op1 + " " + op2 + " $" + reg);
+		return "$" + reg.toString();
 	}
 
 }

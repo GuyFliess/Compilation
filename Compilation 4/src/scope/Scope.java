@@ -36,6 +36,6 @@ public abstract class Scope {
 
 	public abstract void setVaraibleReg(String name, int reg) ;
 
-	public abstract int getVaraibleReg(String name);
+	public abstract Integer getVaraibleReg(String name);
 
 }
