@@ -55,7 +55,7 @@ public class GlobalScope extends Scope {
 
 	@Override
 	public void AddVar(Type type, String name) {
-		// TODO Auto-generated method stub
+		throw new ScopeException("Global scope doesn't have vars");
 		
 	}
 
@@ -63,5 +63,17 @@ public class GlobalScope extends Scope {
 	public MethodTypeWrapper GetMethodWithoutName() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void setReg(String name, int reg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getVaraibleReg(String name2) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

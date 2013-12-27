@@ -14,11 +14,9 @@ public abstract class Scope {
 		
 		if (fatherScope != null) {
 			this.fatherScope = fatherScope; 
-		//	parent = fatherScope.parent;
 		}
 		else {
 			this.fatherScope = null;
-		//	parent = null;
 		}
 		
 	}
@@ -36,14 +34,8 @@ public abstract class Scope {
 
 	public abstract MethodTypeWrapper GetMethodWithoutName() ;
 
-	public void setReg(String name, int reg) {
-		// TODO Auto-generated method stub
-		
-	}
+	public abstract void setReg(String name, int reg) ;
 
-	public Object getVaraibleReg(String name2) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public abstract int getVaraibleReg(String name2);
 
 }

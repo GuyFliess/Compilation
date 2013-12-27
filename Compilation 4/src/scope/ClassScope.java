@@ -140,4 +140,16 @@ public class ClassScope extends Scope {
 		}
 		return null;
 	}
+
+	@Override
+	public void setReg(String name, int reg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getVaraibleReg(String name2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

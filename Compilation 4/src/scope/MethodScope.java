@@ -96,4 +96,10 @@ public class MethodScope extends  StatementBlockScope {
 		}
 		return fatherScope.GetMethod(method);
 	}
+
+
+	public void AddParameterReg(String name, int reg) {
+		// TODO Auto-generated method stub
+		
+	}
 }

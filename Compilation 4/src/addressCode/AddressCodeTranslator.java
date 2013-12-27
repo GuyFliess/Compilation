@@ -1,8 +1,10 @@
 package addressCode;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import scope.ClassScope;
+import scope.MethodScope;
 import scope.MethodTypeWrapper;
 import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
@@ -46,6 +48,7 @@ import interpBuilder.Variable.VariableType;
 public class AddressCodeTranslator implements Visitor {
 
 	int currentRegister;
+	int methodRegister;
 	int currentLabel;
 	ArrayList<String> instructions;
 	
@@ -97,7 +100,7 @@ public class AddressCodeTranslator implements Visitor {
 		classScope.GetMethod(method.getName()).setLabel(currentLabel);
 		instructions.add(":" + currentLabel);
 		currentLabel++;
-
+		this.methodRegister = 0;
 		for (Parameter parameter : method.getFormals()) {
 			parameter.accept(this);
 		}
@@ -119,7 +122,7 @@ public class AddressCodeTranslator implements Visitor {
 		formal.getType().accept(this);
 		// TODO initialize a register for the formal, update it in the method
 		// scope
-		// there's no need if the 3ac uses pre set registers for parameters
+		((MethodScope) formal.GetScope()).AddParameterReg(formal.getName(), this.methodRegister++ );
 		return null;
 	}
 
