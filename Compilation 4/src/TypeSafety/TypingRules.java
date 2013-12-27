@@ -142,7 +142,7 @@ public class TypingRules implements Visitor {
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
-		// TODO Auto-generated method stub
+
 		Ref variable = assignment.getVariable();
 		variable.accept(this);
 		Expression assignmentValue = assignment.getAssignment();
@@ -593,7 +593,7 @@ public class TypingRules implements Visitor {
 							PrimitiveType.DataType.STRING)
 					&& ((PrimitiveType) type2).getDataType().equals(
 							PrimitiveType.DataType.STRING)) {
-				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.INT);
+				binaryOp.typeAtcheck = new PrimitiveType(-1, DataType.STRING);
 			} else {
 				throw new TypingRuleException(
 						String.format(

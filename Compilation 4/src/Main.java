@@ -29,13 +29,13 @@ public class Main {
 		Node libAst = null;
 		try {
 			lex.process(args[0], programTokens); /* Process regular input */
-//			if (args.length > 1 && args[1].startsWith("-L")) { /*
-//																 * Handle Lib
-//																 */
-//				lex.process(args[1].substring(2), tokensForLib);
-//				LibCalc calcLib = new LibCalc();
-//				libAst = calcLib.process(tokensForLib);
-//			}
+			if (args.length > 1 && args[1].startsWith("-L")) { /*
+																 * Handle Lib
+																 */
+				lex.process(args[1].substring(2), tokensForLib);
+				LibCalc calcLib = new LibCalc();
+				libAst = calcLib.process(tokensForLib);
+			}
 			programAst = calc.process(programTokens); /* process program */
 			BuildScope scopeBuilder = new BuildScope();
 			 GlobalScope globalScope = scopeBuilder.MakeScopes(
@@ -51,6 +51,9 @@ public class Main {
 		}			
 		 catch (TypeSafetyException e) {
 		 System.out.println(e.lineNum + ": semantic error; " + e.errorMSG);
+		 for (StackTraceElement element : e.getStackTrace()) {
+			 System.err.println(element);
+			 }
 		 } catch (Throwable e) {
 			 System.err.println(e);
 			 for (StackTraceElement element : e.getStackTrace()) {
