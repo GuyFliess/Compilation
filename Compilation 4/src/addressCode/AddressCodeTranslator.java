@@ -54,7 +54,7 @@ public class AddressCodeTranslator implements Visitor {
 	ArrayList<String> labels;
 	ArrayList<String> whileEndLabels;
 	ArrayList<String> whileStartLabels;
-	boolean  IsAssignmentStatment = false;
+	boolean IsAssignmentStatment = false;
 	GlobalScope globalScope;
 
 	public AddressCodeTranslator(GlobalScope globalScope) {
@@ -62,7 +62,7 @@ public class AddressCodeTranslator implements Visitor {
 		this.currentLabel = 0;
 		this.currentRegister = 0;
 		this.instructions = new ArrayList<>();
-	
+
 		this.labels = new ArrayList<>();
 		this.whileEndLabels = new ArrayList<>();
 		this.whileStartLabels = new ArrayList<>();
@@ -71,7 +71,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
-//	TODO	instructions.add("\tgoto :main");
+		// TODO instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
@@ -114,8 +114,9 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(DeclStaticMethod method) {
 		currentRegister = 0;
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
-		classScope.GetMethod(method.getName()).setLabel(classScope.getName() + "." + method.getName());
-		instructions.add(":" + method.getName()/* + currentLabel */); 
+		classScope.GetMethod(method.getName()).setLabel(
+				classScope.getName() + "." + method.getName());
+		instructions.add(":" + method.getName()/* + currentLabel */);
 		// (in a case of 2 functions with the same name
 		// currentLabel++;
 		for (Parameter parameter : method.getFormals()) {
@@ -153,7 +154,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(ClassType type) {
-		// TODO throw errorsd
+		// TODO throw error
 		return null;
 	}
 
@@ -167,16 +168,13 @@ public class AddressCodeTranslator implements Visitor {
 		this.IsAssignmentStatment = true;
 		String variable = (String) assignment.getVariable().accept(this);
 		this.IsAssignmentStatment = false;
-		String value = (String) assignment.getAssignment().accept(this);		
-		if (assignment.getVariable() instanceof RefArrayElement)
-		{
+		String value = (String) assignment.getAssignment().accept(this);
+		if (assignment.getVariable() instanceof RefArrayElement) {
 			instructions.add("\t[]= " + variable + " " + value);
-		}
-		else 
-		{			
+		} else {
 			instructions.add("\t= " + value + " " + variable);
 		}
-		
+
 		return null;
 	}
 
@@ -190,10 +188,10 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(StmtReturn returnStatement) {
 
 		if (returnStatement.hasValue()) {
-			int value = (int) returnStatement.getValue().accept(this);
-			this.instructions.add("ret $" + value);
+			String value = (String) returnStatement.getValue().accept(this);
+			this.instructions.add("\tret " + value);
 		} else {
-			this.instructions.add("ret");
+			this.instructions.add("\tret");
 		}
 		return null;
 	}
@@ -235,7 +233,7 @@ public class AddressCodeTranslator implements Visitor {
 		whileStartLabels.add(": " + startLabel.toString());
 		instructions.add("\t:" + startLabel);
 		String condition = (String) whileStatement.getCondition().accept(this);
-		
+
 		instructions.add("\tif! " + condition + " :" + endLabel); // if we
 																	// need to
 																	// get out
@@ -252,13 +250,15 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtBreak breakStatement) {
-		instructions.add("\tgoto " + whileEndLabels.get(whileEndLabels.size() - 1));
+		instructions.add("\tgoto "
+				+ whileEndLabels.get(whileEndLabels.size() - 1));
 		return null;
 	}
 
 	@Override
 	public Object visit(StmtContinue continueStatement) {
-		instructions.add("\tgoto " + whileStartLabels.get(whileStartLabels.size() - 1));
+		instructions.add("\tgoto "
+				+ whileStartLabels.get(whileStartLabels.size() - 1));
 		return null;
 	}
 
@@ -306,14 +306,14 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefArrayElement location) {
-		//  find the register in the scope and find the address + offset + 1
+		// find the register in the scope and find the address + offset + 1
 		String arrayAddress = (String) location.getArray().accept(this);
 		String arrayOffset = (String) location.getIndex().accept(this);
 		String resultReg = "$" + currentRegister++;
-		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " " + resultReg);
+		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
+				+ resultReg);
 		instructions.add("\t+ " + resultReg + " 1 " + resultReg);
-		if (!IsAssignmentStatment)
-		{
+		if (!IsAssignmentStatment) {
 			instructions.add("\t[] " + resultReg + " " + resultReg);
 		}
 		return resultReg;
@@ -325,7 +325,7 @@ public class AddressCodeTranslator implements Visitor {
 		// param & call instructions
 		// TODO add instruction of library call to the method
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
-		MethodTypeWrapper methodSignature  = classScope.getStaticMethodScopes()
+		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
 
 		for (Expression expr : call.getArguments()) {
@@ -366,21 +366,20 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(NewArray newArray) {
 		// TODO add a new variable to the scope and in the first slot keep the
 		// length (allocate a register)
-		// call alloc length of array + 1  
+		// call alloc length of array + 1
 		// put length in place 0
-//		# int[] x = new int[3];
-//		= 3 $0
-//		param $0
-//		call :alloc $1
-//		[]= $1 $0
+		// # int[] x = new int[3];
+		// = 3 $0
+		// param $0
+		// call :alloc $1
+		// []= $1 $0
 		String length = (String) newArray.getSize().accept(this);
 		String addressReg = "$" + currentRegister++;
-		instructions.add("\tparam "+ length);
-		
+		instructions.add("\tparam " + length);
+
 		instructions.add("\tcall :alloc " + addressReg);
 		instructions.add("\t[]= " + addressReg + " " + length);
-		
-		
+
 		return addressReg;
 	}
 
@@ -388,9 +387,9 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(Length length) {
 		// TODO find the register in the scope in which the array is stored and
 		// return the first slot (load)
-		int arrReg = (int) length.getArray().accept(this);
-		int resultReg = currentRegister++;
-		instructions.add("[] $" + arrReg + " $" + resultReg);
+		String arrReg = (String) length.getArray().accept(this);
+		String resultReg = "$" + currentRegister++;
+		instructions.add("[] $" + arrReg + " " + resultReg);
 		return resultReg;
 	}
 
@@ -456,10 +455,10 @@ public class AddressCodeTranslator implements Visitor {
 			current_op = "%";
 			break;
 		case LAND:
-			current_op = "???"; // TODO - write in the forum
+			current_op = "&&";
 			break;
 		case LOR:
-			current_op = "???"; // TODO - write in the forum
+			current_op = "||";
 			break;
 		case LT:
 			current_op = "<";
@@ -481,8 +480,15 @@ public class AddressCodeTranslator implements Visitor {
 			break;
 		}
 		Integer reg = currentRegister++;
-		instructions
-				.add("\t" + current_op + " " + op1 + " " + op2 + " $" + reg);
+		if (binaryOp.getFirstOperand().typeAtcheck.getDisplayName().equals(
+				"string")
+				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
+						.equals("string")) {
+			instructions.add("\tcall :stringCat $" + reg);
+		} else {
+			instructions.add("\t" + current_op + " " + op1 + " " + op2 + " $"
+					+ reg);
+		}
 		return "$" + reg.toString();
 	}
 
