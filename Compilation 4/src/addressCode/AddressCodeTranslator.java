@@ -18,7 +18,9 @@ import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Parameter;
 import ic.ast.decl.PrimitiveType;
 import ic.ast.decl.Program;
+import ic.ast.decl.Type;
 import ic.ast.expr.BinaryOp;
+import ic.ast.expr.BinaryOp.BinaryOps;
 import ic.ast.expr.Expression;
 import ic.ast.expr.Length;
 import ic.ast.expr.Literal;
@@ -71,7 +73,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
-		// TODO instructions.add("\tgoto :main");
+		instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
 		}
@@ -114,9 +116,14 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(DeclStaticMethod method) {
 		currentRegister = 0;
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
-		classScope.GetMethod(method.getName()).setLabel(
-				classScope.getName() + "." + method.getName());
-		instructions.add(":" + method.getName()/* + currentLabel */);
+		String method_label;
+		if (method.getName().equals("main")) {
+			method_label = method.getName();
+		} else {
+			method_label = classScope.getName() + "." + method.getName();
+		}
+		classScope.GetMethod(method.getName()).setLabel(method_label);
+		instructions.add(":" + method_label/* + currentLabel */);
 		// (in a case of 2 functions with the same name
 		// currentLabel++;
 		for (Parameter parameter : method.getFormals()) {
@@ -125,6 +132,10 @@ public class AddressCodeTranslator implements Visitor {
 
 		for (Statement statement : method.getStatements()) {
 			statement.accept(this);
+		}
+		if (method.getType().getDisplayName().equals("void")) {
+			instructions.add("\tret 0"); // TODO - check why ret doesn't work in
+											// the 3ac
 		}
 		return null;
 	}
@@ -281,9 +292,10 @@ public class AddressCodeTranslator implements Visitor {
 				.setVaraibleReg(localVariable.getName(), varReg);
 
 		if (localVariable.isInitialized()) {
-			String value = (String) localVariable.getInitialValue()
-					.accept(this);
-			instructions.add(String.format("\t= %s $%s", value, varReg));
+			String value = (String) localVariable.getInitialValue().accept(this);
+			if (value != null) {
+				instructions.add(String.format("\t= %s $%s", value, varReg));
+			}
 		}
 
 		return null;
@@ -327,7 +339,7 @@ public class AddressCodeTranslator implements Visitor {
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
-
+		methodSignature.setLabel(classScope.getName() + "." + methodSignature.getName());
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
 			instructions.add("\tparam " + reg);
@@ -387,9 +399,10 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(Length length) {
 		// TODO find the register in the scope in which the array is stored and
 		// return the first slot (load)
+		// TODO - if the array is not initialized (null) throw runtimeerror - example 21a_null
 		String arrReg = (String) length.getArray().accept(this);
 		String resultReg = "$" + currentRegister++;
-		instructions.add("[] $" + arrReg + " " + resultReg);
+		instructions.add("\t[] " + arrReg + " " + resultReg);
 		return resultReg;
 	}
 
@@ -436,6 +449,21 @@ public class AddressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(BinaryOp binaryOp) {
 		String op1 = (String) binaryOp.getFirstOperand().accept(this);
+		int first_label = currentLabel++, second_label = 0;
+		Integer reg = currentRegister++;
+		if (binaryOp.getOperator() == BinaryOps.LOR) {
+			second_label = currentLabel++;
+			instructions.add("\tif! " + op1 + " :" + first_label);
+			instructions.add("\t= " + op1 + " $" + reg);
+			instructions.add("\tgoto :" + second_label);
+			instructions.add("\t:" + first_label);
+		} else if (binaryOp.getOperator() == BinaryOps.LAND) {
+			second_label = currentLabel++;
+			instructions.add("\tif " + op1 + " :" + first_label);
+			instructions.add("\t= " + op1 + " $" + reg);
+			instructions.add("\tgoto :" + second_label);
+			instructions.add("\t:" + first_label);
+		}
 		String op2 = (String) binaryOp.getSecondOperand().accept(this);
 		String current_op = null;
 		switch (binaryOp.getOperator()) {
@@ -479,7 +507,7 @@ public class AddressCodeTranslator implements Visitor {
 			current_op = "!=";
 			break;
 		}
-		Integer reg = currentRegister++;
+
 		if (binaryOp.getFirstOperand().typeAtcheck.getDisplayName().equals(
 				"string")
 				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
@@ -488,6 +516,10 @@ public class AddressCodeTranslator implements Visitor {
 		} else {
 			instructions.add("\t" + current_op + " " + op1 + " " + op2 + " $"
 					+ reg);
+		}
+		if (binaryOp.getOperator() == BinaryOps.LOR
+				|| binaryOp.getOperator() == BinaryOps.LAND) {
+			instructions.add("\t:" + second_label);
 		}
 		return "$" + reg.toString();
 	}
