@@ -59,6 +59,15 @@ public class AddressCodeTranslator implements Visitor {
 	boolean IsAssignmentStatment = false;
 	GlobalScope globalScope;
 
+	private String nullError = "Runtime error: Null pointer dereference!";
+	private String NullErrorLabel = ":NullError";
+	private String arrayIndexOutOfBounds = "Runtime error: Array index out of bounds!";
+	private String indexOutLabel = ":indexError";
+	private String arrayAllocationNegative = "Runtime error: Array allocation with negative array size!";
+	private String arrayAllocNegLabel = ":arrayAllocNeg";
+	private String divisionByZero = "Runtime error: Division by zero!";
+	private String divsionByZeroLabel = ":division0";
+	
 	public AddressCodeTranslator(GlobalScope globalScope) {
 		super();
 		this.currentLabel = 0;
@@ -73,6 +82,14 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Program program) {
+		// Error strings
+		addLiteral(NullErrorLabel, nullError);
+		addLiteral(indexOutLabel, arrayIndexOutOfBounds);
+		addLiteral(arrayAllocNegLabel, arrayAllocationNegative);
+		addLiteral(divsionByZeroLabel, divisionByZero);
+
+		
+		
 		instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
@@ -87,6 +104,12 @@ public class AddressCodeTranslator implements Visitor {
 			System.out.println(label);
 		}
 		return null;
+	}
+
+	private void addLiteral(String label, String literal) {
+		labels.add(label);
+		labels.add("\t"+ literal.length());
+		labels.add(String.format("\t\"%s\"", literal));
 	}
 
 	@Override
@@ -323,6 +346,25 @@ public class AddressCodeTranslator implements Visitor {
 		String arrayAddress = (String) location.getArray().accept(this);
 		String arrayOffset = (String) location.getIndex().accept(this);
 		String resultReg = "$" + currentRegister++;
+		String runTimeErrorsChecksReg = "$" + currentRegister++;
+		String firstLabel = ":" + currentLabel++;
+		String secondLabel = ":" + currentLabel++;
+		//check a>0
+		instructions.add("\t>= " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
+		instructions.add("\tif! " + runTimeErrorsChecksReg + " " + firstLabel);
+		instructions.add("\tparam " + NullErrorLabel);
+		instructions.add("\tparam -1");
+		instructions.add("\tcall :exit");
+
+		//check 0<=i< a.length
+		instructions.add(firstLabel);
+		instructions.add("\t>= " + arrayOffset + " 0" + runTimeErrorsChecksReg);
+		instructions.add("\tif! " + runTimeErrorsChecksReg + " " + secondLabel);
+		instructions.add("\tparam " + indexOutLabel);
+		instructions.add("\tparam -1");
+		instructions.add("\tcall :exit");
+		instructions.add(secondLabel);
+		
 		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
 				+ resultReg);
 		instructions.add("\t+ " + resultReg + " 1 " + resultReg);
