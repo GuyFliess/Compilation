@@ -14,6 +14,7 @@ import scope.GlobalScope;
 import scopeBuilder.BuildScope;
 import scopeBuilder.PrintScope;
 import ic.ast.Node;
+import ic.ast.PrettyPrint;
 import ic.ast.decl.DeclClass;
 import ic.ast.decl.Program;
 import interp.Interpreter;

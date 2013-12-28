@@ -360,7 +360,8 @@ public class TypingRules implements Visitor {
 				new Type[methodInClass.getParameters().size()]);
 		if (methodParams.length != calledParams.size())
 		{
-			throw new TypingRuleException(String.format("Invalid number of arguments for %s.%s", call.getClassName(),call.getMethod()), call.getLine());
+
+			throw new TypingRuleException(String.format("Number of called parameters dosen't match method %s signature", call.getMethod()), call.getLine());
 		}
 			for (int i = 0; i < methodParams.length; i++) {
 				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
