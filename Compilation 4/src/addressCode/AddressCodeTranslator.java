@@ -340,8 +340,12 @@ public class AddressCodeTranslator implements Visitor {
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
-		methodSignature.setLabel(classScope.getName() + "."
-				+ methodSignature.getName());
+		if (classScope.getName().equals("Library")) {
+			methodSignature.setLabel(methodSignature.getName());
+		} else {
+			methodSignature.setLabel(classScope.getName() + "."
+					+ methodSignature.getName());
+		}
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
 			instructions.add("\tparam " + reg);
@@ -474,14 +478,14 @@ public class AddressCodeTranslator implements Visitor {
 				"int")
 				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
 						.equals("int")) {
-			if (binaryOp.getOperator() == BinaryOps.DIVIDE ||
-					binaryOp.getOperator() == BinaryOps.MOD) {
-//				if $0 :1
-//				param :label0
-//				call :println
-//				param 0
-//				call :exit
-//				:1
+			if (binaryOp.getOperator() == BinaryOps.DIVIDE
+					|| binaryOp.getOperator() == BinaryOps.MOD) {
+				// if $0 :1
+				// param :label0
+				// call :println
+				// param 0
+				// call :exit
+				// :1
 				first_label = currentLabel++;
 				second_label = currentLabel++;
 				instructions.add("\tif " + op2 + " :" + first_label);
