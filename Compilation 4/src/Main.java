@@ -24,6 +24,7 @@ public class Main {
 
 		Lexer lex = new Lexer();
 		Calc calc = new Calc();
+//		PrettyPrint printer = new PrettyPrint();
 		Node programAst;
 		List<Token> programTokens = new LinkedList<Token>();
 		List<Token> tokensForLib = new LinkedList<Token>();
@@ -38,6 +39,7 @@ public class Main {
 				libAst = calcLib.process(tokensForLib);
 			}
 			programAst = calc.process(programTokens); /* process program */
+//			System.out.println(programAst.accept(printer));
 			BuildScope scopeBuilder = new BuildScope();
 			 GlobalScope globalScope = scopeBuilder.MakeScopes(
 			 (Program) programAst, (DeclClass) libAst);
