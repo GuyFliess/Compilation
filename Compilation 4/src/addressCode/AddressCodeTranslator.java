@@ -349,21 +349,22 @@ public class AddressCodeTranslator implements Visitor {
 		String runTimeErrorsChecksReg = "$" + currentRegister++;
 		String firstLabel = ":" + currentLabel++;
 		String secondLabel = ":" + currentLabel++;
-		//check a>0
-		instructions.add("\t>= " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
-		instructions.add("\tif! " + runTimeErrorsChecksReg + " " + firstLabel);
-		instructions.add("\tparam " + NullErrorLabel);
-		instructions.add("\tparam -1");
-		instructions.add("\tcall :exit");
-
-		//check 0<=i< a.length
-		instructions.add(firstLabel);
-		instructions.add("\t>= " + arrayOffset + " 0" + runTimeErrorsChecksReg);
-		instructions.add("\tif! " + runTimeErrorsChecksReg + " " + secondLabel);
+		String thridLabel = ":" + currentLabel++;
+		arrayAddressPositive(arrayAddress, runTimeErrorsChecksReg, firstLabel);
+		instructions.add("#check 0<=i< a.length");
+		instructions.add("#check i>0");
+		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);
+		instructions.add(secondLabel);	
+		String tempReg = "$" + currentRegister++;
+		instructions.add("\t[] " + arrayAddress + " " + tempReg);
+		instructions.add("\t< " + arrayOffset + " "+ tempReg + " "+ runTimeErrorsChecksReg);
+		instructions.add("\tif " + runTimeErrorsChecksReg + " " + thridLabel);
 		instructions.add("\tparam " + indexOutLabel);
-		instructions.add("\tparam -1");
+		instructions.add("\tcall :println");
+		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
-		instructions.add(secondLabel);
+		
+		instructions.add(thridLabel);
 		
 		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
 				+ resultReg);
@@ -372,6 +373,28 @@ public class AddressCodeTranslator implements Visitor {
 			instructions.add("\t[] " + resultReg + " " + resultReg);
 		}
 		return resultReg;
+	}
+
+	private void checkLengthNonNegative(String arrayOffset,
+			String runTimeErrorsChecksReg, String secondLabel) {
+		instructions.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
+		instructions.add("\tif " + runTimeErrorsChecksReg + " " + secondLabel);
+		instructions.add("\tparam " + indexOutLabel);
+		instructions.add("\tcall :println");
+		instructions.add("\tparam 0");
+		instructions.add("\tcall :exit");
+	}
+
+	private void arrayAddressPositive(String arrayAddress,
+			String runTimeErrorsChecksReg, String firstLabel) {
+		instructions.add("#check a>0");
+		instructions.add("\t>= " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
+		instructions.add("\tif " + runTimeErrorsChecksReg + " " + firstLabel);
+		instructions.add("\tparam " + NullErrorLabel);
+		instructions.add("\tcall :println");
+		instructions.add("\tparam 0");
+		instructions.add("\tcall :exit");
+		instructions.add(firstLabel);
 	}
 
 	@Override
@@ -424,7 +447,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(NewArray newArray) {
-		// TODO add a new variable to the scope and in the first slot keep the
+		//  add a new variable to the scope and in the first slot keep the
 		// length (allocate a register)
 		// call alloc length of array + 1
 		// put length in place 0
@@ -433,23 +456,26 @@ public class AddressCodeTranslator implements Visitor {
 		// param $0
 		// call :alloc $1
 		// []= $1 $0
-		String length = (String) newArray.getSize().accept(this);
+		String lengthReg = (String) newArray.getSize().accept(this);
+		
 		String addressReg = "$" + currentRegister++;
-		instructions.add("\tparam " + length);
+		arrayAddressPositive(addressReg,"$" + currentRegister++, ":" + currentLabel++);
+		instructions.add("\tparam " + lengthReg);
 
 		instructions.add("\tcall :alloc " + addressReg);
-		instructions.add("\t[]= " + addressReg + " " + length);
+		instructions.add("\t[]= " + addressReg + " " + lengthReg);
 
 		return addressReg;
 	}
 
 	@Override
 	public Object visit(Length length) {
-		// TODO find the register in the scope in which the array is stored and
+		//  find the register in the scope in which the array is stored and
 		// return the first slot (load)
-		// TODO - if the array is not initialized (null) throw runtimeerror -
+		//  - if the array is not initialized (null) throw runtimeerror -
 		// example 21a_null
 		String arrReg = (String) length.getArray().accept(this);
+		arrayAddressPositive(arrReg, "$" + currentRegister++, ":" + currentLabel++);
 		String resultReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrReg + " " + resultReg);
 		return resultReg;
