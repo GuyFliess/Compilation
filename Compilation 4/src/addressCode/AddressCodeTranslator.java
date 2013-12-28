@@ -387,14 +387,14 @@ public class AddressCodeTranslator implements Visitor {
 
 	private void arrayAddressPositive(String arrayAddress,
 			String runTimeErrorsChecksReg, String firstLabel) {
-		instructions.add("#check a>0");
+		instructions.add("\t#check a > 0");
 		instructions.add("\t>= " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + firstLabel);
 		instructions.add("\tparam " + NullErrorLabel);
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
-		instructions.add(firstLabel);
+		instructions.add("\t" + firstLabel);
 	}
 
 	@Override
@@ -429,7 +429,30 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(VirtualCall call) {
-		// TODO throw error
+		ClassScope classScope = (ClassScope) call.GetScope().fatherScope;
+		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
+				.get(call.getMethod());
+//		String className = call.GetScope().fatherScope.getName();
+//		String methodName = call.getMethod();
+		if (classScope.getName().equals("Library")) {
+			methodSignature.setLabel(methodSignature.getName());
+		} else {
+			methodSignature.setLabel(classScope.getName() + "."
+					+ methodSignature.getName());
+		}
+		for (Expression expr : call.getArguments()) {
+			String reg = (String) expr.accept(this);
+			instructions.add("\tparam " + reg);
+		}
+		if (methodSignature.getReturnType().getDisplayName()
+				.equalsIgnoreCase("void")) {
+			instructions.add("\tcall :" + methodSignature.getLabel());
+		} else {
+			String regResult = "$" + currentRegister++;
+			instructions.add("\tcall :" + methodSignature.getLabel() + " "
+					+ regResult);
+			return regResult;
+		}
 		return null;
 	}
 
@@ -616,6 +639,8 @@ public class AddressCodeTranslator implements Visitor {
 				"string")
 				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
 						.equals("string")) {
+			instructions.add("\tparam " + op1);
+			instructions.add("\tparam " + op2);
 			instructions.add("\tcall :stringCat $" + reg);
 		} else {
 			instructions.add("\t" + current_op + " " + op1 + " " + op2 + " $"
