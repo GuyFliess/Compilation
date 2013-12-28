@@ -292,7 +292,8 @@ public class AddressCodeTranslator implements Visitor {
 				.setVaraibleReg(localVariable.getName(), varReg);
 
 		if (localVariable.isInitialized()) {
-			String value = (String) localVariable.getInitialValue().accept(this);
+			String value = (String) localVariable.getInitialValue()
+					.accept(this);
 			if (value != null) {
 				instructions.add(String.format("\t= %s $%s", value, varReg));
 			}
@@ -339,7 +340,8 @@ public class AddressCodeTranslator implements Visitor {
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
-		methodSignature.setLabel(classScope.getName() + "." + methodSignature.getName());
+		methodSignature.setLabel(classScope.getName() + "."
+				+ methodSignature.getName());
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
 			instructions.add("\tparam " + reg);
@@ -399,7 +401,8 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(Length length) {
 		// TODO find the register in the scope in which the array is stored and
 		// return the first slot (load)
-		// TODO - if the array is not initialized (null) throw runtimeerror - example 21a_null
+		// TODO - if the array is not initialized (null) throw runtimeerror -
+		// example 21a_null
 		String arrReg = (String) length.getArray().accept(this);
 		String resultReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrReg + " " + resultReg);
@@ -449,15 +452,17 @@ public class AddressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(BinaryOp binaryOp) {
 		String op1 = (String) binaryOp.getFirstOperand().accept(this);
-		int first_label = currentLabel++, second_label = 0;
+		int first_label = 0, second_label = 0;
 		Integer reg = currentRegister++;
 		if (binaryOp.getOperator() == BinaryOps.LOR) {
+			first_label = currentLabel++;
 			second_label = currentLabel++;
 			instructions.add("\tif! " + op1 + " :" + first_label);
 			instructions.add("\t= " + op1 + " $" + reg);
 			instructions.add("\tgoto :" + second_label);
 			instructions.add("\t:" + first_label);
 		} else if (binaryOp.getOperator() == BinaryOps.LAND) {
+			first_label = currentLabel++;
 			second_label = currentLabel++;
 			instructions.add("\tif " + op1 + " :" + first_label);
 			instructions.add("\t= " + op1 + " $" + reg);
@@ -465,6 +470,33 @@ public class AddressCodeTranslator implements Visitor {
 			instructions.add("\t:" + first_label);
 		}
 		String op2 = (String) binaryOp.getSecondOperand().accept(this);
+		if (binaryOp.getFirstOperand().typeAtcheck.getDisplayName().equals(
+				"int")
+				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
+						.equals("int")) {
+			if (binaryOp.getOperator() == BinaryOps.DIVIDE ||
+					binaryOp.getOperator() == BinaryOps.MOD) {
+//				if $0 :1
+//				param :label0
+//				call :println
+//				param 0
+//				call :exit
+//				:1
+				first_label = currentLabel++;
+				second_label = currentLabel++;
+				instructions.add("\tif " + op2 + " :" + first_label);
+				instructions.add("\tparam :label" + second_label);
+				instructions.add("\tcall :println");
+				instructions.add("\tparam 0");
+				instructions.add("\tcall :exit");
+				instructions.add("\t:" + first_label);
+				String RuntimeError = "\t\"Runtime error: Division by zero!\"";
+				Integer length = RuntimeError.length() - 3;
+				labels.add(":label" + second_label);
+				labels.add("\t" + length.toString());
+				labels.add(RuntimeError);
+			}
+		}
 		String current_op = null;
 		switch (binaryOp.getOperator()) {
 		case PLUS:
