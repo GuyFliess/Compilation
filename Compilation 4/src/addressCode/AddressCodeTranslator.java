@@ -1,5 +1,6 @@
 package addressCode;
 
+import java.awt.List;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -344,27 +345,30 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(RefArrayElement location) {
 		// find the register in the scope and find the address + offset + 1
 		String arrayAddress = (String) location.getArray().accept(this);
+		instructions.add("# array address: " + arrayAddress);
 		String arrayOffset = (String) location.getIndex().accept(this);
+		instructions.add("# index address: " + arrayOffset);
 		String resultReg = "$" + currentRegister++;
 		String runTimeErrorsChecksReg = "$" + currentRegister++;
 		String firstLabel = ":" + currentLabel++;
 		String secondLabel = ":" + currentLabel++;
-		String thridLabel = ":" + currentLabel++;
+		String thirdLabel = ":" + currentLabel++;
 		arrayAddressPositive(arrayAddress, runTimeErrorsChecksReg, firstLabel);
 		instructions.add("#check 0<=i< a.length");
-		instructions.add("#check i>0");
+		instructions.add("#check i>0 for line: " + location.getLine());
 		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);
 		instructions.add(secondLabel);	
+		instructions.add("#refArray element " + location.getLine());
 		String tempReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrayAddress + " " + tempReg);
 		instructions.add("\t< " + arrayOffset + " "+ tempReg + " "+ runTimeErrorsChecksReg);
-		instructions.add("\tif " + runTimeErrorsChecksReg + " " + thridLabel);
+		instructions.add("\tif " + runTimeErrorsChecksReg + " " + thirdLabel);
 		instructions.add("\tparam " + indexOutLabel);
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
 		
-		instructions.add(thridLabel);
+		instructions.add(thirdLabel);
 		
 		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
 				+ resultReg);
@@ -411,10 +415,14 @@ public class AddressCodeTranslator implements Visitor {
 			methodSignature.setLabel(classScope.getName() + "."
 					+ methodSignature.getName());
 		}
+		java.util.List<String> parameters = new ArrayList<String>();
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
-			instructions.add("\tparam " + reg);
+			parameters.add(reg);			
 		}
+		for (String reg : parameters) {
+			instructions.add("\tparam " + reg);
+		}		
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
 			instructions.add("\tcall :" + methodSignature.getLabel());
@@ -440,10 +448,14 @@ public class AddressCodeTranslator implements Visitor {
 			methodSignature.setLabel(classScope.getName() + "."
 					+ methodSignature.getName());
 		}
+		java.util.List<String> parameters = new ArrayList<String>();
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
-			instructions.add("\tparam " + reg);
+			parameters.add(reg);			
 		}
+		for (String reg : parameters) {
+			instructions.add("\tparam " + reg);
+		}		
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
 			instructions.add("\tcall :" + methodSignature.getLabel());

@@ -203,7 +203,7 @@ public class TypingRules implements Visitor {
 		boolean thenHasReturn = (boolean) ifStatement.getOperation().accept(this);
 		if (ifStatement.hasElse())
 		{
-			hasReturn =((thenHasReturn) && (boolean)  ifStatement.getElseOperation().accept(this));
+			hasReturn =((boolean)  ifStatement.getElseOperation().accept(this) && (thenHasReturn));
 		}
 		if (!isOfType(ifStatement.getCondition().typeAtcheck, DataType.BOOLEAN)) {
 			throw new TypingRuleException(
