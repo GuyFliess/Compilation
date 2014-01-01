@@ -392,7 +392,7 @@ public class AddressCodeTranslator implements Visitor {
 	private void arrayAddressPositive(String arrayAddress,
 			String runTimeErrorsChecksReg, String firstLabel) {
 		instructions.add("\t#check a > 0");
-		instructions.add("\t>= " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
+		instructions.add("\t> " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + firstLabel);
 		instructions.add("\tparam " + NullErrorLabel);
 		instructions.add("\tcall :println");
