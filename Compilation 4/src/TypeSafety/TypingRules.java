@@ -1,8 +1,6 @@
 package TypeSafety;
 
-
 import java.util.List;
-
 
 import scope.ClassScope;
 import scope.GlobalScope;
@@ -67,7 +65,7 @@ public class TypingRules implements Visitor {
 		for (DeclField field : icClass.getFields())
 			field.accept(this);
 		for (DeclMethod method : icClass.getMethods())
-			method.accept(this);	
+			method.accept(this);
 		return null;
 	}
 
@@ -83,16 +81,18 @@ public class TypingRules implements Visitor {
 		boolean hasReturn = false;
 		for (Parameter formal : method.getFormals())
 			formal.accept(this);
-		for (Statement statement : method.getStatements())
-		{
+		for (Statement statement : method.getStatements()) {
 			hasReturn |= (boolean) statement.accept(this);
 		}
-		if (!hasReturn && !isOfType(method.getType(),DataType.VOID))
-		{
-			throw new TypeSafetyException(String.format("non void method %s dosen't return value in every control path ",method.getName()), method.getLine());
+		if (!hasReturn && !isOfType(method.getType(), DataType.VOID)) {
+			throw new TypeSafetyException(
+					String.format(
+							"non void method %s dosen't return value in every control path ",
+							method.getName()), method.getLine());
 		}
-//		met
-//		MethodTypeWrapper methodWrraper = new MethodTypeWrapper(method.getName(), returnType, parameters, scope)
+		// met
+		// MethodTypeWrapper methodWrraper = new
+		// MethodTypeWrapper(method.getName(), returnType, parameters, scope)
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -103,10 +103,12 @@ public class TypingRules implements Visitor {
 		for (Parameter formal : method.getFormals())
 			formal.accept(this);
 		for (Statement statement : method.getStatements())
-			hasReturn |= (boolean)statement.accept(this);
-		if (!hasReturn && !isOfType(method.getType(),DataType.VOID))
-		{
-			throw new TypeSafetyException(String.format("non void method %s dosen't return value in every control path ",method.getName()), method.getLine());
+			hasReturn |= (boolean) statement.accept(this);
+		if (!hasReturn && !isOfType(method.getType(), DataType.VOID)) {
+			throw new TypeSafetyException(
+					String.format(
+							"non void method %s dosen't return value in every control path ",
+							method.getName()), method.getLine());
 		}
 		return null;
 	}
@@ -161,7 +163,6 @@ public class TypingRules implements Visitor {
 	public Object visit(StmtCall callStatement) {
 		callStatement.getCall().accept(this);
 
-
 		return false;
 	}
 
@@ -189,10 +190,12 @@ public class TypingRules implements Visitor {
 			}
 		}
 		if (!(isSubTypeOf(returnType, method.getReturnType()))) {
-			throw new TypingRuleException(String.format("Return statement is not of type %s",method.getReturnType().getDisplayName()),
+			throw new TypingRuleException(String.format(
+					"Return statement is not of type %s", method
+							.getReturnType().getDisplayName()),
 					returnStatement.getLine());
 		}
-		
+
 		return true;
 	}
 
@@ -200,10 +203,10 @@ public class TypingRules implements Visitor {
 	public Object visit(StmtIf ifStatement) {
 		boolean hasReturn = false;
 		ifStatement.getCondition().accept(this);
-		boolean thenHasReturn = (boolean) ifStatement.getOperation().accept(this);
-		if (ifStatement.hasElse())
-		{
-			hasReturn =((boolean)  ifStatement.getElseOperation().accept(this) && (thenHasReturn));
+		boolean thenHasReturn = (boolean) ifStatement.getOperation().accept(
+				this);
+		if (ifStatement.hasElse()) {
+			hasReturn = ((boolean) ifStatement.getElseOperation().accept(this) && (thenHasReturn));
 		}
 		if (!isOfType(ifStatement.getCondition().typeAtcheck, DataType.BOOLEAN)) {
 			throw new TypingRuleException(
@@ -217,7 +220,8 @@ public class TypingRules implements Visitor {
 	@Override
 	public Object visit(StmtWhile whileStatement) {
 		whileStatement.getCondition().accept(this);
-		boolean hasreturn = (boolean) whileStatement.getOperation().accept(this);
+		boolean hasreturn = (boolean) whileStatement.getOperation()
+				.accept(this);
 		if (!isOfType(whileStatement.getCondition().typeAtcheck,
 				DataType.BOOLEAN)) {
 			throw new TypingRuleException(
@@ -273,13 +277,10 @@ public class TypingRules implements Visitor {
 	public Object visit(RefVariable location) {
 
 		Scope scope = location.GetScope();
-		Type var ;
-		try 
-		{
+		Type var;
+		try {
 			var = scope.GetVariable(location.getName());
-		}
-		catch (TypingRuleException e) 
-		{
+		} catch (TypingRuleException e) {
 			throw new TypingRuleException(e.errorMSG, location.getLine());
 		}
 		if (var == null) {
@@ -326,7 +327,8 @@ public class TypingRules implements Visitor {
 				|| !(arrType.getArrayDimension() > 0)) // must be an array
 		{
 			throw new TypingRuleException(
-					"Invalid array operation, type %s is not an array",
+
+			"Invalid array operation, type %s is not an array",
 					location.getLine());
 		}
 		if (arrType instanceof PrimitiveType) {
@@ -336,6 +338,11 @@ public class TypingRules implements Visitor {
 			resultType = new ClassType(-1, ((ClassType) arrType).getClassName());
 		} else
 			throw new Error("internal error");
+		int dim = arrType.getArrayDimension() - 1;
+		while (dim > 0) {
+			resultType.incrementDimension();
+			dim--;
+		}
 		location.typeAtcheck = resultType;// make new type of type of
 		return false;
 	}
@@ -346,9 +353,10 @@ public class TypingRules implements Visitor {
 			argument.accept(this);
 		}
 
-		ClassScope classScope = globalScope.getClassScope(call.getClassName());		
-		if ((classScope == null) || 
-				(!classScope.getStaticMethodScopes().containsKey(call.getMethod()))) {
+		ClassScope classScope = globalScope.getClassScope(call.getClassName());
+		if ((classScope == null)
+				|| (!classScope.getStaticMethodScopes().containsKey(
+						call.getMethod()))) {
 			throw new TypingRuleException(String.format(
 					"Method %s doesn't exist", call.getMethod()),
 					call.getLine());
@@ -358,18 +366,22 @@ public class TypingRules implements Visitor {
 		List<Expression> calledParams = call.getArguments();
 		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
 				new Type[methodInClass.getParameters().size()]);
-		if (methodParams.length != calledParams.size())
-		{
+		if (methodParams.length != calledParams.size()) {
 
-			throw new TypingRuleException(String.format("Number of called parameters dosen't match method %s signature", call.getMethod()), call.getLine());
+			throw new TypingRuleException(
+					String.format(
+							"Number of called parameters dosen't match method %s signature",
+							call.getMethod()), call.getLine());
 		}
-			for (int i = 0; i < methodParams.length; i++) {
-				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
-						methodParams[i])) {
-					throw new TypingRuleException(String.format("Method %s.%s is not applicable for the arguments given",call.getClassName(),call.getMethod()),
-							call.getLine());
-				}
+		for (int i = 0; i < methodParams.length; i++) {
+			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i])) {
+				throw new TypingRuleException(
+						String.format(
+								"Method %s.%s is not applicable for the arguments given",
+								call.getClassName(), call.getMethod()),
+						call.getLine());
 			}
+		}
 
 		call.typeAtcheck = methodInClass.getReturnType();
 		return false;
@@ -386,13 +398,13 @@ public class TypingRules implements Visitor {
 		ClassScope classScope; // globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodInClass;
 		if (call.hasExplicitObject()) {
-			Type type = call.getObject().typeAtcheck;			
+			Type type = call.getObject().typeAtcheck;
 			if (!(type instanceof ClassType)) {
 				throw new TypingRuleException("non class can't have methods",
 						call.getLine());
 			}
 			className = ((ClassType) type).getClassName();
-//			Scope scope = type.GetScope();
+			// Scope scope = type.GetScope();
 			Scope scope = globalScope.getClassScope(className);
 			if (scope instanceof ClassScope) {
 				classScope = (ClassScope) scope;
@@ -407,16 +419,14 @@ public class TypingRules implements Visitor {
 						type.getDisplayName(), call.getMethod()),
 						call.getLine());
 		} else {
-			try 
-			{
-			methodInClass = call.GetScope().GetMethod(call.getMethod());
-			}
-			catch (TypingRuleException e)
-			{
+			try {
+				methodInClass = call.GetScope().GetMethod(call.getMethod());
+			} catch (TypingRuleException e) {
 				throw new TypingRuleException(e.errorMSG, call.getLine());
 			}
-			Scope currentScope =  call.GetScope();
-			while (!(currentScope instanceof ClassScope)) currentScope = currentScope.fatherScope;
+			Scope currentScope = call.GetScope();
+			while (!(currentScope instanceof ClassScope))
+				currentScope = currentScope.fatherScope;
 			className = currentScope.getName();
 			if (methodInClass == null)
 				throw new TypingRuleException(String.format(
@@ -427,17 +437,19 @@ public class TypingRules implements Visitor {
 		List<Expression> calledParams = call.getArguments();
 		Type[] methodParams = (Type[]) methodInClass.getParameters().toArray(
 				new Type[methodInClass.getParameters().size()]);
-		if (methodParams.length != calledParams.size())
-		{
-			throw new TypingRuleException(String.format("Invalid number of arguments for %s.%s",className,call.getMethod()), call.getLine());
+		if (methodParams.length != calledParams.size()) {
+			throw new TypingRuleException(String.format(
+					"Invalid number of arguments for %s.%s", className,
+					call.getMethod()), call.getLine());
 		}
-			for (int i = 0; i < methodParams.length; i++) {
-				if (!isSubTypeOf(calledParams.get(i).typeAtcheck,
-						methodParams[i])) {
-					throw new TypingRuleException(String.format("Method %s.%s is not applicable for the arguments given",className,call.getMethod()),
-							call.getLine());
-				}
+		for (int i = 0; i < methodParams.length; i++) {
+			if (!isSubTypeOf(calledParams.get(i).typeAtcheck, methodParams[i])) {
+				throw new TypingRuleException(
+						String.format(
+								"Method %s.%s is not applicable for the arguments given",
+								className, call.getMethod()), call.getLine());
 			}
+		}
 
 		call.typeAtcheck = methodInClass.getReturnType();
 

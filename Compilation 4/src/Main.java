@@ -24,7 +24,7 @@ public class Main {
 
 		Lexer lex = new Lexer();
 		Calc calc = new Calc();
-//		PrettyPrint printer = new PrettyPrint();
+		PrettyPrint printer = new PrettyPrint();
 		Node programAst;
 		List<Token> programTokens = new LinkedList<Token>();
 		List<Token> tokensForLib = new LinkedList<Token>();

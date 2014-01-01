@@ -60,13 +60,13 @@ public class AddressCodeTranslator implements Visitor {
 	boolean IsAssignmentStatment = false;
 	GlobalScope globalScope;
 
-	private String nullError = "Runtime error: Null pointer dereference!";
+	private String nullError = "Runtime Error: Null pointer dereference!";
 	private String NullErrorLabel = ":NullError";
-	private String arrayIndexOutOfBounds = "Runtime error: Array index out of bounds!";
+	private String arrayIndexOutOfBounds = "Runtime Error: Array index out of bounds!";
 	private String indexOutLabel = ":indexError";
-	private String arrayAllocationNegative = "Runtime error: Array allocation with negative array size!";
+	private String arrayAllocationNegative = "Runtime Error: Array allocation with negative array size!";
 	private String arrayAllocNegLabel = ":arrayAllocNeg";
-	private String divisionByZero = "Runtime error: Division by zero!";
+	private String divisionByZero = "Runtime Error: Division by zero!";
 	private String divsionByZeroLabel = ":division0";
 	
 	public AddressCodeTranslator(GlobalScope globalScope) {
@@ -195,7 +195,8 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
-		// TODO find the register of the right hand side of the assignment
+		instructions.add("#starting assignment statement at " + assignment.getLine());
+		//  find the register of the right hand side of the assignment
 		// (accept)
 		// and the register of the left hand side (accept) and move register to
 		// register
@@ -204,6 +205,7 @@ public class AddressCodeTranslator implements Visitor {
 		String variable = (String) assignment.getVariable().accept(this);
 		this.IsAssignmentStatment = false;
 		String value = (String) assignment.getAssignment().accept(this);
+		instructions.add("#returned to assignment statement at " + assignment.getLine());
 		if (assignment.getVariable() instanceof RefArrayElement) {
 			instructions.add("\t[]= " + variable + " " + value);
 		} else {
@@ -343,7 +345,10 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefArrayElement location) {
+		instructions.add("#Ref array element statring recuresion at Line " + location.getLine() );
 		// find the register in the scope and find the address + offset + 1
+		Boolean tempIsAssignment = IsAssignmentStatment; 
+		IsAssignmentStatment = false;
 		String arrayAddress = (String) location.getArray().accept(this);
 		instructions.add("# array address: " + arrayAddress);
 		String arrayOffset = (String) location.getIndex().accept(this);
@@ -356,9 +361,8 @@ public class AddressCodeTranslator implements Visitor {
 		arrayAddressPositive(arrayAddress, runTimeErrorsChecksReg, firstLabel);
 		instructions.add("#check 0<=i< a.length");
 		instructions.add("#check i>0 for line: " + location.getLine());
-		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);
-		instructions.add(secondLabel);	
-		instructions.add("#refArray element " + location.getLine());
+		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);	
+		instructions.add("#refArray element actuall " + location.getLine());
 		String tempReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrayAddress + " " + tempReg);
 		instructions.add("\t< " + arrayOffset + " "+ tempReg + " "+ runTimeErrorsChecksReg);
@@ -373,9 +377,12 @@ public class AddressCodeTranslator implements Visitor {
 		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
 				+ resultReg);
 		instructions.add("\t+ " + resultReg + " 1 " + resultReg);
+		IsAssignmentStatment = tempIsAssignment;
 		if (!IsAssignmentStatment) {
 			instructions.add("\t[] " + resultReg + " " + resultReg);
 		}
+		
+		instructions.add("#finished ref array");
 		return resultReg;
 	}
 
@@ -387,6 +394,7 @@ public class AddressCodeTranslator implements Visitor {
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
+		instructions.add("\t" + secondLabel);
 	}
 
 	private void arrayAddressPositive(String arrayAddress,
@@ -492,10 +500,11 @@ public class AddressCodeTranslator implements Visitor {
 		// call :alloc $1
 		// []= $1 $0
 		String lengthReg = (String) newArray.getSize().accept(this);
-		
+		String tempReg = "$" + currentRegister++;
+		instructions.add("+ "+ lengthReg + " 1 " + tempReg);
 		String addressReg = "$" + currentRegister++;
-		arrayAddressPositive(addressReg,"$" + currentRegister++, ":" + currentLabel++);
-		instructions.add("\tparam " + lengthReg);
+		checkLengthNonNegative(tempReg,"$" + currentRegister++, ":" + currentLabel++);
+		instructions.add("\tparam " + tempReg);
 
 		instructions.add("\tcall :alloc " + addressReg);
 		instructions.add("\t[]= " + addressReg + " " + lengthReg);
@@ -597,7 +606,7 @@ public class AddressCodeTranslator implements Visitor {
 				instructions.add("\tparam 0");
 				instructions.add("\tcall :exit");
 				instructions.add("\t:" + first_label);
-				String RuntimeError = "\t\"Runtime error: Division by zero!\"";
+				String RuntimeError = "\t\"Runtime Error: Division by zero!\"";
 				Integer length = RuntimeError.length() - 3;
 				labels.add(":label" + second_label);
 				labels.add("\t" + length.toString());
