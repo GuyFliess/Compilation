@@ -371,7 +371,7 @@ public class AddressCodeTranslator implements Visitor {
 		
 		String reg = (String) location.getObject().accept(this);
 		String resultReg = "$"+currentRegister++;
-		instructions.add("\t+ " + reg + " " + location.GetScope().getFieldOffset() + " " + resultReg);
+		instructions.add("\t+ " + reg + " " + location.GetScope().getFieldOffset(location.getField()) + " " + resultReg);
 		
 		return resultReg;
 	}
@@ -521,16 +521,21 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(This thisExpression) {
+		//this object should always be kept in $0 (this only appears in virtual methods)
+		
 		
 		// TODO 
-		return null;
+		return "$0";
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
-		
-		// TODO throw error
-		return null;
+		String resultReg = "$" + currentRegister++;
+		ClassScope classScope = globalScope.getClassScope(newClass.getName());
+		instructions.add("\tparam" + classScope.getClassSize());
+		instructions.add("\tcall :alloc " + resultReg);
+		instructions.add("\t[]= " + resultReg + " " + classScope.getDispatchVector());
+		return resultReg;
 	}
 
 	@Override
@@ -574,7 +579,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Literal literal) {
-		// TODO: add instruction of loading the literal into a new register and
+		// add instruction of loading the literal into a new register and
 		// return the currentRegister(++)
 		// int reg = currentRegister++;
 		switch (literal.getType()) {

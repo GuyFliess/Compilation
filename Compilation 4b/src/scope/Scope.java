@@ -38,6 +38,6 @@ public abstract class Scope {
 
 	public abstract Integer getVaraibleReg(String name);
 
-	public abstract int getFieldOffset();
+	public  int getFieldOffset(String string) {return 0;}
 
 }

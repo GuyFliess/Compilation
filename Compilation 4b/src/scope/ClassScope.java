@@ -181,4 +181,14 @@ public class ClassScope extends Scope {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public int getClassSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public String getDispatchVector() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
