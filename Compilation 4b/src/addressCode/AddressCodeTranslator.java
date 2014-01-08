@@ -68,7 +68,7 @@ public class AddressCodeTranslator implements Visitor {
 	private String arrayAllocNegLabel = ":arrayAllocNeg";
 	private String divisionByZero = "Runtime Error: Division by zero!";
 	private String divsionByZeroLabel = ":division0";
-	
+
 	public AddressCodeTranslator(GlobalScope globalScope) {
 		super();
 		this.currentLabel = 0;
@@ -89,8 +89,6 @@ public class AddressCodeTranslator implements Visitor {
 		addLiteral(arrayAllocNegLabel, arrayAllocationNegative);
 		addLiteral(divsionByZeroLabel, divisionByZero);
 
-		
-		
 		instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
 			declClass.accept(this);
@@ -109,30 +107,59 @@ public class AddressCodeTranslator implements Visitor {
 
 	private void addLiteral(String label, String literal) {
 		labels.add(label);
-		labels.add("\t"+ literal.length());
+		labels.add("\t" + literal.length());
 		labels.add(String.format("\t\"%s\"", literal));
 	}
 
 	@Override
 	public Object visit(DeclClass icClass) {
-		for (DeclField field : icClass.getFields()) {
-			// TODO do nothing for now
+		((ClassScope)icClass.GetScope()).CopyOffsetsFromFather();
+		
+		for (DeclField field : icClass.getFields()) {		
+			field.accept(this);
 		}
 		for (DeclMethod method : icClass.getMethods()) {
 			method.accept(this);
+		}
+		String dispathVectorLabel = ":_" + icClass.getName() + "_@DV";
+		labels.add(dispathVectorLabel);
+
+		// go over all virutal methods in the class including the inherited
+		// methods, and add their dispatch vector (label)
+		java.util.List<MethodTypeWrapper> methods = ((ClassScope)icClass.GetScope()).getAllMethodsAndLabels();
+		for (MethodTypeWrapper methodTypeWrapper : methods) {
+			labels.add("\t" + methodTypeWrapper.getLabel() );  // TODO add ()?
 		}
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclField field) {
-		// TODO throw error
+		((ClassScope) field.GetScope()).AddFieldOffset(field);
 		return null;
 	}
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		// TODO throw error
+		((ClassScope) method.GetScope()).AddMethodOffset(method);
+		
+		currentRegister = 1; // 1 because reg 0 should contain "this"
+		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
+  		String method_label = classScope.getName() + "." + method.getName();
+		classScope.GetMethod(method.getName()).setLabel(method_label);
+		instructions.add(":" + method_label/* + currentLabel */);
+		// (in a case of 2 functions with the same name
+		// currentLabel++;
+		for (Parameter parameter : method.getFormals()) {
+			parameter.accept(this);
+		}
+
+		for (Statement statement : method.getStatements()) {
+			statement.accept(this);
+		}
+		if (method.getType().getDisplayName().equals("void")) {
+			instructions.add("\tret 0");
+		}
 		return null;
 	}
 
@@ -158,8 +185,7 @@ public class AddressCodeTranslator implements Visitor {
 			statement.accept(this);
 		}
 		if (method.getType().getDisplayName().equals("void")) {
-			instructions.add("\tret 0"); // TODO - check why ret doesn't work in
-											// the 3ac
+			instructions.add("\tret 0");
 		}
 		return null;
 	}
@@ -174,7 +200,7 @@ public class AddressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(Parameter formal) {
 		formal.getType().accept(this);
-		// TODO initialize a register for the formal, update it in the method
+		// initialize a register for the formal, update it in the method
 		// scope
 		((MethodScope) formal.GetScope()).AddParameterReg(formal.getName(),
 				this.currentRegister++);
@@ -195,8 +221,9 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtAssignment assignment) {
-		instructions.add("#starting assignment statement at " + assignment.getLine());
-		//  find the register of the right hand side of the assignment
+		instructions.add("#starting assignment statement at "
+				+ assignment.getLine());
+		// find the register of the right hand side of the assignment
 		// (accept)
 		// and the register of the left hand side (accept) and move register to
 		// register
@@ -205,7 +232,8 @@ public class AddressCodeTranslator implements Visitor {
 		String variable = (String) assignment.getVariable().accept(this);
 		this.IsAssignmentStatment = false;
 		String value = (String) assignment.getAssignment().accept(this);
-		instructions.add("#returned to assignment statement at " + assignment.getLine());
+		instructions.add("#returned to assignment statement at "
+				+ assignment.getLine());
 		if (assignment.getVariable() instanceof RefArrayElement) {
 			instructions.add("\t[]= " + variable + " " + value);
 		} else {
@@ -235,7 +263,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
-		// TODO find the register in which there's the condition result
+		//  find the register in which there's the condition result
 		// initialize new 2 labels
 		int elseLabel = 0;// l = currentLabel++;
 		int endLabel;// = currentLabel++;
@@ -262,7 +290,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
-		// TODO find the register in which there's the condition result
+		//  find the register in which there's the condition result
 		// initialize new 2 labels
 		Integer startLabel = currentLabel++;
 		Integer endLabel = currentLabel++;
@@ -310,7 +338,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		// TODO initialize a new register and save that variable in the scope,
+		//  initialize a new register and save that variable in the scope,
 		// make sure to check if localVariable.isInitialized() and load it to
 		// the register
 		int varReg = currentRegister++;
@@ -330,7 +358,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefVariable location) {
-		// TODO find the variable in the scope and return its register
+		//  find the variable in the scope and return its register
 
 		return "$"
 				+ location.GetScope().getVaraibleReg(location.getName())
@@ -339,15 +367,21 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefField location) {
-		// TODO throw error
-		return null;
+		
+		
+		String reg = (String) location.getObject().accept(this);
+		String resultReg = "$"+currentRegister++;
+		instructions.add("\t+ " + reg + " " + location.GetScope().getFieldOffset() + " " + resultReg);
+		
+		return resultReg;
 	}
 
 	@Override
 	public Object visit(RefArrayElement location) {
-		instructions.add("#Ref array element statring recuresion at Line " + location.getLine() );
+		instructions.add("#Ref array element statring recuresion at Line "
+				+ location.getLine());
 		// find the register in the scope and find the address + offset + 1
-		Boolean tempIsAssignment = IsAssignmentStatment; 
+		Boolean tempIsAssignment = IsAssignmentStatment;
 		IsAssignmentStatment = false;
 		String arrayAddress = (String) location.getArray().accept(this);
 		instructions.add("# array address: " + arrayAddress);
@@ -361,19 +395,20 @@ public class AddressCodeTranslator implements Visitor {
 		arrayAddressPositive(arrayAddress, runTimeErrorsChecksReg, firstLabel);
 		instructions.add("#check 0<=i< a.length");
 		instructions.add("#check i>0 for line: " + location.getLine());
-		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);	
+		checkLengthNonNegative(arrayOffset, runTimeErrorsChecksReg, secondLabel);
 		instructions.add("#refArray element actuall " + location.getLine());
 		String tempReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrayAddress + " " + tempReg);
-		instructions.add("\t< " + arrayOffset + " "+ tempReg + " "+ runTimeErrorsChecksReg);
+		instructions.add("\t< " + arrayOffset + " " + tempReg + " "
+				+ runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + thirdLabel);
 		instructions.add("\tparam " + indexOutLabel);
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
-		
+
 		instructions.add(thirdLabel);
-		
+
 		instructions.add("\t+ " + arrayAddress + " " + arrayOffset + " "
 				+ resultReg);
 		instructions.add("\t+ " + resultReg + " 1 " + resultReg);
@@ -381,14 +416,15 @@ public class AddressCodeTranslator implements Visitor {
 		if (!IsAssignmentStatment) {
 			instructions.add("\t[] " + resultReg + " " + resultReg);
 		}
-		
+
 		instructions.add("#finished ref array");
 		return resultReg;
 	}
 
 	private void checkLengthNonNegative(String arrayOffset,
 			String runTimeErrorsChecksReg, String secondLabel) {
-		instructions.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
+		instructions
+				.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + secondLabel);
 		instructions.add("\tparam " + indexOutLabel);
 		instructions.add("\tcall :println");
@@ -400,7 +436,8 @@ public class AddressCodeTranslator implements Visitor {
 	private void arrayAddressPositive(String arrayAddress,
 			String runTimeErrorsChecksReg, String firstLabel) {
 		instructions.add("\t#check a > 0");
-		instructions.add("\t> " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
+		instructions
+				.add("\t> " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + firstLabel);
 		instructions.add("\tparam " + NullErrorLabel);
 		instructions.add("\tcall :println");
@@ -411,9 +448,9 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StaticCall call) {
-		// TODO find the method details: label and parameters registers, and add
+		//  find the method details: label and parameters registers, and add
 		// param & call instructions
-		// TODO add instruction of library call to the method
+		//  add instruction of library call to the method
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
@@ -426,11 +463,11 @@ public class AddressCodeTranslator implements Visitor {
 		java.util.List<String> parameters = new ArrayList<String>();
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
-			parameters.add(reg);			
+			parameters.add(reg);
 		}
 		for (String reg : parameters) {
 			instructions.add("\tparam " + reg);
-		}		
+		}
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
 			instructions.add("\tcall :" + methodSignature.getLabel());
@@ -448,8 +485,14 @@ public class AddressCodeTranslator implements Visitor {
 		ClassScope classScope = (ClassScope) call.GetScope().fatherScope;
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
-//		String className = call.GetScope().fatherScope.getName();
-//		String methodName = call.getMethod();
+		
+		if (methodSignature == null)
+		{
+			//this is a virtuall call
+			//TODO
+			
+		}
+		
 		if (classScope.getName().equals("Library")) {
 			methodSignature.setLabel(methodSignature.getName());
 		} else {
@@ -459,11 +502,11 @@ public class AddressCodeTranslator implements Visitor {
 		java.util.List<String> parameters = new ArrayList<String>();
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
-			parameters.add(reg);			
+			parameters.add(reg);
 		}
 		for (String reg : parameters) {
 			instructions.add("\tparam " + reg);
-		}		
+		}
 		if (methodSignature.getReturnType().getDisplayName()
 				.equalsIgnoreCase("void")) {
 			instructions.add("\tcall :" + methodSignature.getLabel());
@@ -478,19 +521,21 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(This thisExpression) {
-		// TODO throw error
+		
+		// TODO 
 		return null;
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
+		
 		// TODO throw error
 		return null;
 	}
 
 	@Override
 	public Object visit(NewArray newArray) {
-		//  add a new variable to the scope and in the first slot keep the
+		// add a new variable to the scope and in the first slot keep the
 		// length (allocate a register)
 		// call alloc length of array + 1
 		// put length in place 0
@@ -501,9 +546,10 @@ public class AddressCodeTranslator implements Visitor {
 		// []= $1 $0
 		String lengthReg = (String) newArray.getSize().accept(this);
 		String tempReg = "$" + currentRegister++;
-		instructions.add("+ "+ lengthReg + " 1 " + tempReg);
+		instructions.add("+ " + lengthReg + " 1 " + tempReg);
 		String addressReg = "$" + currentRegister++;
-		checkLengthNonNegative(tempReg,"$" + currentRegister++, ":" + currentLabel++);
+		checkLengthNonNegative(tempReg, "$" + currentRegister++, ":"
+				+ currentLabel++);
 		instructions.add("\tparam " + tempReg);
 
 		instructions.add("\tcall :alloc " + addressReg);
@@ -514,12 +560,13 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(Length length) {
-		//  find the register in the scope in which the array is stored and
+		// find the register in the scope in which the array is stored and
 		// return the first slot (load)
-		//  - if the array is not initialized (null) throw runtimeerror -
+		// - if the array is not initialized (null) throw runtimeerror -
 		// example 21a_null
 		String arrReg = (String) length.getArray().accept(this);
-		arrayAddressPositive(arrReg, "$" + currentRegister++, ":" + currentLabel++);
+		arrayAddressPositive(arrReg, "$" + currentRegister++, ":"
+				+ currentLabel++);
 		String resultReg = "$" + currentRegister++;
 		instructions.add("\t[] " + arrReg + " " + resultReg);
 		return resultReg;

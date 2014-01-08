@@ -1,5 +1,6 @@
 package scope;
 
+import ic.ast.decl.DeclField;
 import ic.ast.decl.DeclLibraryMethod;
 import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
@@ -7,6 +8,7 @@ import ic.ast.decl.Type;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ClassScope extends Scope {
@@ -151,5 +153,32 @@ public class ClassScope extends Scope {
 	public Integer getVaraibleReg(String name2) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public void AddFieldOffset(DeclField field) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void CopyOffsetsFromFather() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	/**
+	 * Add new offest, 
+	 * if the method is overridden keep the old offset
+	 * @param method
+	 */
+	public void AddMethodOffset(DeclVirtualMethod method) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<MethodTypeWrapper> getAllMethodsAndLabels() {
+		return null;
+		// TODO Auto-generated method stub
+		
 	}
 }
