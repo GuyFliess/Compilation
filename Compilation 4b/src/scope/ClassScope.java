@@ -6,8 +6,10 @@ import ic.ast.decl.DeclStaticMethod;
 import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Type;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +26,12 @@ public class ClassScope extends Scope {
 	Map<String, MethodTypeWrapper> virtualMethodScopes = new LinkedHashMap<>();
 
 	Map<String, Type> fields = new HashMap<>();
+
+	Map<String, Integer> fieldsOfsset = new HashMap<>();
+
+	private String disptachVecotr = null;
+
+	Map<String, Integer> MethodsOfsset = new HashMap<>();
 
 	public boolean HasSuperNode = false;
 
@@ -85,28 +93,19 @@ public class ClassScope extends Scope {
 
 	@Override
 	public MethodTypeWrapper GetMethod(String method) {
-		// if (virtualMethodScopes.containsKey(method))
-		// {
-		// return virtualMethodScopes.get(method);
-		// }
-		// else
-		// {
-		// return fatherScope.GetMethod(method);
-		// }
 		if (virtualMethodScopes.containsKey(method)) {
 			return getVirtualMethod(method);
 		} else if (staticMethodScopes.containsKey(method)) {
 			return getStaticMethod(method);
 		}
 
-		// TODO - throw error
 		return null;
 
 	}
 
 	@Override
 	public MethodTypeWrapper GetMethodWithoutName() {
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
@@ -145,50 +144,77 @@ public class ClassScope extends Scope {
 
 	@Override
 	public void setVaraibleReg(String name, int reg) {
-		// TODO Auto-generated method stub
-		
+		// Class has no local vars
 	}
 
 	@Override
 	public Integer getVaraibleReg(String name2) {
-		// TODO Auto-generated method stub
+		// Class has no local vars
 		return 0;
 	}
 
 	public void AddFieldOffset(DeclField field) {
-		// TODO Auto-generated method stub
-		
+		AddFieldOffset(field.getName(), fieldsOfsset.size() + 1);
 	}
 
-	public void CopyOffsetsFromFather() {
-		// TODO Auto-generated method stub
-		
+	public void AddFieldOffset(String field, Integer offset) {
+		fieldsOfsset.put(field, offset);
 	}
 
-	
+	public void initOffsets() {
+		// fieldsOfsset.put("this", 0);
+		if (this.fatherScope instanceof ClassScope) {
+			Map<String, Integer> fatherOffsets = ((ClassScope) this.fatherScope).fieldsOfsset;
+			for (String field : fatherOffsets.keySet()) {
+				AddFieldOffset(field, fatherOffsets.get(field));
+			}
+
+			Map<String, Integer> fatherMethods = ((ClassScope) this.fatherScope).MethodsOfsset;
+			for (String method : fatherMethods.keySet()) {
+				MethodsOfsset.put(method, fatherMethods.get(method));
+			}
+		}
+	}
+
 	/**
-	 * Add new offest, 
-	 * if the method is overridden keep the old offset
+	 * Add new offset, if the method is overridden keep the old offset
+	 * 
 	 * @param method
 	 */
 	public void AddMethodOffset(DeclVirtualMethod method) {
-		// TODO Auto-generated method stub
-		
+		if (!MethodsOfsset.containsKey(method.getName())) {
+			MethodsOfsset.put(method.getName(), MethodsOfsset.size());
+		}
 	}
 
 	public List<MethodTypeWrapper> getAllMethodsAndLabels() {
-		return null;
-		// TODO Auto-generated method stub
-		
+		List<MethodTypeWrapper> resultList = new ArrayList<MethodTypeWrapper>(MethodsOfsset.size());
+		for (String method : MethodsOfsset.keySet()) {
+			resultList.add(MethodsOfsset.get(method), getVirtualMethod(method));
+		}
+		return resultList;
 	}
 
 	public int getClassSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return fieldsOfsset.size() + 1;
 	}
 
-	public String getDispatchVector() {
-		// TODO Auto-generated method stub
-		return null;
+	@Override
+	public int getFieldOffset(String fieldName) {
+		return fieldsOfsset.get(fieldName);
 	}
+
+	@Override
+	public int getMethodOffset(String methodName) {
+		return MethodsOfsset.get(methodName);
+	}
+
+	public String getDisptachVecotr() {
+		return disptachVecotr;
+	}
+
+	public void setDisptachVecotr(String disptachVecotr) {
+		this.disptachVecotr = disptachVecotr;
+	}
+
 }

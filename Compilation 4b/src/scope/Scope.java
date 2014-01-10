@@ -38,6 +38,12 @@ public abstract class Scope {
 
 	public abstract Integer getVaraibleReg(String name);
 
-	public  int getFieldOffset(String string) {return 0;}
+	public int getFieldOffset(String fieldName){
+		return fatherScope.getFieldOffset(fieldName);
+	}
+
+	public int getMethodOffset(String methodName) {
+		return fatherScope.getMethodOffset(methodName);		
+	}
 
 }
