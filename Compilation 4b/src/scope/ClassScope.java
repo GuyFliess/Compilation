@@ -187,13 +187,14 @@ public class ClassScope extends Scope {
 		}
 	}
 
-	public List<MethodTypeWrapper> getAllMethodsAndLabels() {
-		List<MethodTypeWrapper> resultList = new ArrayList<MethodTypeWrapper>(MethodsOfsset.size());
-		for (String method : MethodsOfsset.keySet()) {
-			resultList.add(MethodsOfsset.get(method), getVirtualMethod(method));
-		}
+	public MethodTypeWrapper[] getAllMethodsAndLabels() {
+		MethodTypeWrapper[] resultList = new MethodTypeWrapper[MethodsOfsset.size()];
+		for (String method : MethodsOfsset.keySet()) 
+			resultList[MethodsOfsset.get(method)] =  getVirtualMethod(method);
+		
 		return resultList;
 	}
+
 
 	public int getClassSize() {
 		return fieldsOfsset.size() + 1;

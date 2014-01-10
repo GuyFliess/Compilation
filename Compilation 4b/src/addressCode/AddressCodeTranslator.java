@@ -1,13 +1,11 @@
 package addressCode;
 
-import java.awt.List;
 import java.util.ArrayList;
-import java.util.Set;
-
 import scope.ClassScope;
 import scope.GlobalScope;
 import scope.MethodScope;
 import scope.MethodTypeWrapper;
+import scope.Scope;
 import ic.ast.Visitor;
 import ic.ast.decl.ClassType;
 import ic.ast.decl.DeclClass;
@@ -19,7 +17,6 @@ import ic.ast.decl.DeclVirtualMethod;
 import ic.ast.decl.Parameter;
 import ic.ast.decl.PrimitiveType;
 import ic.ast.decl.Program;
-import ic.ast.decl.Type;
 import ic.ast.expr.BinaryOp;
 import ic.ast.expr.BinaryOp.BinaryOps;
 import ic.ast.expr.Expression;
@@ -44,10 +41,6 @@ import ic.ast.stmt.StmtContinue;
 import ic.ast.stmt.StmtIf;
 import ic.ast.stmt.StmtReturn;
 import ic.ast.stmt.StmtWhile;
-import interp.Interpreter.RuntimeError;
-import interpBuilder.Variable;
-import interpBuilder.Variable.VariableLocation;
-import interpBuilder.Variable.VariableType;
 
 public class AddressCodeTranslator implements Visitor {
 
@@ -113,22 +106,34 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(DeclClass icClass) {
-		((ClassScope)icClass.GetScope()).initOffsets();
-		
-		for (DeclField field : icClass.getFields()) {		
+		((ClassScope) icClass.GetScope()).initOffsets();
+		String dispathVectorLabel = ":_" + icClass.getName() + "_@DV";
+
+		((ClassScope) icClass.GetScope()).setDisptachVecotr(dispathVectorLabel);
+		for (DeclField field : icClass.getFields()) {
 			field.accept(this);
 		}
+
+		for (DeclMethod method : icClass.getMethods()) {
+			if (method instanceof DeclVirtualMethod) {
+				DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
+				ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
+				classScope.AddMethodOffset(virtualMethod);
+			}
+		}
+
 		for (DeclMethod method : icClass.getMethods()) {
 			method.accept(this);
 		}
-		String dispathVectorLabel = ":_" + icClass.getName() + "_@DV";
+
 		labels.add(dispathVectorLabel);
-		((ClassScope)icClass.GetScope()).setDisptachVecotr(dispathVectorLabel);
 		// go over all virutal methods in the class including the inherited
 		// methods, and add their dispatch vector (label)
-		java.util.List<MethodTypeWrapper> methods = ((ClassScope)icClass.GetScope()).getAllMethodsAndLabels();
+		MethodTypeWrapper[] methods = ((ClassScope) icClass.GetScope())
+				.getAllMethodsAndLabels();
 		for (MethodTypeWrapper methodTypeWrapper : methods) {
-			labels.add("\t(" + methodTypeWrapper.getLabel() + ")" );  // TODO add ()?
+			labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
+																	// ()?
 		}
 		return null;
 	}
@@ -141,11 +146,11 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(DeclVirtualMethod method) {
-		
+
 		currentRegister = 1; // 1 because reg 0 should contain "this"
 		ClassScope classScope = (ClassScope) method.GetScope().fatherScope;
-		classScope.AddMethodOffset(method);
-  		String method_label = classScope.getName() + "." + method.getName();
+		// classScope.AddMethodOffset(method);
+		String method_label = classScope.getName() + "." + method.getName();
 		classScope.GetMethod(method.getName()).setLabel(method_label);
 		instructions.add(":" + method_label/* + currentLabel */);
 		// (in a case of 2 functions with the same name
@@ -263,7 +268,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtIf ifStatement) {
-		//  find the register in which there's the condition result
+		// find the register in which there's the condition result
 		// initialize new 2 labels
 		int elseLabel = 0;// l = currentLabel++;
 		int endLabel;// = currentLabel++;
@@ -290,7 +295,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StmtWhile whileStatement) {
-		//  find the register in which there's the condition result
+		// find the register in which there's the condition result
 		// initialize new 2 labels
 		Integer startLabel = currentLabel++;
 		Integer endLabel = currentLabel++;
@@ -338,7 +343,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		//  initialize a new register and save that variable in the scope,
+		// initialize a new register and save that variable in the scope,
 		// make sure to check if localVariable.isInitialized() and load it to
 		// the register
 		int varReg = currentRegister++;
@@ -358,7 +363,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefVariable location) {
-		//  find the variable in the scope and return its register
+		// find the variable in the scope and return its register
 
 		return "$"
 				+ location.GetScope().getVaraibleReg(location.getName())
@@ -367,12 +372,13 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefField location) {
-		
-		
+
 		String reg = (String) location.getObject().accept(this);
-		String resultReg = "$"+currentRegister++;
-		instructions.add("\t+ " + reg + " " + location.GetScope().getFieldOffset(location.getField()) + " " + resultReg);
-		
+		String resultReg = "$" + currentRegister++;
+		instructions.add("\t+ " + reg + " "
+				+ location.GetScope().getFieldOffset(location.getField()) + " "
+				+ resultReg);
+
 		return resultReg;
 	}
 
@@ -448,9 +454,9 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(StaticCall call) {
-		//  find the method details: label and parameters registers, and add
+		// find the method details: label and parameters registers, and add
 		// param & call instructions
-		//  add instruction of library call to the method
+		// add instruction of library call to the method
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
@@ -482,16 +488,19 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(VirtualCall call) {
-		ClassScope classScope = (ClassScope) call.GetScope().fatherScope;
-		// TODO GetStaticMethod instead? this seems to only get from the inheriting class
+		Scope scope = call.GetScope();
+		while (!(scope instanceof ClassScope))
+			scope = scope.fatherScope;
+		ClassScope classScope = (ClassScope) scope;
+		// TODO GetStaticMethod instead? this seems to only get from the
+		// inheriting class
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
-		
-		if (methodSignature == null)
-		{
-			return invokeVirtualMethod(call, classScope);			
+
+		if (methodSignature == null) {
+			return invokeVirtualMethod(call, classScope);
 		}
-		
+
 		if (classScope.getName().equals("Library")) {
 			methodSignature.setLabel(methodSignature.getName());
 		} else {
@@ -522,34 +531,36 @@ public class AddressCodeTranslator implements Visitor {
 		MethodTypeWrapper methodSignature;
 		String classReg;
 		String methodName = call.getMethod();
-		Integer offset ;
-		if (!call.hasExplicitObject()){
+		Integer offset;
+		if (!call.hasExplicitObject()) {
 			methodSignature = classScope.getVirtualMethod(methodName);
 			classReg = "$0";
-			
-		}
-		else 
-		{
+
+		} else {
 			classReg = (String) call.getObject().accept(this);
-			classScope = (ClassScope)call.getObject().typeAtcheck.GetScope();
+			String className = ((ClassType) call.getObject().typeAtcheck)
+					.getClassName();
+
+			classScope = (ClassScope) globalScope.getClassScope(className);
 			methodSignature = classScope.getVirtualMethod(methodName);
 		}
-		
+
 		java.util.List<String> parameters = new ArrayList<String>();
 		for (Expression expr : call.getArguments()) {
 			String reg = (String) expr.accept(this);
 			parameters.add(reg);
 		}
-		
+
 		// class reg should point to the dispatch vector
 		// load it and add the method offset
 		offset = classScope.getMethodOffset(methodName);
 		String dispatchVectorReg = "$" + currentRegister++;
-		instructions.add("\t[] " + classReg +  " " + dispatchVectorReg);
-		addInstruction("+", dispatchVectorReg, offset.toString(), dispatchVectorReg);
-		instructions.add("\t[] " + dispatchVectorReg +  " " + dispatchVectorReg);
+		instructions.add("\t[] " + classReg + " " + dispatchVectorReg);
+		addInstruction("+", dispatchVectorReg, offset.toString(),
+				dispatchVectorReg);
+		instructions.add("\t[] " + dispatchVectorReg + " " + dispatchVectorReg);
 		instructions.add("\tparam " + classReg);
-		
+
 		for (String reg : parameters) {
 			instructions.add("\tparam " + reg);
 		}
@@ -559,33 +570,33 @@ public class AddressCodeTranslator implements Visitor {
 			return null;
 		} else {
 			String regResult = "$" + currentRegister++;
-			instructions.add("\tcall " + dispatchVectorReg + " "
-					+ regResult);
+			instructions.add("\tcall " + dispatchVectorReg + " " + regResult);
 			return regResult;
 		}
 	}
 
-	private void addInstruction(String op, String v1,
-			String v2, String target) {
+	private void addInstruction(String op, String v1, String v2, String target) {
 		instructions.add("\t" + op + " " + v1 + " " + v2 + " " + target);
-		
+
 	}
 
 	@Override
 	public Object visit(This thisExpression) {
-		//this object should always be kept in $0 (this only appears in virtual methods)
-		
-		
+		// this object should always be kept in $0 (this only appears in virtual
+		// methods)
+
 		return "$0";
 	}
 
 	@Override
 	public Object visit(NewInstance newClass) {
+		instructions.add("#new class " + newClass.getName());
 		String resultReg = "$" + currentRegister++;
 		ClassScope classScope = globalScope.getClassScope(newClass.getName());
-		instructions.add("\tparam" + classScope.getClassSize());
+		instructions.add("\tparam " + classScope.getClassSize());
 		instructions.add("\tcall :alloc " + resultReg);
-		instructions.add("\t[]= " + resultReg + " " + classScope.getDisptachVecotr());
+		instructions.add("\t[]= " + resultReg + " "
+				+ classScope.getDisptachVecotr());
 		return resultReg;
 	}
 
