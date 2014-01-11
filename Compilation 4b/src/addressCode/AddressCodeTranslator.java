@@ -450,7 +450,22 @@ public class AddressCodeTranslator implements Visitor {
 		instructions
 				.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + secondLabel);
+
 		instructions.add("\tparam " + indexOutLabel);
+		instructions.add("\tcall :println");
+		instructions.add("\tparam 0");
+		instructions.add("\tcall :exit");
+		instructions.add("\t" + secondLabel);
+	}
+	
+	private void checkLengthNonNegativeInit(String arrayOffset,
+			String runTimeErrorsChecksReg, String secondLabel) {
+		instructions
+				.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
+		instructions.add("\tif " + runTimeErrorsChecksReg + " " + secondLabel);
+		//TODO arrayAllocNegLabel
+		//instructions.add("\tparam " + indexOutLabel);
+		instructions.add("\tparam " + arrayAllocNegLabel);
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
 		instructions.add("\tcall :exit");
@@ -633,7 +648,7 @@ public class AddressCodeTranslator implements Visitor {
 		String tempReg = "$" + currentRegister++;
 		instructions.add("+ " + lengthReg + " 1 " + tempReg);
 		String addressReg = "$" + currentRegister++;
-		checkLengthNonNegative(tempReg, "$" + currentRegister++, ":"
+		checkLengthNonNegativeInit(tempReg, "$" + currentRegister++, ":"
 				+ currentLabel++);
 		instructions.add("\tparam " + tempReg);
 
