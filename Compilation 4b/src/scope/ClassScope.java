@@ -167,8 +167,7 @@ public class ClassScope extends Scope {
 
 	@Override
 	public Integer getVaraibleReg(String name2) {
-		// Class has no local vars
-		return 0;
+		return fieldsOfsset.get(name2);
 	}
 
 	public void AddFieldOffset(DeclField field) {
@@ -219,7 +218,7 @@ public class ClassScope extends Scope {
 	}
 
 	@Override
-	public int getFieldOffset(String fieldName) {
+	public Integer getFieldOffset(String fieldName) {
 		return fieldsOfsset.get(fieldName);
 	}
 

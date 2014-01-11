@@ -1,3 +1,4 @@
+
 package scope;
 
 import ic.ast.decl.Parameter;
@@ -76,6 +77,11 @@ public class MethodScope extends StatementBlockScope {
 		return resultType;
 	}
 
+		public boolean variableExists(String name) {
+		return this.localVariables.containsKey(name);
+	}
+	
+	
 	@Override
 	public MethodTypeWrapper GetMethodWithoutName() {
 		return GetMethod(getName());
