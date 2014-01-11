@@ -13,6 +13,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import scope.MethodScope.MethodType;
+import TypeSafety.TypingRuleException;
+
 public class ClassScope extends Scope {
 
 	public ClassScope(Scope scope, String name) {
@@ -58,6 +61,21 @@ public class ClassScope extends Scope {
 
 	public Map<String, Type> getFields() {
 		return fields;
+	}
+	
+	public Type getField(String name)
+	{
+		Scope currentScope = this; 
+	
+		Type resultType = null;
+		while (currentScope instanceof ClassScope) {
+			ClassScope classScope = (ClassScope) currentScope;
+			if (classScope.getFields().containsKey(name)) {
+					resultType = classScope.getFields().get(name);
+			}
+			currentScope = currentScope.fatherScope;
+		}
+		return resultType;
 	}
 
 	public Map<String, MethodTypeWrapper> getVirtualMethodScopes() {

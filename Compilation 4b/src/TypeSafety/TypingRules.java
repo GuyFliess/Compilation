@@ -295,16 +295,18 @@ public class TypingRules implements Visitor {
 	@Override
 	public Object visit(RefField location) {
 		location.getObject().accept(this);
-
+		Type result;
 		ClassScope classScope = (ClassScope) location.getObject().typeAtcheck
 				.GetScope();
-		if (!classScope.getFields().containsKey(location.getField())) {
-			;
+//		if (!classScope.getFields().containsKey(location.getField())) {
+		result = classScope.getField(location.getField());
+		if (result == null)
+		{
 			throw new TypingRuleException(String.format(
-					"field %s is not undefined", location.getField()),
+					"field %s is undefined", location.getField()),
 					location.getLine());
 		}
-		Type result = classScope.getFields().get(location.getField());
+//		 result = classScope.getFields().get(location.getField());
 		location.typeAtcheck = result;
 		return false;
 	}
