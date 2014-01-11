@@ -38,6 +38,9 @@ public class MethodScope extends  StatementBlockScope {
 		parameters.put(parameter.getName(), parameter.getType());
 	}
 
+	public boolean variableExists(String name) {
+		return this.localVariables.containsKey(name);
+	}
 	
 	@Override
 	public Type GetVariable(String name)  {
