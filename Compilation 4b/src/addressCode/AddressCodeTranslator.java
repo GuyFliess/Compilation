@@ -134,7 +134,17 @@ public class AddressCodeTranslator implements Visitor {
 		labels.add(((ClassScope) icClass.GetScope()).getDisptachVecotr());
 		// go over all virutal methods in the class including the inherited
 		// methods, and add their dispatch vector (label)
-		MethodTypeWrapper[] methods = ((ClassScope) icClass.GetScope())
+		ClassScope scope = (ClassScope) icClass.GetScope();
+		MethodTypeWrapper[] methods;
+		while (scope.HasSuperNode) {
+			scope = (ClassScope) scope.fatherScope;
+			methods = scope.getAllMethodsAndLabels();
+			for (MethodTypeWrapper methodTypeWrapper : methods) {
+				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
+																		// ()?
+			}
+		}
+		methods = ((ClassScope) icClass.GetScope())
 				.getAllMethodsAndLabels();
 		for (MethodTypeWrapper methodTypeWrapper : methods) {
 			labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
