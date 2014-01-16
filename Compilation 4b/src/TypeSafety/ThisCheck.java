@@ -146,11 +146,14 @@ public class ThisCheck {
 		
 		if (VirtualCall.class.isInstance(statement.getCall())) {
 			VirtualCall call = (VirtualCall) statement.getCall();
+			if (call.hasExplicitObject())
+			{
 			String s = call.getObject().toString();
 			if (call.getObject().toString().contains("This")) {
 				throw new ThisException(
 						"Use of 'this' expression inside static method is not allowed",
 						statement.getLine());
+			}
 			}
 		}
 

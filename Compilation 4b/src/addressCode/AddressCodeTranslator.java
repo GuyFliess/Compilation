@@ -73,6 +73,7 @@ public class AddressCodeTranslator implements Visitor {
 		this.whileEndLabels = new ArrayList<>();
 		this.whileStartLabels = new ArrayList<>();
 		this.globalScope = globalScope;
+
 	}
 
 	@Override
@@ -86,12 +87,23 @@ public class AddressCodeTranslator implements Visitor {
 
 		instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
-			String dispathVectorLabel = ":_" + declClass.getName() + "_@DV";
+			String dispathVectorLabel = ":_" + declClass.getName() + "_@DV";			
+			((ClassScope) declClass.GetScope()).initOffsets();
+			for (DeclField field : declClass.getFields()) {
+				field.accept(this);
+			}
+			for (DeclMethod method : declClass.getMethods()) {
+				if (method instanceof DeclVirtualMethod) {
+					DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
+					ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
+					classScope.AddMethodOffset(virtualMethod);
+				}
+			}
 			((ClassScope) declClass.GetScope())
 					.setDisptachVecotr(dispathVectorLabel);
 		}
 		for (DeclClass declClass : program.getClasses()) {
-			((ClassScope) declClass.GetScope()).initOffsets();
+//			((ClassScope) declClass.GetScope()).initOffsets();
 			declClass.accept(this);
 		}
 		instructions.add("\tparam 0");
@@ -114,17 +126,17 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(DeclClass icClass) {
-		for (DeclField field : icClass.getFields()) {
-			field.accept(this);
-		}
+//		for (DeclField field : icClass.getFields()) {
+//			field.accept(this);
+//		}
 
-		for (DeclMethod method : icClass.getMethods()) {
-			if (method instanceof DeclVirtualMethod) {
-				DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
-				ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
-				classScope.AddMethodOffset(virtualMethod);
-			}
-		}
+//		for (DeclMethod method : icClass.getMethods()) {
+//			if (method instanceof DeclVirtualMethod) {
+//				DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
+//				ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
+//				classScope.AddMethodOffset(virtualMethod);
+//			}
+//		}
 
 		for (DeclMethod method : icClass.getMethods()) {
 			method.accept(this);
@@ -135,15 +147,15 @@ public class AddressCodeTranslator implements Visitor {
 		// methods, and add their dispatch vector (label)
 		ClassScope scope = (ClassScope) icClass.GetScope();
 		MethodTypeWrapper[] methods;
-		while (scope.HasSuperNode) {
-			scope = (ClassScope) scope.fatherScope;
-			methods = scope.getAllMethodsAndLabels();
-			for (MethodTypeWrapper methodTypeWrapper : methods) {
-				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO
-																			// add
-																			// ()?
-			}
-		}
+//		if (scope.HasSuperNode) {
+//			scope = (ClassScope) scope.fatherScope;
+//			methods = scope.getAllMethodsAndLabels();
+////			for (MethodTypeWrapper methodTypeWrapper : methods) {
+////				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO
+////																			// add
+////																			// ()?
+////			}
+//		}	
 		methods = ((ClassScope) icClass.GetScope()).getAllMethodsAndLabels();
 		for (MethodTypeWrapper methodTypeWrapper : methods) {
 			labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
@@ -421,8 +433,11 @@ public class AddressCodeTranslator implements Visitor {
 
 		String reg = (String) location.getObject().accept(this);
 		String resultReg = "$" + currentRegister++;
+		Scope scope = globalScope.getClassScope(((ClassType)location.getObject().typeAtcheck).getClassName());
+		assigning_field = true;
+		arrayAddressPositive(reg, "$" + currentRegister++,  ":" + currentLabel++);
 		instructions.add("\t+ " + reg + " "
-				+ location.GetScope().getFieldOffset(location.getField()) + " "
+				+ scope.getFieldOffset(location.getField()) + " "
 				+ resultReg);
 		if (!this.IsAssignmentStatment)
 		{
@@ -607,6 +622,8 @@ public class AddressCodeTranslator implements Visitor {
 
 		} else {
 			classReg = (String) call.getObject().accept(this);
+			arrayAddressPositive(classReg,"$" + currentRegister++, ":"
+					+ currentLabel++);
 			String className = ((ClassType) call.getObject().typeAtcheck)
 					.getClassName();
 

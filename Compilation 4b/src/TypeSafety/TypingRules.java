@@ -296,8 +296,10 @@ public class TypingRules implements Visitor {
 	public Object visit(RefField location) {
 		location.getObject().accept(this);
 		Type result;
-		ClassScope classScope = (ClassScope) location.getObject().typeAtcheck
-				.GetScope();
+		ClassType type =(ClassType) location.getObject().typeAtcheck;
+		ClassScope classScope = globalScope.getClassScope(type.getClassName()); 
+//				(ClassScope) location.getObject().typeAtcheck
+//				.GetScope();
 //		if (!classScope.getFields().containsKey(location.getField())) {
 		result = classScope.getField(location.getField());
 		if (result == null)
@@ -413,7 +415,8 @@ public class TypingRules implements Visitor {
 			} else
 				throw new TypingRuleException(String.format(
 						"%s is not a method", call.getMethod()), call.getLine());
-			methodInClass = classScope.GetMethod(call.getMethod());
+			methodInClass = classScope.getStaticMethod(call.getMethod());
+			if (methodInClass == null) methodInClass =classScope.getVirtualMethod(call.getMethod());
 
 			if (methodInClass == null)
 				throw new TypingRuleException(String.format(

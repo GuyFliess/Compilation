@@ -174,7 +174,7 @@ public class ClassScope extends Scope {
 		AddFieldOffset(field.getName(), fieldsOfsset.size() + 1);
 	}
 
-	public void AddFieldOffset(String field, Integer offset) {
+	public void AddFieldOffset(String field, int offset) {
 		fieldsOfsset.put(field, offset);
 	}
 
