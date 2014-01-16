@@ -85,9 +85,10 @@ public class AddressCodeTranslator implements Visitor {
 		addLiteral(divsionByZeroLabel, divisionByZero);
 
 		instructions.add("\tgoto :main");
-		for (DeclClass declClass : program.getClasses()) {			
+		for (DeclClass declClass : program.getClasses()) {
 			String dispathVectorLabel = ":_" + declClass.getName() + "_@DV";
-			((ClassScope) declClass.GetScope()).setDisptachVecotr(dispathVectorLabel);
+			((ClassScope) declClass.GetScope())
+					.setDisptachVecotr(dispathVectorLabel);
 		}
 		for (DeclClass declClass : program.getClasses()) {
 			((ClassScope) declClass.GetScope()).initOffsets();
@@ -138,15 +139,15 @@ public class AddressCodeTranslator implements Visitor {
 			scope = (ClassScope) scope.fatherScope;
 			methods = scope.getAllMethodsAndLabels();
 			for (MethodTypeWrapper methodTypeWrapper : methods) {
-				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
-																		// ()?
+				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO
+																			// add
+																			// ()?
 			}
 		}
-		methods = ((ClassScope) icClass.GetScope())
-				.getAllMethodsAndLabels();
+		methods = ((ClassScope) icClass.GetScope()).getAllMethodsAndLabels();
 		for (MethodTypeWrapper methodTypeWrapper : methods) {
 			labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
-																	// ()?
+																		// ()?
 		}
 		return null;
 	}
@@ -252,7 +253,8 @@ public class AddressCodeTranslator implements Visitor {
 		String value = (String) assignment.getAssignment().accept(this);
 		instructions.add("#returned to assignment statement at "
 				+ assignment.getLine());
-		if ((assignment.getVariable() instanceof RefArrayElement) || assigning_field) {
+		if ((assignment.getVariable() instanceof RefArrayElement)
+				|| assigning_field) {
 			instructions.add("\t[]= " + variable + " " + value);
 			assigning_field = false;
 		} else {
@@ -377,19 +379,37 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(RefVariable location) {
+		instructions.add("#ref Varaible at line " + location.getLine());
 		// find the variable in the scope and return its register
 		Scope scope = location.GetScope();
-		if (scope instanceof MethodScope) {
-			if (!((MethodScope) scope).variableExists(location.getName()) && 
-					!((MethodScope) scope).getParameters().containsKey(location.getName())) { // this is a field
+//		if (scope instanceof MethodScope) { \\Why???
+		Integer offset = scope.getFieldOffset(location.getName());
+		if (offset != null) //this is a field
+		{
+//			if (!((MethodScope) scope).variableExists(location.getName())
+//					&& !((MethodScope) scope).getParameters().containsKey(
+//							location.getName())) { // this is a field
 				assigning_field = true;
-				if (this.IsAssignmentStatment) {
-					return scope.getFieldOffset(location.getName()).toString();
-				}
 				String reg = "$" + currentRegister++;
-				instructions.add("\t[] " + scope.getFieldOffset(location.getName()).toString() + " " + reg);
+				if (this.IsAssignmentStatment) {
+					// if this is a field in ref Variable then we should use
+					// "this" meaning $0
+					// We return a register with the exact adress of the field
+//					String offset = scope.getFieldOffset(location.getName())
+//							.toString();
+					instructions.add("\t+ $0 " + offset + " " + reg);
+				} else {
+//					String offset = scope.getFieldOffset(location.getName())
+//							.toString();
+					instructions.add("\t+ $0 " + offset + " " + reg);		
+					instructions.add("\t[] "
+					+ reg + " " + reg);		
+//					instructions.add("\t[] "
+//							+ scope.getFieldOffset(location.getName())
+//									.toString() + " " + reg);
+				}
 				return reg;
-			}
+//			}
 		}
 		return "$"
 				+ location.GetScope().getVaraibleReg(location.getName())
@@ -404,7 +424,10 @@ public class AddressCodeTranslator implements Visitor {
 		instructions.add("\t+ " + reg + " "
 				+ location.GetScope().getFieldOffset(location.getField()) + " "
 				+ resultReg);
-
+		if (!this.IsAssignmentStatment)
+		{
+			instructions.add("\t[] " + resultReg + " " + resultReg);
+		}
 		return resultReg;
 	}
 
@@ -465,14 +488,15 @@ public class AddressCodeTranslator implements Visitor {
 		instructions.add("\tcall :exit");
 		instructions.add("\t" + secondLabel);
 	}
-	
+
 	private void checkLengthNonNegativeInit(String arrayOffset,
 			String runTimeErrorsChecksReg, String secondLabel) {
+		instructions.add("\t#check i > 0 for array location");
 		instructions
 				.add("\t>= " + arrayOffset + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + secondLabel);
-		//TODO arrayAllocNegLabel
-		//instructions.add("\tparam " + indexOutLabel);
+		// TODO arrayAllocNegLabel
+		// instructions.add("\tparam " + indexOutLabel);
 		instructions.add("\tparam " + arrayAllocNegLabel);
 		instructions.add("\tcall :println");
 		instructions.add("\tparam 0");
@@ -482,7 +506,7 @@ public class AddressCodeTranslator implements Visitor {
 
 	private void arrayAddressPositive(String arrayAddress,
 			String runTimeErrorsChecksReg, String firstLabel) {
-		instructions.add("\t#check a > 0");
+		instructions.add("\t#check a > 0 for array address");
 		instructions
 				.add("\t> " + arrayAddress + " 0 " + runTimeErrorsChecksReg);
 		instructions.add("\tif " + runTimeErrorsChecksReg + " " + firstLabel);
@@ -498,6 +522,8 @@ public class AddressCodeTranslator implements Visitor {
 		// find the method details: label and parameters registers, and add
 		// param & call instructions
 		// add instruction of library call to the method
+		instructions.add("#Static call " + call.getClassName() + "."
+				+ call.getMethod());
 		ClassScope classScope = globalScope.getClassScope(call.getClassName());
 		MethodTypeWrapper methodSignature = classScope.getStaticMethodScopes()
 				.get(call.getMethod());
@@ -529,7 +555,9 @@ public class AddressCodeTranslator implements Visitor {
 
 	@Override
 	public Object visit(VirtualCall call) {
+		instructions.add("#Virtual call " + call.getMethod());
 		Scope scope = call.GetScope();
+
 		while (!(scope instanceof ClassScope))
 			scope = scope.fatherScope;
 		ClassScope classScope = (ClassScope) scope;
@@ -596,10 +624,12 @@ public class AddressCodeTranslator implements Visitor {
 		// load it and add the method offset
 		offset = classScope.getMethodOffset(methodName);
 		String dispatchVectorReg = "$" + currentRegister++;
+		instructions.add("#Virtual call: preparing activation record");
 		instructions.add("\t[] " + classReg + " " + dispatchVectorReg);
 		addInstruction("+", dispatchVectorReg, offset.toString(),
 				dispatchVectorReg);
 		instructions.add("\t[] " + dispatchVectorReg + " " + dispatchVectorReg);
+		instructions.add("# 'this' goes in first place");
 		instructions.add("\tparam " + classReg);
 
 		for (String reg : parameters) {
@@ -636,6 +666,7 @@ public class AddressCodeTranslator implements Visitor {
 		ClassScope classScope = globalScope.getClassScope(newClass.getName());
 		instructions.add("\tparam " + classScope.getClassSize());
 		instructions.add("\tcall :alloc " + resultReg);
+		instructions.add("#setting dispatch vector");
 		instructions.add("\t[]= " + resultReg + " "
 				+ classScope.getDisptachVecotr());
 		return resultReg;
@@ -654,7 +685,7 @@ public class AddressCodeTranslator implements Visitor {
 		// []= $1 $0
 		String lengthReg = (String) newArray.getSize().accept(this);
 		String tempReg = "$" + currentRegister++;
-		instructions.add("+ " + lengthReg + " 1 " + tempReg);
+		instructions.add("\t+ " + lengthReg + " 1 " + tempReg);
 		String addressReg = "$" + currentRegister++;
 		checkLengthNonNegativeInit(tempReg, "$" + currentRegister++, ":"
 				+ currentLabel++);
@@ -670,7 +701,7 @@ public class AddressCodeTranslator implements Visitor {
 	public Object visit(Length length) {
 		// find the register in the scope in which the array is stored and
 		// return the first slot (load)
-		// - if the array is not initialized (null) throw runtimeerror -
+		// - if the array is not initialized (null) throw runtime error -
 		// example 21a_null
 		String arrReg = (String) length.getArray().accept(this);
 		arrayAddressPositive(arrReg, "$" + currentRegister++, ":"
@@ -706,11 +737,11 @@ public class AddressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(UnaryOp unaryOp) {
 		String op = (String) unaryOp.getOperand().accept(this);
-//		if (assigning_field) {
-//			instructions.add("\t[] " + op + " $" + currentRegister);
-//			op = "$" + currentRegister++;
-//			returned_field = false;
-//		}
+		// if (assigning_field) {
+		// instructions.add("\t[] " + op + " $" + currentRegister);
+		// op = "$" + currentRegister++;
+		// returned_field = false;
+		// }
 		String current_op = null;
 		switch (unaryOp.getOperator()) {
 		case LNEG:
@@ -728,11 +759,11 @@ public class AddressCodeTranslator implements Visitor {
 	@Override
 	public Object visit(BinaryOp binaryOp) {
 		String op1 = (String) binaryOp.getFirstOperand().accept(this);
-//		if (assigning_field) {
-//			instructions.add("\t[] " + op1 + " $" + currentRegister);
-//			op1 = "$" + currentRegister++;
-//			returned_field = false;
-//		}
+		// if (assigning_field) {
+		// instructions.add("\t[] " + op1 + " $" + currentRegister);
+		// op1 = "$" + currentRegister++;
+		// returned_field = false;
+		// }
 		int first_label = 0, second_label = 0;
 		Integer reg = currentRegister++;
 		if (binaryOp.getOperator() == BinaryOps.LOR) {
@@ -751,11 +782,11 @@ public class AddressCodeTranslator implements Visitor {
 			instructions.add("\t:" + first_label);
 		}
 		String op2 = (String) binaryOp.getSecondOperand().accept(this);
-//		if (assigning_field) {
-//			instructions.add("\t[] " + op2 + " $" + currentRegister);
-//			op2 = "$" + currentRegister++;
-//			returned_field = false;
-//		}
+		// if (assigning_field) {
+		// instructions.add("\t[] " + op2 + " $" + currentRegister);
+		// op2 = "$" + currentRegister++;
+		// returned_field = false;
+		// }
 		if (binaryOp.getFirstOperand().typeAtcheck.getDisplayName().equals(
 				"int")
 				&& binaryOp.getSecondOperand().typeAtcheck.getDisplayName()
