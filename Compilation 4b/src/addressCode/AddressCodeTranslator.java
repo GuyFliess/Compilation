@@ -264,12 +264,14 @@ public class AddressCodeTranslator implements Visitor {
 		assigning_field = false;
 		this.IsAssignmentStatment = true;
 		String variable = (String) assignment.getVariable().accept(this);
+		boolean tempAssigningField = assigning_field;
+		
 		this.IsAssignmentStatment = false;
 		String value = (String) assignment.getAssignment().accept(this);
 		instructions.add("#returned to assignment statement at "
 				+ assignment.getLine());
 		if ((assignment.getVariable() instanceof RefArrayElement)
-				|| assigning_field) {
+				|| tempAssigningField) {
 			instructions.add("\t[]= " + variable + " " + value);
 			assigning_field = false;
 		} else {
