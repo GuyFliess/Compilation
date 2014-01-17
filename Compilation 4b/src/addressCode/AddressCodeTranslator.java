@@ -87,7 +87,7 @@ public class AddressCodeTranslator implements Visitor {
 
 		instructions.add("\tgoto :main");
 		for (DeclClass declClass : program.getClasses()) {
-			String dispathVectorLabel = ":_" + declClass.getName() + "_@DV";			
+			String dispathVectorLabel = ":_" + declClass.getName() + "_@DV";
 			((ClassScope) declClass.GetScope()).initOffsets();
 			for (DeclField field : declClass.getFields()) {
 				field.accept(this);
@@ -95,7 +95,8 @@ public class AddressCodeTranslator implements Visitor {
 			for (DeclMethod method : declClass.getMethods()) {
 				if (method instanceof DeclVirtualMethod) {
 					DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
-					ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
+					ClassScope classScope = (ClassScope) virtualMethod
+							.GetScope().fatherScope;
 					classScope.AddMethodOffset(virtualMethod);
 				}
 			}
@@ -103,7 +104,7 @@ public class AddressCodeTranslator implements Visitor {
 					.setDisptachVecotr(dispathVectorLabel);
 		}
 		for (DeclClass declClass : program.getClasses()) {
-//			((ClassScope) declClass.GetScope()).initOffsets();
+			// ((ClassScope) declClass.GetScope()).initOffsets();
 			declClass.accept(this);
 		}
 		instructions.add("\tparam 0");
@@ -121,22 +122,23 @@ public class AddressCodeTranslator implements Visitor {
 	private void addLiteral(String label, String literal) {
 		labels.add(label);
 		labels.add("\t" + literal.length());
-		labels.add(String.format("\t\"%s\"", literal));
+		labels.add(String.format("\t\"%s\"", escapeString(literal)));
 	}
 
 	@Override
 	public Object visit(DeclClass icClass) {
-//		for (DeclField field : icClass.getFields()) {
-//			field.accept(this);
-//		}
+		// for (DeclField field : icClass.getFields()) {
+		// field.accept(this);
+		// }
 
-//		for (DeclMethod method : icClass.getMethods()) {
-//			if (method instanceof DeclVirtualMethod) {
-//				DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
-//				ClassScope classScope = (ClassScope) virtualMethod.GetScope().fatherScope;
-//				classScope.AddMethodOffset(virtualMethod);
-//			}
-//		}
+		// for (DeclMethod method : icClass.getMethods()) {
+		// if (method instanceof DeclVirtualMethod) {
+		// DeclVirtualMethod virtualMethod = (DeclVirtualMethod) method;
+		// ClassScope classScope = (ClassScope)
+		// virtualMethod.GetScope().fatherScope;
+		// classScope.AddMethodOffset(virtualMethod);
+		// }
+		// }
 
 		for (DeclMethod method : icClass.getMethods()) {
 			method.accept(this);
@@ -147,15 +149,15 @@ public class AddressCodeTranslator implements Visitor {
 		// methods, and add their dispatch vector (label)
 		ClassScope scope = (ClassScope) icClass.GetScope();
 		MethodTypeWrapper[] methods;
-//		if (scope.HasSuperNode) {
-//			scope = (ClassScope) scope.fatherScope;
-//			methods = scope.getAllMethodsAndLabels();
-////			for (MethodTypeWrapper methodTypeWrapper : methods) {
-////				labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO
-////																			// add
-////																			// ()?
-////			}
-//		}	
+		// if (scope.HasSuperNode) {
+		// scope = (ClassScope) scope.fatherScope;
+		// methods = scope.getAllMethodsAndLabels();
+		// // for (MethodTypeWrapper methodTypeWrapper : methods) {
+		// // labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO
+		// // // add
+		// // // ()?
+		// // }
+		// }
 		methods = ((ClassScope) icClass.GetScope()).getAllMethodsAndLabels();
 		for (MethodTypeWrapper methodTypeWrapper : methods) {
 			labels.add("\t(:" + methodTypeWrapper.getLabel() + ")"); // TODO add
@@ -395,34 +397,33 @@ public class AddressCodeTranslator implements Visitor {
 		instructions.add("#ref Varaible at line " + location.getLine());
 		// find the variable in the scope and return its register
 		Scope scope = location.GetScope();
-//		if (scope instanceof MethodScope) { \\Why???
+		// if (scope instanceof MethodScope) { \\Why???
 		Integer offset = scope.getFieldOffset(location.getName());
-		if (offset != null) //this is a field
+		if (offset != null) // this is a field
 		{
-//			if (!((MethodScope) scope).variableExists(location.getName())
-//					&& !((MethodScope) scope).getParameters().containsKey(
-//							location.getName())) { // this is a field
-				assigning_field = true;
-				String reg = "$" + currentRegister++;
-				if (this.IsAssignmentStatment) {
-					// if this is a field in ref Variable then we should use
-					// "this" meaning $0
-					// We return a register with the exact adress of the field
-//					String offset = scope.getFieldOffset(location.getName())
-//							.toString();
-					instructions.add("\t+ $0 " + offset + " " + reg);
-				} else {
-//					String offset = scope.getFieldOffset(location.getName())
-//							.toString();
-					instructions.add("\t+ $0 " + offset + " " + reg);		
-					instructions.add("\t[] "
-					+ reg + " " + reg);		
-//					instructions.add("\t[] "
-//							+ scope.getFieldOffset(location.getName())
-//									.toString() + " " + reg);
-				}
-				return reg;
-//			}
+			// if (!((MethodScope) scope).variableExists(location.getName())
+			// && !((MethodScope) scope).getParameters().containsKey(
+			// location.getName())) { // this is a field
+			assigning_field = true;
+			String reg = "$" + currentRegister++;
+			if (this.IsAssignmentStatment) {
+				// if this is a field in ref Variable then we should use
+				// "this" meaning $0
+				// We return a register with the exact adress of the field
+				// String offset = scope.getFieldOffset(location.getName())
+				// .toString();
+				instructions.add("\t+ $0 " + offset + " " + reg);
+			} else {
+				// String offset = scope.getFieldOffset(location.getName())
+				// .toString();
+				instructions.add("\t+ $0 " + offset + " " + reg);
+				instructions.add("\t[] " + reg + " " + reg);
+				// instructions.add("\t[] "
+				// + scope.getFieldOffset(location.getName())
+				// .toString() + " " + reg);
+			}
+			return reg;
+			// }
 		}
 		return "$"
 				+ location.GetScope().getVaraibleReg(location.getName())
@@ -434,14 +435,13 @@ public class AddressCodeTranslator implements Visitor {
 
 		String reg = (String) location.getObject().accept(this);
 		String resultReg = "$" + currentRegister++;
-		Scope scope = globalScope.getClassScope(((ClassType)location.getObject().typeAtcheck).getClassName());
+		Scope scope = globalScope.getClassScope(((ClassType) location
+				.getObject().typeAtcheck).getClassName());
 		assigning_field = true;
-		arrayAddressPositive(reg, "$" + currentRegister++,  ":" + currentLabel++);
+		arrayAddressPositive(reg, "$" + currentRegister++, ":" + currentLabel++);
 		instructions.add("\t+ " + reg + " "
-				+ scope.getFieldOffset(location.getField()) + " "
-				+ resultReg);
-		if (!this.IsAssignmentStatment)
-		{
+				+ scope.getFieldOffset(location.getField()) + " " + resultReg);
+		if (!this.IsAssignmentStatment) {
 			instructions.add("\t[] " + resultReg + " " + resultReg);
 		}
 		return resultReg;
@@ -623,7 +623,7 @@ public class AddressCodeTranslator implements Visitor {
 
 		} else {
 			classReg = (String) call.getObject().accept(this);
-			arrayAddressPositive(classReg,"$" + currentRegister++, ":"
+			arrayAddressPositive(classReg, "$" + currentRegister++, ":"
 					+ currentLabel++);
 			String className = ((ClassType) call.getObject().typeAtcheck)
 					.getClassName();
@@ -744,12 +744,36 @@ public class AddressCodeTranslator implements Visitor {
 			labels.add(label_name);
 			labels.add("\t"
 					+ String.valueOf(literal.getValue().toString().length()));
-			labels.add("\t\"" + literal.getValue().toString() + "\"");
+			labels.add("\t\"" + escapeString(literal.getValue().toString()) + "\"");
 			return label_name;
 		default:
 			break;
 		}
 		return null;
+	}
+
+	private static String escapeString(String s) {
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			switch (c) {
+			case '\n':
+				b.append("\\n");
+				break;
+			case '\t':
+				b.append("\\t");
+				break;
+			case '\\':
+				b.append("\\\\");
+				break;
+			case '\"':
+				b.append("\\\"");
+				break;
+			default:
+				b.append(c);
+			}
+		}
+		return b.toString();
 	}
 
 	@Override
