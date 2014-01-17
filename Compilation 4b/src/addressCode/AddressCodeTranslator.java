@@ -259,6 +259,7 @@ public class AddressCodeTranslator implements Visitor {
 		// and the register of the left hand side (accept) and move register to
 		// register
 		// check what to do in case of RefArrayElement
+		assigning_field = false;
 		this.IsAssignmentStatment = true;
 		String variable = (String) assignment.getVariable().accept(this);
 		this.IsAssignmentStatment = false;
